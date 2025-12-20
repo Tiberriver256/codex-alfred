@@ -11,4 +11,17 @@ Each user creates their own Slack app and gets their own tokens. Use the manifes
 
 <!-- slack-manifest-link:end -->
 
+### End-to-end setup
+1. Click the button above, create the app in your workspace, then install it. Copy:
+   - App-level token (`xapp-...`)
+   - Bot token (`xoxb-...`)
+2. Install prerequisites:
+   - Docker
+   - Node.js (18+)
+3. Run Alfred locally:
+```
+npx @tiberriver256/codex-alfred --appKey <app-key> --botKey <bot-key> --data-dir ./data
+```
+4. In Slack, mention `@Alfred` in a channel or DM to get started.
+
 See `spec.md` for the product/technical spec.
