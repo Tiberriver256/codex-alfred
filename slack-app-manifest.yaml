@@ -1,0 +1,30 @@
+display_information:
+  name: codex-alfred
+  description: Slack butler that bridges threads to Codex CLI.
+  background_color: "#4A154B"
+features:
+  bot_user:
+    display_name: Alfred
+    always_online: false
+oauth_config:
+  scopes:
+    bot:
+      - app_mentions:read
+      - channels:history
+      - channels:read
+      - groups:history
+      - groups:read
+      - im:history
+      - im:read
+      - mpim:history
+      - mpim:read
+      - chat:write
+      - users:read
+settings:
+  socket_mode_enabled: true
+  event_subscriptions:
+    bot_events:
+      - app_mention
+  interactivity:
+    is_enabled: false
+  org_deploy_enabled: false

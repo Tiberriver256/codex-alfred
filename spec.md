@@ -41,6 +41,19 @@ Subscribe to events:
 
 Note: `app_mention` is the only trigger. All other thread messages are pulled on-demand using `conversations.replies` when a mention occurs.
 
+## Easy Install (App Manifest)
+Each user creates their own Slack app (and gets their own tokens) using the shared manifest in `slack-app-manifest.yaml`.
+
+Install flow:
+1. Generate a manifest link using the URL-encoded YAML (see README button).
+2. User clicks the link, creates the app in their workspace, and installs it.
+3. User copies their own `xapp-...` and `xoxb-...` tokens into env vars locally.
+
+Manifest link format (from Slack docs):
+```
+https://api.slack.com/apps?new_app=1&manifest_yaml=<URL_ENCODED_MANIFEST>
+```
+
 ## Data Model
 Persisted state (simple JSON file or SQLite):
 - `thread_key`: `${channel_id}:${thread_ts}`

@@ -1,0 +1,24 @@
+name: Verify README manifest link
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    paths:
+      - "slack-app-manifest.yaml"
+      - "README.md"
+      - "scripts/update-readme-manifest-link.py"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Update README link
+        run: python3 scripts/update-readme-manifest-link.py
+      - name: Verify README is up to date
+        run: git diff --exit-code README.md
