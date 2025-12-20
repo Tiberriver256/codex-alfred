@@ -4,7 +4,7 @@
 - [x] Create project layout (src/, tests/, data/, scripts/) and TS config.
 - [x] Add package.json with Node LTS engines, scripts, and `type: module` (if using ESM).
 - [x] Set up `mise` tooling config (already pinned via `.mise.toml`).
- - [x] Add basic lint/format config (minimal, optional).
+- [x] Add basic lint/format config (minimal, optional).
 
 ## Config + CLI
 - [x] Define config/env vars (`SLACK_APP_TOKEN`, `SLACK_BOT_TOKEN`, `ALFRED_WORKDIR`, data path, sandbox options).
