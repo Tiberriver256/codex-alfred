@@ -80,6 +80,10 @@ export function parseCli(argv: string[], env = process.env, cwd = process.cwd())
 
   const logLevel = (flags['log-level'] as AppConfig['logLevel']) ?? (env.ALFRED_LOG_LEVEL as AppConfig['logLevel']) ?? 'info';
 
+  const finalCodexArgs = sandbox.mode === 'docker' && !codexArgs.includes('--yolo')
+    ? ['--yolo', ...codexArgs]
+    : codexArgs;
+
   return {
     config: {
       appToken,
@@ -87,7 +91,7 @@ export function parseCli(argv: string[], env = process.env, cwd = process.cwd())
       dataDir,
       workDir,
       sandbox,
-      codexArgs,
+      codexArgs: finalCodexArgs,
       logLevel,
     },
     showHelp: false,

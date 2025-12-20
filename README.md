@@ -17,7 +17,8 @@ Each user creates their own Slack app and gets their own tokens. Use the manifes
    - Bot token (`xoxb-...`)
 2. Install prerequisites:
    - Docker
-   - Node.js (18+)
+   - Node.js LTS (pinned via mise)
+     - `mise install`
 3. Run Alfred locally:
 ```
 npx @tiberriver256/codex-alfred --appKey <app-key> --botKey <bot-key> --data-dir ./data
@@ -25,3 +26,30 @@ npx @tiberriver256/codex-alfred --appKey <app-key> --botKey <bot-key> --data-dir
 4. In Slack, mention `@Alfred` in a channel or DM to get started.
 
 See `spec.md` for the product/technical spec.
+
+## Configuration
+You can supply tokens via CLI flags or environment variables:
+- `--appKey` or `SLACK_APP_TOKEN`
+- `--botKey` or `SLACK_BOT_TOKEN`
+- `--data-dir` or `ALFRED_DATA_DIR`
+- `--workdir` or `ALFRED_WORKDIR`
+- `--sandbox` or `ALFRED_SANDBOX` (`host` or `docker:<name>`)
+- `--log-level` or `ALFRED_LOG_LEVEL`
+
+Pass additional Codex CLI args after `--`:
+```
+codex-alfred --appKey ... --botKey ... -- --yolo
+```
+
+## Testing
+```
+node --test --import=tsx
+```
+
+## Docker sandbox
+Use the helper script to create and manage the sandbox container:
+```
+./docker.sh create ./data
+./docker.sh start
+```
+When running with `--sandbox docker:<name>`, Alfred adds `--yolo` to Codex args by default (unless you pass it explicitly).

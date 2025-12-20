@@ -67,11 +67,16 @@ export async function handleAppMention(
     await store.set(record);
   }
 
-  const replies = await client.conversations.replies({
-    channel: event.channel,
-    ts: threadTs,
-    oldest: record.lastResponseTs,
-  });
+  const replies = await retryOnce(
+    () =>
+      client.conversations.replies({
+        channel: event.channel,
+        ts: threadTs,
+        oldest: record.lastResponseTs,
+      }),
+    logger,
+    'conversations.replies',
+  );
 
   const messages = filterMessages(replies.messages ?? [], botUserId, record.lastResponseTs);
   const prompt = buildPrompt(event.channel, threadTs, messages, botUserId);
@@ -79,25 +84,34 @@ export async function handleAppMention(
   let output: BlockKitMessage;
 
   try {
+    const startedAt = Date.now();
     const result = await thread.run(prompt, { outputSchema: blockKitSchema });
+    const latencyMs = Date.now() - startedAt;
     const structured = extractStructuredOutput(result);
+    const usage = (result as { usage?: unknown }).usage;
     const validation = validateBlockKit(structured);
     if (validation.ok) {
       output = structured as BlockKitMessage;
     } else {
       output = buildFallbackMessage(validation.errors?.[0] ?? 'Invalid Block Kit payload');
     }
+    logger.info('Codex run complete', { threadKey, latencyMs, usage });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown Codex error';
     output = buildFallbackMessage(message);
   }
 
-  const response = await client.chat.postMessage({
-    channel: event.channel,
-    thread_ts: threadTs,
-    text: output.text,
-    blocks: output.blocks,
-  });
+  const response = await retryOnce(
+    () =>
+      client.chat.postMessage({
+        channel: event.channel,
+        thread_ts: threadTs,
+        text: output.text,
+        blocks: output.blocks,
+      }),
+    logger,
+    'chat.postMessage',
+  );
 
   const lastResponseTs = response.ts ?? record.lastResponseTs ?? threadTs;
   const lastSeenUserTs = messages.length > 0 ? messages[messages.length - 1].ts : record.lastSeenUserTs;
@@ -108,6 +122,15 @@ export async function handleAppMention(
   } as Partial<ThreadRecord>);
 
   logger.info(`Responded to ${threadKey}`);
+}
+
+async function retryOnce<T>(fn: () => Promise<T>, logger: Logger, label: string): Promise<T> {
+  try {
+    return await fn();
+  } catch (error) {
+    logger.warn(`${label} failed, retrying once`, error);
+    return fn();
+  }
 }
 
 export function filterMessages(messages: SlackMessage[], botUserId: string, lastResponseTs?: string): SlackMessage[] {

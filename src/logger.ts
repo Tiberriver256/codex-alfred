@@ -18,7 +18,6 @@ export function createLogger(level: LogLevel = 'info'): Logger {
   const threshold = LEVELS[level] ?? LEVELS.info;
   const log = (lvl: LogLevel, method: 'log' | 'warn' | 'error', args: unknown[]) => {
     if (LEVELS[lvl] < threshold) return;
-    // eslint-disable-next-line no-console
     console[method](`[${lvl}]`, ...args);
   };
 
