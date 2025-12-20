@@ -9,6 +9,7 @@ codex-alfred is a lightweight Slack butler that bridges Slack Socket Mode events
 - Only send messages in the thread that happened since the bot's last response.
 - Require Codex output to be valid Block Kit JSON via structured output schema.
 - Keep the wiring thin: Slack <-> Codex SDK, no agent framework or extra tools.
+- Provide an easy-start Docker sandbox mode with a persistent data directory for secure agent execution.
 
 ## Non-goals
 - Implement pi-mono or Claude-specific toolchains.
@@ -20,8 +21,7 @@ codex-alfred is a lightweight Slack butler that bridges Slack Socket Mode events
 - Outputs: Slack messages posted in the same thread, using Block Kit only.
 
 ## Dependencies
-- `@slack/socket-mode` for websockets.
-- `@slack/web-api` for Slack Web API calls.
+- `@slack/bolt` for Socket Mode + Slack Web API.
 - `@openai/codex-sdk` for Codex CLI integration.
 
 ## Slack App Setup (minimum)
@@ -62,7 +62,7 @@ Recommended file: `data/threads.json` for v1.
 ## Event Flow
 ### On startup
 - Read env/config.
-- Instantiate Slack SocketModeClient + WebClient.
+- Instantiate Bolt `App` with a Socket Mode receiver.
 - Load persisted mappings into memory.
 - Fetch bot user ID with `auth.test`.
 
@@ -103,6 +103,7 @@ Respond in Block Kit JSON according to the output schema.
   - `workingDirectory`: configured path (env `ALFRED_WORKDIR`).
   - `skipGitRepoCheck`: true by default to avoid blocking.
   - `approvalPolicy`: `never`.
+- For Docker easy-start, run Codex in `--yolo` mode (SDK equivalent) and pass through extra CLI args.
 - Use `outputSchema` each turn for Block Kit JSON.
 
 ## Block Kit Output Schema (v1)
@@ -146,6 +147,16 @@ Schema file: `schemas/blockkit-response.schema.json`.
 - Tokens loaded from env (`SLACK_APP_TOKEN`, `SLACK_BOT_TOKEN`).
 - No secrets written to logs.
 - Local state file stored under `data/` (gitignored).
+
+## Docker Sandbox Easy Start
+Goal: secure tool execution by running Codex inside a Docker container with a persistent data directory.
+
+Requirements:
+- Provide an easy-start path (helper script or CLI mode) that creates/starts a named container and runs codex-alfred against it.
+- The host data directory is mounted to `/workspace` in the container and is also the Codex working directory.
+- The data directory is user-configurable (default to current working dir) to keep setups reusable.
+- Start Codex inside the container in `--yolo` mode by default.
+- Allow additional Codex CLI args to be passed through (e.g., after `--`).
 
 ## Open Questions
 - Should DMs be treated as a single thread or mirrored to per-message threads?
