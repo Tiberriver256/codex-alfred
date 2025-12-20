@@ -151,11 +151,17 @@ Schema file: `schemas/blockkit-response.schema.json`.
 ## Docker Sandbox Easy Start
 Goal: secure tool execution by running Codex inside a Docker container with a persistent data directory.
 
-Requirements:
-- Provide an easy-start path (helper script or CLI mode) that creates/starts a named container and runs codex-alfred against it.
+Requirements (mirroring mom's sandbox UX/behavior):
+- Provide a `docker.sh` helper script with `create`, `start`, `stop`, `remove`, `status`, `shell`.
+- Default container name uses a `<project>-sandbox` pattern (mom uses `mom-sandbox`) with `IMAGE="alpine:latest"`.
+- `create` accepts a data dir, resolves it to an absolute path, mounts it to `/workspace`, and keeps the container alive with `tail -f /dev/null`.
 - The host data directory is mounted to `/workspace` in the container and is also the Codex working directory.
 - The data directory is user-configurable (default to current working dir) to keep setups reusable.
-- Start Codex inside the container in `--yolo` mode by default.
+- CLI/config flag `--sandbox=host` or `--sandbox=docker:<container>`; error if the docker name is missing.
+- On startup, validate Docker is installed (`docker --version`) and container is running (`docker inspect -f {{.State.Running}} <name>`); print actionable errors (`docker start <name>` or `./docker.sh create <data-dir>`).
+- Execution model mirrors mom: host process handles Slack and orchestration; the Docker container is the tool execution environment (either by running Codex in the container or by proxying tool calls via `docker exec <name> sh -c '<command>'`), with `/workspace` as the container-visible root.
+- Container is stateful: tools/configs installed inside persist across restarts; `docker.sh remove` resets.
+- Run Codex inside the container in `--yolo` mode by default when docker sandbox is enabled.
 - Allow additional Codex CLI args to be passed through (e.g., after `--`).
 
 ## Open Questions
