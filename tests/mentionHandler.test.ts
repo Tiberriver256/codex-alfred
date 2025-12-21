@@ -90,8 +90,8 @@ test('handleAppMention posts response and updates store', async () => {
   );
 
   assert.equal(prompts.length, 1);
-  assert.match(prompts[0], /Block Kit Response Guidance/);
-  assert.match(prompts[0], /Do not include fields, accessories, or buttons/);
+  assert.match(prompts[0], /Conversations in Block Kit/);
+  assert.match(prompts[0], /Mode 1: Conversation/);
   assert.doesNotMatch(prompts[0], /Thread:/);
   assert.doesNotMatch(prompts[0], /User:/);
   assert.equal(thinkingText, 'Thinking...');
@@ -233,6 +233,6 @@ test('handleAppMention only injects guidance on first turn', async () => {
   );
 
   assert.equal(prompts.length, 2);
-  assert.match(prompts[0], /Block Kit Response Guidance/);
-  assert.doesNotMatch(prompts[1], /Block Kit Response Guidance/);
+  assert.match(prompts[0], /Conversations in Block Kit/);
+  assert.doesNotMatch(prompts[1], /Conversations in Block Kit/);
 });

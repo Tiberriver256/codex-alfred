@@ -1,4 +1,7 @@
 import { type Logger } from '../logger.js';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { type ThreadStore, type ThreadRecord } from '../store/threadStore.js';
 import { buildThreadOptions, type CodexClient } from '../codex/client.js';
 import { type AppConfig } from '../config.js';
@@ -49,7 +52,8 @@ export async function handleAppMention(
   );
 
   const messages = filterMessages(replies.messages ?? [], botUserId, record?.lastResponseTs);
-  const prompt = buildPrompt(event.channel, threadTs, messages, botUserId, !record);
+  const intro = record ? undefined : await loadBlockKitGuide(logger);
+  const prompt = buildPrompt(event.channel, threadTs, messages, botUserId, intro);
 
   const { response } = await runCodexAndPost({
     thread,
@@ -116,27 +120,36 @@ export function stripBotMention(text: string, botUserId: string): string {
   return text.replace(mention, '').trim();
 }
 
-const BLOCK_KIT_CHEATSHEET = [
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const BLOCK_KIT_GUIDE_PATH = path.join(REPO_ROOT, 'conversations-in-blockkit.md');
+let blockKitGuideCache: string | null = null;
+
+const BLOCK_KIT_GUIDE_FALLBACK = [
   'Block Kit Response Guidance (internal, do not repeat):',
   '- Respond with a JSON object that includes "text" and "blocks".',
-  '- Do not include thread IDs, user IDs, or other internal metadata in the reply.',
   '- Avoid interactive elements unless the user explicitly asks for them.',
-  '- If you include interactive elements, include valid action_id values and avoid placeholder URLs.',
-  '- Do not mention AGENTS.md or other internal file lookups unless the user explicitly asked.',
-  '- Do not include image blocks or image accessories unless the user explicitly asked for images.',
-  '- For simple replies, use a single section block with just text. Do not include fields, accessories, or buttons.',
-  '- Never include empty strings in fields; omit the fields array entirely unless required.',
-  '- For select menus: options must not include "url"; only overflow menu options can include "url".',
-  '- For static_select: do not include max_selected_items (that is only for multi-selects).',
-  '- Keep blocks <= 50 and options <= 100 per Slack limits.',
+  '- Do not include image blocks or accessories unless the user explicitly asked for images.',
+  '- For simple replies, use a single section block with just text; no fields, accessories, or buttons.',
 ].join('\n');
+
+async function loadBlockKitGuide(logger: Logger): Promise<string> {
+  if (blockKitGuideCache) return blockKitGuideCache;
+  try {
+    const guide = await fs.readFile(BLOCK_KIT_GUIDE_PATH, 'utf8');
+    blockKitGuideCache = guide.trim();
+  } catch (error) {
+    logger.warn(`Failed to load block kit guide at ${BLOCK_KIT_GUIDE_PATH}, using fallback`, error);
+    blockKitGuideCache = BLOCK_KIT_GUIDE_FALLBACK;
+  }
+  return blockKitGuideCache;
+}
 
 export function buildPrompt(
   channel: string,
   threadTs: string,
   messages: SlackMessage[],
   botUserId: string,
-  includeIntro: boolean,
+  intro?: string,
 ): string {
   const lines = messages.map((msg) => {
     const who = msg.user ? `@${msg.user}` : '@unknown';
@@ -148,8 +161,8 @@ export function buildPrompt(
     lines.push('- (no new messages)');
   }
 
-  const intro = includeIntro ? [BLOCK_KIT_CHEATSHEET, ''] : [];
-  return [...intro, 'Messages since last response:', ...lines, '', 'Respond with Block Kit JSON that matches the output schema.'].join(
+  const introLines = intro ? [intro, ''] : [];
+  return [...introLines, 'Messages since last response:', ...lines, '', 'Respond with Block Kit JSON that matches the output schema.'].join(
     '\n',
   );
 }
