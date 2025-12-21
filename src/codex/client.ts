@@ -81,6 +81,9 @@ export function extractStructuredOutput(result: CodexRunResult): unknown {
   if (typeof result.text === 'string') {
     return safeJsonParse(result.text);
   }
+  if (typeof (result as { finalResponse?: unknown }).finalResponse === 'string') {
+    return safeJsonParse((result as { finalResponse: string }).finalResponse);
+  }
   return result;
 }
 
