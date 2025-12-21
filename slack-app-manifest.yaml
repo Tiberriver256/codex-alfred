@@ -26,5 +26,5 @@ settings:
     bot_events:
       - app_mention
   interactivity:
-    is_enabled: false
+    is_enabled: true
   org_deploy_enabled: false

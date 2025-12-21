@@ -6,6 +6,7 @@ import { ThreadStore } from './store/threadStore.js';
 import { loadBlockKitSchema, loadBlockKitOutputSchema, createBlockKitValidator } from './blockkit/validator.js';
 import { createCodexClient } from './codex/client.js';
 import { handleAppMention } from './slack/mentionHandler.js';
+import { handleAction } from './slack/actionHandler.js';
 import { ensureDockerReady } from './sandbox/docker.js';
 
 export async function startApp(config: AppConfig, logger: Logger): Promise<void> {
@@ -38,6 +39,24 @@ export async function startApp(config: AppConfig, logger: Logger): Promise<void>
     const safeAck = ack ?? (async () => undefined);
     await handleAppMention(
       { event: event as any, ack: safeAck },
+      {
+        client: client as any,
+        store,
+        codex,
+        config,
+        logger,
+        botUserId,
+        validateBlockKit,
+        blockKitSchema,
+        blockKitOutputSchema,
+      },
+    );
+  });
+
+  app.action(/.*/, async ({ body, ack, client }) => {
+    const safeAck = ack ?? (async () => undefined);
+    await handleAction(
+      { body: body as any, ack: safeAck },
       {
         client: client as any,
         store,
