@@ -6,8 +6,3029 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 3000
+    },
+    "blocks": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 50,
+      "items": {
+        "$ref": "#/$defs/block"
+      }
     }
   },
-  "required": ["text"],
-  "additionalProperties": false
+  "required": [
+    "text",
+    "blocks"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "blockId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "actionId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "url": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 3000
+    },
+    "plainTextObject": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "plain_text"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 3000
+        },
+        "emoji": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "text",
+        "emoji"
+      ],
+      "additionalProperties": false
+    },
+    "plainTextObject30": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "plain_text"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 30
+        },
+        "emoji": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "text",
+        "emoji"
+      ],
+      "additionalProperties": false
+    },
+    "plainTextObject75": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "plain_text"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 75
+        },
+        "emoji": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "text",
+        "emoji"
+      ],
+      "additionalProperties": false
+    },
+    "plainTextObject100": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "plain_text"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "emoji": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "text",
+        "emoji"
+      ],
+      "additionalProperties": false
+    },
+    "plainTextObject150": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "plain_text"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 150
+        },
+        "emoji": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "text",
+        "emoji"
+      ],
+      "additionalProperties": false
+    },
+    "plainTextObject200": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "plain_text"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "emoji": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "text",
+        "emoji"
+      ],
+      "additionalProperties": false
+    },
+    "plainTextObject300": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "plain_text"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "emoji": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "text",
+        "emoji"
+      ],
+      "additionalProperties": false
+    },
+    "plainTextObject1500": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "plain_text"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1500
+        },
+        "emoji": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "text",
+        "emoji"
+      ],
+      "additionalProperties": false
+    },
+    "plainTextObject2000": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "plain_text"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "emoji": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "text",
+        "emoji"
+      ],
+      "additionalProperties": false
+    },
+    "mrkdwnTextObject": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "mrkdwn"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 3000
+        },
+        "verbatim": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "text",
+        "verbatim"
+      ],
+      "additionalProperties": false
+    },
+    "textObject": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/plainTextObject"
+        },
+        {
+          "$ref": "#/$defs/mrkdwnTextObject"
+        }
+      ]
+    },
+    "rawTextObject": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "raw_text"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 10000
+        }
+      },
+      "required": [
+        "type",
+        "text"
+      ],
+      "additionalProperties": false
+    },
+    "confirmObject": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/plainTextObject100"
+        },
+        "text": {
+          "$ref": "#/$defs/plainTextObject300"
+        },
+        "confirm": {
+          "$ref": "#/$defs/plainTextObject30"
+        },
+        "deny": {
+          "$ref": "#/$defs/plainTextObject30"
+        },
+        "style": {
+          "enum": [
+            "primary",
+            "danger"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "text",
+        "confirm",
+        "deny",
+        "style"
+      ],
+      "additionalProperties": false
+    },
+    "optionObject": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "$ref": "#/$defs/plainTextObject75"
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 150
+        },
+        "description": {
+          "$ref": "#/$defs/plainTextObject75"
+        },
+        "url": {
+          "$ref": "#/$defs/url"
+        }
+      },
+      "required": [
+        "text",
+        "value",
+        "description",
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "optionGroupObject": {
+      "type": "object",
+      "properties": {
+        "label": {
+          "$ref": "#/$defs/plainTextObject75"
+        },
+        "options": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/optionObject"
+          }
+        }
+      },
+      "required": [
+        "label",
+        "options"
+      ],
+      "additionalProperties": false
+    },
+    "dispatchActionConfigObject": {
+      "type": "object",
+      "properties": {
+        "trigger_actions_on": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "on_enter_pressed",
+              "on_character_entered"
+            ],
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "trigger_actions_on"
+      ],
+      "additionalProperties": false
+    },
+    "conversationFilterObject": {
+      "type": "object",
+      "properties": {
+        "include": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "im",
+              "mpim",
+              "private",
+              "public"
+            ],
+            "type": "string"
+          }
+        },
+        "exclude_bot_users": {
+          "type": "boolean"
+        },
+        "exclude_external_shared_channels": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "include",
+        "exclude_bot_users",
+        "exclude_external_shared_channels"
+      ]
+    },
+    "inputParameterObject": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 3000
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 3000
+        }
+      },
+      "required": [
+        "name",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "triggerObject": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "$ref": "#/$defs/url"
+        },
+        "customizable_input_parameters": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/inputParameterObject"
+          }
+        }
+      },
+      "required": [
+        "url",
+        "customizable_input_parameters"
+      ],
+      "additionalProperties": false
+    },
+    "workflowObject": {
+      "type": "object",
+      "properties": {
+        "trigger": {
+          "$ref": "#/$defs/triggerObject"
+        }
+      },
+      "required": [
+        "trigger"
+      ],
+      "additionalProperties": false
+    },
+    "slackFileObject": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 30
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "id"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "url": {
+              "$ref": "#/$defs/url"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "url"
+          ]
+        }
+      ]
+    },
+    "richTextStyleObject": {
+      "type": "object",
+      "properties": {
+        "bold": {
+          "type": "boolean"
+        },
+        "italic": {
+          "type": "boolean"
+        },
+        "strike": {
+          "type": "boolean"
+        },
+        "code": {
+          "type": "boolean"
+        },
+        "highlight": {
+          "type": "boolean"
+        },
+        "client_highlight": {
+          "type": "boolean"
+        },
+        "unlink": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "bold",
+        "italic",
+        "strike",
+        "code",
+        "highlight",
+        "client_highlight",
+        "unlink"
+      ]
+    },
+    "richTextElementText": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "text"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 3000
+        },
+        "style": {
+          "$ref": "#/$defs/richTextStyleObject"
+        }
+      },
+      "required": [
+        "type",
+        "text",
+        "style"
+      ],
+      "additionalProperties": false
+    },
+    "richTextElementEmoji": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "emoji"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "unicode": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "type",
+        "name",
+        "unicode"
+      ],
+      "additionalProperties": false
+    },
+    "richTextElementLink": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "link"
+          ]
+        },
+        "url": {
+          "$ref": "#/$defs/url"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "unsafe": {
+          "type": "boolean"
+        },
+        "style": {
+          "$ref": "#/$defs/richTextStyleObject"
+        }
+      },
+      "required": [
+        "type",
+        "url",
+        "text",
+        "unsafe",
+        "style"
+      ],
+      "additionalProperties": false
+    },
+    "richTextElementUser": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "user"
+          ]
+        },
+        "user_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "style": {
+          "$ref": "#/$defs/richTextStyleObject"
+        }
+      },
+      "required": [
+        "type",
+        "user_id",
+        "style"
+      ],
+      "additionalProperties": false
+    },
+    "richTextElementUsergroup": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "usergroup"
+          ]
+        },
+        "usergroup_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "style": {
+          "$ref": "#/$defs/richTextStyleObject"
+        }
+      },
+      "required": [
+        "type",
+        "usergroup_id",
+        "style"
+      ],
+      "additionalProperties": false
+    },
+    "richTextElementChannel": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "channel"
+          ]
+        },
+        "channel_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "style": {
+          "$ref": "#/$defs/richTextStyleObject"
+        }
+      },
+      "required": [
+        "type",
+        "channel_id",
+        "style"
+      ],
+      "additionalProperties": false
+    },
+    "richTextElementDate": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "date"
+          ]
+        },
+        "timestamp": {
+          "type": "integer"
+        },
+        "format": {
+          "type": "string",
+          "minLength": 1
+        },
+        "url": {
+          "$ref": "#/$defs/url"
+        },
+        "fallback": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "type",
+        "timestamp",
+        "format",
+        "url",
+        "fallback"
+      ],
+      "additionalProperties": false
+    },
+    "richTextElementBroadcast": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "broadcast"
+          ]
+        },
+        "range": {
+          "enum": [
+            "here",
+            "channel",
+            "everyone"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "range"
+      ],
+      "additionalProperties": false
+    },
+    "richTextElementColor": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "color"
+          ]
+        },
+        "value": {
+          "type": "string",
+          "pattern": "^#?([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
+        }
+      },
+      "required": [
+        "type",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "richTextElement": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/richTextElementText"
+        },
+        {
+          "$ref": "#/$defs/richTextElementEmoji"
+        },
+        {
+          "$ref": "#/$defs/richTextElementLink"
+        },
+        {
+          "$ref": "#/$defs/richTextElementUser"
+        },
+        {
+          "$ref": "#/$defs/richTextElementUsergroup"
+        },
+        {
+          "$ref": "#/$defs/richTextElementChannel"
+        },
+        {
+          "$ref": "#/$defs/richTextElementDate"
+        },
+        {
+          "$ref": "#/$defs/richTextElementBroadcast"
+        },
+        {
+          "$ref": "#/$defs/richTextElementColor"
+        }
+      ]
+    },
+    "richTextSectionObject": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "rich_text_section"
+          ]
+        },
+        "elements": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/richTextElement"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "elements"
+      ],
+      "additionalProperties": false
+    },
+    "richTextListObject": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "rich_text_list"
+          ]
+        },
+        "style": {
+          "enum": [
+            "bullet",
+            "ordered"
+          ],
+          "type": "string"
+        },
+        "elements": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/richTextSectionObject"
+          }
+        },
+        "indent": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "border": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "type",
+        "style",
+        "elements",
+        "indent",
+        "offset",
+        "border"
+      ],
+      "additionalProperties": false
+    },
+    "richTextPreformattedObject": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "rich_text_preformatted"
+          ]
+        },
+        "elements": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/richTextElement"
+          }
+        },
+        "border": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "type",
+        "elements",
+        "border"
+      ],
+      "additionalProperties": false
+    },
+    "richTextQuoteObject": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "rich_text_quote"
+          ]
+        },
+        "elements": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/richTextElement"
+          }
+        },
+        "border": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "type",
+        "elements",
+        "border"
+      ],
+      "additionalProperties": false
+    },
+    "richTextBlock": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "rich_text"
+          ]
+        },
+        "elements": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/richTextSectionObject"
+              },
+              {
+                "$ref": "#/$defs/richTextListObject"
+              },
+              {
+                "$ref": "#/$defs/richTextPreformattedObject"
+              },
+              {
+                "$ref": "#/$defs/richTextQuoteObject"
+              }
+            ]
+          }
+        },
+        "block_id": {
+          "$ref": "#/$defs/blockId"
+        }
+      },
+      "required": [
+        "type",
+        "elements",
+        "block_id"
+      ],
+      "additionalProperties": false
+    },
+    "columnSettingsObject": {
+      "type": "object",
+      "properties": {
+        "align": {
+          "enum": [
+            "left",
+            "center",
+            "right"
+          ],
+          "type": "string"
+        },
+        "is_wrapped": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "align",
+        "is_wrapped"
+      ]
+    },
+    "buttonElement": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "button"
+          ]
+        },
+        "text": {
+          "$ref": "#/$defs/plainTextObject75"
+        },
+        "action_id": {
+          "$ref": "#/$defs/actionId"
+        },
+        "url": {
+          "$ref": "#/$defs/url"
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "style": {
+          "enum": [
+            "primary",
+            "danger"
+          ],
+          "type": "string"
+        },
+        "confirm": {
+          "$ref": "#/$defs/confirmObject"
+        },
+        "accessibility_label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 75
+        }
+      },
+      "required": [
+        "type",
+        "text",
+        "action_id",
+        "url",
+        "value",
+        "style",
+        "confirm",
+        "accessibility_label"
+      ],
+      "additionalProperties": false
+    },
+    "checkboxesElement": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "checkboxes"
+          ]
+        },
+        "action_id": {
+          "$ref": "#/$defs/actionId"
+        },
+        "options": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": {
+            "$ref": "#/$defs/optionObject"
+          }
+        },
+        "initial_options": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": {
+            "$ref": "#/$defs/optionObject"
+          }
+        },
+        "confirm": {
+          "$ref": "#/$defs/confirmObject"
+        },
+        "focus_on_load": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "action_id",
+        "options",
+        "initial_options",
+        "confirm",
+        "focus_on_load"
+      ],
+      "additionalProperties": false
+    },
+    "datePickerElement": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "datepicker"
+          ]
+        },
+        "action_id": {
+          "$ref": "#/$defs/actionId"
+        },
+        "initial_date": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "confirm": {
+          "$ref": "#/$defs/confirmObject"
+        },
+        "focus_on_load": {
+          "type": "boolean"
+        },
+        "placeholder": {
+          "$ref": "#/$defs/plainTextObject150"
+        }
+      },
+      "required": [
+        "type",
+        "action_id",
+        "initial_date",
+        "confirm",
+        "focus_on_load",
+        "placeholder"
+      ],
+      "additionalProperties": false
+    },
+    "datetimePickerElement": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "datetimepicker"
+          ]
+        },
+        "action_id": {
+          "$ref": "#/$defs/actionId"
+        },
+        "initial_date_time": {
+          "type": "integer"
+        },
+        "confirm": {
+          "$ref": "#/$defs/confirmObject"
+        },
+        "focus_on_load": {
+          "type": "boolean"
+        },
+        "placeholder": {
+          "$ref": "#/$defs/plainTextObject150"
+        }
+      },
+      "required": [
+        "type",
+        "action_id",
+        "initial_date_time",
+        "confirm",
+        "focus_on_load",
+        "placeholder"
+      ],
+      "additionalProperties": false
+    },
+    "emailInputElement": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "email_text_input"
+          ]
+        },
+        "action_id": {
+          "$ref": "#/$defs/actionId"
+        },
+        "initial_value": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 74
+        },
+        "dispatch_action_config": {
+          "$ref": "#/$defs/dispatchActionConfigObject"
+        },
+        "focus_on_load": {
+          "type": "boolean"
+        },
+        "placeholder": {
+          "$ref": "#/$defs/plainTextObject150"
+        }
+      },
+      "required": [
+        "type",
+        "action_id",
+        "initial_value",
+        "dispatch_action_config",
+        "focus_on_load",
+        "placeholder"
+      ],
+      "additionalProperties": false
+    },
+    "fileInputElement": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "file_input"
+          ]
+        },
+        "action_id": {
+          "$ref": "#/$defs/actionId"
+        },
+        "filetypes": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "auto",
+              "text",
+              "ai",
+              "apk",
+              "applescript",
+              "binary",
+              "bmp",
+              "boxnote",
+              "c",
+              "csharp",
+              "cpp",
+              "css",
+              "csv",
+              "clojure",
+              "coffeescript",
+              "cfm",
+              "d",
+              "dart",
+              "diff",
+              "doc",
+              "docx",
+              "dockerfile",
+              "dotx",
+              "eml",
+              "eps",
+              "epub",
+              "erlang",
+              "fla",
+              "flv",
+              "fsharp",
+              "fortran",
+              "gdoc",
+              "gdraw",
+              "gif",
+              "go",
+              "gpres",
+              "groovy",
+              "gsheet",
+              "gzip",
+              "html",
+              "handlebars",
+              "haskell",
+              "haxe",
+              "indd",
+              "java",
+              "javascript",
+              "jpg",
+              "json",
+              "keynote",
+              "kotlin",
+              "latex",
+              "lisp",
+              "lua",
+              "m4a",
+              "markdown",
+              "matlab",
+              "mhtml",
+              "mkv",
+              "mov",
+              "mp3",
+              "mp4",
+              "mpg",
+              "mumps",
+              "numbers",
+              "nzb",
+              "objc",
+              "ocaml",
+              "odg",
+              "odi",
+              "odp",
+              "ods",
+              "odt",
+              "ogg",
+              "ogv",
+              "pages",
+              "pascal",
+              "pdf",
+              "perl",
+              "php",
+              "pig",
+              "png",
+              "post",
+              "powershell",
+              "ppt",
+              "pptx",
+              "psd",
+              "puppet",
+              "python",
+              "qtz",
+              "r",
+              "rtf",
+              "ruby",
+              "rust",
+              "sql",
+              "sass",
+              "scala",
+              "scheme",
+              "sketch",
+              "shell",
+              "smalltalk",
+              "svg",
+              "swf",
+              "swift",
+              "tar",
+              "tiff",
+              "tsv",
+              "vb",
+              "vbscript",
+              "vcard",
+              "velocity",
+              "verilog",
+              "wav",
+              "webm",
+              "wmv",
+              "xls",
+              "xlsx",
+              "xlsb",
+              "xlsm",
+              "xltx",
+              "xml",
+              "yaml",
+              "zip"
+            ],
+            "type": "string"
+          }
+        },
+        "max_files": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        }
+      },
+      "required": [
+        "type",
+        "action_id",
+        "filetypes",
+        "max_files"
+      ],
+      "additionalProperties": false
+    },
+    "imageElement": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "image"
+              ]
+            },
+            "alt_text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            "image_url": {
+              "$ref": "#/$defs/url"
+            }
+          },
+          "required": [
+            "type",
+            "alt_text",
+            "image_url"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "image"
+              ]
+            },
+            "alt_text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            "slack_file": {
+              "$ref": "#/$defs/slackFileObject"
+            }
+          },
+          "required": [
+            "type",
+            "alt_text",
+            "slack_file"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "multiStaticSelectElement": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "multi_static_select"
+              ]
+            },
+            "action_id": {
+              "$ref": "#/$defs/actionId"
+            },
+            "options": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 100,
+              "items": {
+                "$ref": "#/$defs/optionObject"
+              }
+            },
+            "initial_options": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 100,
+              "items": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/optionObject"
+                  },
+                  {
+                    "$ref": "#/$defs/optionGroupObject"
+                  }
+                ]
+              }
+            },
+            "confirm": {
+              "$ref": "#/$defs/confirmObject"
+            },
+            "max_selected_items": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "focus_on_load": {
+              "type": "boolean"
+            },
+            "placeholder": {
+              "$ref": "#/$defs/plainTextObject150"
+            }
+          },
+          "required": [
+            "type",
+            "action_id",
+            "options",
+            "initial_options",
+            "confirm",
+            "max_selected_items",
+            "focus_on_load",
+            "placeholder"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "multi_static_select"
+              ]
+            },
+            "action_id": {
+              "$ref": "#/$defs/actionId"
+            },
+            "option_groups": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 100,
+              "items": {
+                "$ref": "#/$defs/optionGroupObject"
+              }
+            },
+            "initial_options": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 100,
+              "items": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/optionObject"
+                  },
+                  {
+                    "$ref": "#/$defs/optionGroupObject"
+                  }
+                ]
+              }
+            },
+            "confirm": {
+              "$ref": "#/$defs/confirmObject"
+            },
+            "max_selected_items": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "focus_on_load": {
+              "type": "boolean"
+            },
+            "placeholder": {
+              "$ref": "#/$defs/plainTextObject150"
+            }
+          },
+          "required": [
+            "type",
+            "action_id",
+            "option_groups",
+            "initial_options",
+            "confirm",
+            "max_selected_items",
+            "focus_on_load",
+            "placeholder"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "multiExternalSelectElement": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "multi_external_select"
+          ]
+        },
+        "action_id": {
+          "$ref": "#/$defs/actionId"
+        },
+        "min_query_length": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "initial_options": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 100,
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/optionObject"
+              },
+              {
+                "$ref": "#/$defs/optionGroupObject"
+              }
+            ]
+          }
+        },
+        "confirm": {
+          "$ref": "#/$defs/confirmObject"
+        },
+        "max_selected_items": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "focus_on_load": {
+          "type": "boolean"
+        },
+        "placeholder": {
+          "$ref": "#/$defs/plainTextObject150"
+        }
+      },
+      "required": [
+        "type",
+        "action_id",
+        "min_query_length",
+        "initial_options",
+        "confirm",
+        "max_selected_items",
+        "focus_on_load",
+        "placeholder"
+      ],
+      "additionalProperties": false
+    },
+    "multiUsersSelectElement": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "multi_users_select"
+          ]
+        },
+        "action_id": {
+          "$ref": "#/$defs/actionId"
+        },
+        "initial_users": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "confirm": {
+          "$ref": "#/$defs/confirmObject"
+        },
+        "max_selected_items": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "focus_on_load": {
+          "type": "boolean"
+        },
+        "placeholder": {
+          "$ref": "#/$defs/plainTextObject150"
+        }
+      },
+      "required": [
+        "type",
+        "action_id",
+        "initial_users",
+        "confirm",
+        "max_selected_items",
+        "focus_on_load",
+        "placeholder"
+      ],
+      "additionalProperties": false
+    },
+    "multiConversationsSelectElement": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "multi_conversations_select"
+          ]
+        },
+        "action_id": {
+          "$ref": "#/$defs/actionId"
+        },
+        "initial_conversations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "default_to_current_conversation": {
+          "type": "boolean"
+        },
+        "confirm": {
+          "$ref": "#/$defs/confirmObject"
+        },
+        "max_selected_items": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "filter": {
+          "$ref": "#/$defs/conversationFilterObject"
+        },
+        "focus_on_load": {
+          "type": "boolean"
+        },
+        "placeholder": {
+          "$ref": "#/$defs/plainTextObject150"
+        }
+      },
+      "required": [
+        "type",
+        "action_id",
+        "initial_conversations",
+        "default_to_current_conversation",
+        "confirm",
+        "max_selected_items",
+        "filter",
+        "focus_on_load",
+        "placeholder"
+      ],
+      "additionalProperties": false
+    },
+    "multiChannelsSelectElement": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "multi_channels_select"
+          ]
+        },
+        "action_id": {
+          "$ref": "#/$defs/actionId"
+        },
+        "initial_channels": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "confirm": {
+          "$ref": "#/$defs/confirmObject"
+        },
+        "max_selected_items": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "focus_on_load": {
+          "type": "boolean"
+        },
+        "placeholder": {
+          "$ref": "#/$defs/plainTextObject150"
+        }
+      },
+      "required": [
+        "type",
+        "action_id",
+        "initial_channels",
+        "confirm",
+        "max_selected_items",
+        "focus_on_load",
+        "placeholder"
+      ],
+      "additionalProperties": false
+    },
+    "numberInputElement": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "number_input"
+          ]
+        },
+        "is_decimal_allowed": {
+          "type": "boolean"
+        },
+        "action_id": {
+          "$ref": "#/$defs/actionId"
+        },
+        "initial_value": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "min_value": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "max_value": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "dispatch_action_config": {
+          "$ref": "#/$defs/dispatchActionConfigObject"
+        },
+        "focus_on_load": {
+          "type": "boolean"
+        },
+        "placeholder": {
+          "$ref": "#/$defs/plainTextObject150"
+        }
+      },
+      "required": [
+        "type",
+        "is_decimal_allowed",
+        "action_id",
+        "initial_value",
+        "min_value",
+        "max_value",
+        "dispatch_action_config",
+        "focus_on_load",
+        "placeholder"
+      ],
+      "additionalProperties": false
+    },
+    "overflowElement": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "overflow"
+          ]
+        },
+        "action_id": {
+          "$ref": "#/$defs/actionId"
+        },
+        "options": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 5,
+          "items": {
+            "$ref": "#/$defs/optionObject"
+          }
+        },
+        "confirm": {
+          "$ref": "#/$defs/confirmObject"
+        }
+      },
+      "required": [
+        "type",
+        "action_id",
+        "options",
+        "confirm"
+      ],
+      "additionalProperties": false
+    },
+    "plainTextInputElement": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "plain_text_input"
+          ]
+        },
+        "action_id": {
+          "$ref": "#/$defs/actionId"
+        },
+        "initial_value": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 3000
+        },
+        "multiline": {
+          "type": "boolean"
+        },
+        "min_length": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3000
+        },
+        "max_length": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3000
+        },
+        "dispatch_action_config": {
+          "$ref": "#/$defs/dispatchActionConfigObject"
+        },
+        "focus_on_load": {
+          "type": "boolean"
+        },
+        "placeholder": {
+          "$ref": "#/$defs/plainTextObject150"
+        }
+      },
+      "required": [
+        "type",
+        "action_id",
+        "initial_value",
+        "multiline",
+        "min_length",
+        "max_length",
+        "dispatch_action_config",
+        "focus_on_load",
+        "placeholder"
+      ],
+      "additionalProperties": false
+    },
+    "radioButtonsElement": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "radio_buttons"
+          ]
+        },
+        "action_id": {
+          "$ref": "#/$defs/actionId"
+        },
+        "options": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": {
+            "$ref": "#/$defs/optionObject"
+          }
+        },
+        "initial_option": {
+          "$ref": "#/$defs/optionObject"
+        },
+        "confirm": {
+          "$ref": "#/$defs/confirmObject"
+        },
+        "focus_on_load": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "action_id",
+        "options",
+        "initial_option",
+        "confirm",
+        "focus_on_load"
+      ],
+      "additionalProperties": false
+    },
+    "richTextInputElement": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "rich_text_input"
+          ]
+        },
+        "action_id": {
+          "$ref": "#/$defs/actionId"
+        },
+        "initial_value": {
+          "$ref": "#/$defs/richTextBlock"
+        },
+        "dispatch_action_config": {
+          "$ref": "#/$defs/dispatchActionConfigObject"
+        },
+        "focus_on_load": {
+          "type": "boolean"
+        },
+        "placeholder": {
+          "$ref": "#/$defs/plainTextObject150"
+        }
+      },
+      "required": [
+        "type",
+        "action_id",
+        "initial_value",
+        "dispatch_action_config",
+        "focus_on_load",
+        "placeholder"
+      ],
+      "additionalProperties": false
+    },
+    "staticSelectElement": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "static_select"
+              ]
+            },
+            "action_id": {
+              "$ref": "#/$defs/actionId"
+            },
+            "options": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 100,
+              "items": {
+                "$ref": "#/$defs/optionObject"
+              }
+            },
+            "initial_option": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/optionObject"
+                },
+                {
+                  "$ref": "#/$defs/optionGroupObject"
+                }
+              ]
+            },
+            "confirm": {
+              "$ref": "#/$defs/confirmObject"
+            },
+            "max_selected_items": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "focus_on_load": {
+              "type": "boolean"
+            },
+            "placeholder": {
+              "$ref": "#/$defs/plainTextObject150"
+            }
+          },
+          "required": [
+            "type",
+            "action_id",
+            "options",
+            "initial_option",
+            "confirm",
+            "max_selected_items",
+            "focus_on_load",
+            "placeholder"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "static_select"
+              ]
+            },
+            "action_id": {
+              "$ref": "#/$defs/actionId"
+            },
+            "option_groups": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 100,
+              "items": {
+                "$ref": "#/$defs/optionGroupObject"
+              }
+            },
+            "initial_option": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/optionObject"
+                },
+                {
+                  "$ref": "#/$defs/optionGroupObject"
+                }
+              ]
+            },
+            "confirm": {
+              "$ref": "#/$defs/confirmObject"
+            },
+            "max_selected_items": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "focus_on_load": {
+              "type": "boolean"
+            },
+            "placeholder": {
+              "$ref": "#/$defs/plainTextObject150"
+            }
+          },
+          "required": [
+            "type",
+            "action_id",
+            "option_groups",
+            "initial_option",
+            "confirm",
+            "max_selected_items",
+            "focus_on_load",
+            "placeholder"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "externalSelectElement": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "external_select"
+          ]
+        },
+        "action_id": {
+          "$ref": "#/$defs/actionId"
+        },
+        "min_query_length": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "initial_option": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/optionObject"
+            },
+            {
+              "$ref": "#/$defs/optionGroupObject"
+            }
+          ]
+        },
+        "confirm": {
+          "$ref": "#/$defs/confirmObject"
+        },
+        "max_selected_items": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "focus_on_load": {
+          "type": "boolean"
+        },
+        "placeholder": {
+          "$ref": "#/$defs/plainTextObject150"
+        }
+      },
+      "required": [
+        "type",
+        "action_id",
+        "min_query_length",
+        "initial_option",
+        "confirm",
+        "max_selected_items",
+        "focus_on_load",
+        "placeholder"
+      ],
+      "additionalProperties": false
+    },
+    "usersSelectElement": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "users_select"
+          ]
+        },
+        "action_id": {
+          "$ref": "#/$defs/actionId"
+        },
+        "initial_user": {
+          "type": "string",
+          "minLength": 1
+        },
+        "confirm": {
+          "$ref": "#/$defs/confirmObject"
+        },
+        "focus_on_load": {
+          "type": "boolean"
+        },
+        "placeholder": {
+          "$ref": "#/$defs/plainTextObject150"
+        }
+      },
+      "required": [
+        "type",
+        "action_id",
+        "initial_user",
+        "confirm",
+        "focus_on_load",
+        "placeholder"
+      ],
+      "additionalProperties": false
+    },
+    "conversationsSelectElement": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "conversations_select"
+          ]
+        },
+        "action_id": {
+          "$ref": "#/$defs/actionId"
+        },
+        "initial_conversation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "default_to_current_conversation": {
+          "type": "boolean"
+        },
+        "confirm": {
+          "$ref": "#/$defs/confirmObject"
+        },
+        "response_url_enabled": {
+          "type": "boolean"
+        },
+        "filter": {
+          "$ref": "#/$defs/conversationFilterObject"
+        },
+        "focus_on_load": {
+          "type": "boolean"
+        },
+        "placeholder": {
+          "$ref": "#/$defs/plainTextObject150"
+        }
+      },
+      "required": [
+        "type",
+        "action_id",
+        "initial_conversation",
+        "default_to_current_conversation",
+        "confirm",
+        "response_url_enabled",
+        "filter",
+        "focus_on_load",
+        "placeholder"
+      ],
+      "additionalProperties": false
+    },
+    "channelsSelectElement": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "channels_select"
+          ]
+        },
+        "action_id": {
+          "$ref": "#/$defs/actionId"
+        },
+        "initial_channel": {
+          "type": "string",
+          "minLength": 1
+        },
+        "confirm": {
+          "$ref": "#/$defs/confirmObject"
+        },
+        "response_url_enabled": {
+          "type": "boolean"
+        },
+        "focus_on_load": {
+          "type": "boolean"
+        },
+        "placeholder": {
+          "$ref": "#/$defs/plainTextObject150"
+        }
+      },
+      "required": [
+        "type",
+        "action_id",
+        "initial_channel",
+        "confirm",
+        "response_url_enabled",
+        "focus_on_load",
+        "placeholder"
+      ],
+      "additionalProperties": false
+    },
+    "timePickerElement": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "timepicker"
+          ]
+        },
+        "action_id": {
+          "$ref": "#/$defs/actionId"
+        },
+        "initial_time": {
+          "type": "string",
+          "pattern": "^\\d{2}:\\d{2}$"
+        },
+        "confirm": {
+          "$ref": "#/$defs/confirmObject"
+        },
+        "focus_on_load": {
+          "type": "boolean"
+        },
+        "placeholder": {
+          "$ref": "#/$defs/plainTextObject150"
+        },
+        "timezone": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "type",
+        "action_id",
+        "initial_time",
+        "confirm",
+        "focus_on_load",
+        "placeholder",
+        "timezone"
+      ],
+      "additionalProperties": false
+    },
+    "urlInputElement": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "url_text_input"
+          ]
+        },
+        "action_id": {
+          "$ref": "#/$defs/actionId"
+        },
+        "initial_value": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 74
+        },
+        "dispatch_action_config": {
+          "$ref": "#/$defs/dispatchActionConfigObject"
+        },
+        "focus_on_load": {
+          "type": "boolean"
+        },
+        "placeholder": {
+          "$ref": "#/$defs/plainTextObject150"
+        }
+      },
+      "required": [
+        "type",
+        "action_id",
+        "initial_value",
+        "dispatch_action_config",
+        "focus_on_load",
+        "placeholder"
+      ],
+      "additionalProperties": false
+    },
+    "workflowButtonElement": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "workflow_button"
+          ]
+        },
+        "text": {
+          "$ref": "#/$defs/plainTextObject75"
+        },
+        "workflow": {
+          "$ref": "#/$defs/workflowObject"
+        },
+        "action_id": {
+          "$ref": "#/$defs/actionId"
+        },
+        "style": {
+          "enum": [
+            "primary",
+            "danger"
+          ],
+          "type": "string"
+        },
+        "accessibility_label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 75
+        }
+      },
+      "required": [
+        "type",
+        "text",
+        "workflow",
+        "action_id",
+        "style",
+        "accessibility_label"
+      ],
+      "additionalProperties": false
+    },
+    "actionElement": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/buttonElement"
+        },
+        {
+          "$ref": "#/$defs/checkboxesElement"
+        },
+        {
+          "$ref": "#/$defs/datePickerElement"
+        },
+        {
+          "$ref": "#/$defs/multiStaticSelectElement"
+        },
+        {
+          "$ref": "#/$defs/multiExternalSelectElement"
+        },
+        {
+          "$ref": "#/$defs/multiUsersSelectElement"
+        },
+        {
+          "$ref": "#/$defs/multiConversationsSelectElement"
+        },
+        {
+          "$ref": "#/$defs/multiChannelsSelectElement"
+        },
+        {
+          "$ref": "#/$defs/overflowElement"
+        },
+        {
+          "$ref": "#/$defs/radioButtonsElement"
+        },
+        {
+          "$ref": "#/$defs/richTextInputElement"
+        },
+        {
+          "$ref": "#/$defs/staticSelectElement"
+        },
+        {
+          "$ref": "#/$defs/externalSelectElement"
+        },
+        {
+          "$ref": "#/$defs/usersSelectElement"
+        },
+        {
+          "$ref": "#/$defs/conversationsSelectElement"
+        },
+        {
+          "$ref": "#/$defs/channelsSelectElement"
+        },
+        {
+          "$ref": "#/$defs/timePickerElement"
+        },
+        {
+          "$ref": "#/$defs/workflowButtonElement"
+        }
+      ]
+    },
+    "inputElement": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/checkboxesElement"
+        },
+        {
+          "$ref": "#/$defs/datePickerElement"
+        },
+        {
+          "$ref": "#/$defs/datetimePickerElement"
+        },
+        {
+          "$ref": "#/$defs/emailInputElement"
+        },
+        {
+          "$ref": "#/$defs/fileInputElement"
+        },
+        {
+          "$ref": "#/$defs/multiStaticSelectElement"
+        },
+        {
+          "$ref": "#/$defs/multiExternalSelectElement"
+        },
+        {
+          "$ref": "#/$defs/multiUsersSelectElement"
+        },
+        {
+          "$ref": "#/$defs/multiConversationsSelectElement"
+        },
+        {
+          "$ref": "#/$defs/multiChannelsSelectElement"
+        },
+        {
+          "$ref": "#/$defs/numberInputElement"
+        },
+        {
+          "$ref": "#/$defs/plainTextInputElement"
+        },
+        {
+          "$ref": "#/$defs/radioButtonsElement"
+        },
+        {
+          "$ref": "#/$defs/richTextInputElement"
+        },
+        {
+          "$ref": "#/$defs/staticSelectElement"
+        },
+        {
+          "$ref": "#/$defs/externalSelectElement"
+        },
+        {
+          "$ref": "#/$defs/usersSelectElement"
+        },
+        {
+          "$ref": "#/$defs/conversationsSelectElement"
+        },
+        {
+          "$ref": "#/$defs/channelsSelectElement"
+        },
+        {
+          "$ref": "#/$defs/timePickerElement"
+        },
+        {
+          "$ref": "#/$defs/urlInputElement"
+        }
+      ]
+    },
+    "sectionElement": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/buttonElement"
+        },
+        {
+          "$ref": "#/$defs/checkboxesElement"
+        },
+        {
+          "$ref": "#/$defs/datePickerElement"
+        },
+        {
+          "$ref": "#/$defs/imageElement"
+        },
+        {
+          "$ref": "#/$defs/multiStaticSelectElement"
+        },
+        {
+          "$ref": "#/$defs/multiExternalSelectElement"
+        },
+        {
+          "$ref": "#/$defs/multiUsersSelectElement"
+        },
+        {
+          "$ref": "#/$defs/multiConversationsSelectElement"
+        },
+        {
+          "$ref": "#/$defs/multiChannelsSelectElement"
+        },
+        {
+          "$ref": "#/$defs/overflowElement"
+        },
+        {
+          "$ref": "#/$defs/radioButtonsElement"
+        },
+        {
+          "$ref": "#/$defs/staticSelectElement"
+        },
+        {
+          "$ref": "#/$defs/externalSelectElement"
+        },
+        {
+          "$ref": "#/$defs/usersSelectElement"
+        },
+        {
+          "$ref": "#/$defs/conversationsSelectElement"
+        },
+        {
+          "$ref": "#/$defs/channelsSelectElement"
+        },
+        {
+          "$ref": "#/$defs/timePickerElement"
+        },
+        {
+          "$ref": "#/$defs/workflowButtonElement"
+        }
+      ]
+    },
+    "contextElement": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/textObject"
+        },
+        {
+          "$ref": "#/$defs/imageElement"
+        }
+      ]
+    },
+    "actionsBlock": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "actions"
+          ]
+        },
+        "elements": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 25,
+          "items": {
+            "$ref": "#/$defs/actionElement"
+          }
+        },
+        "block_id": {
+          "$ref": "#/$defs/blockId"
+        }
+      },
+      "required": [
+        "type",
+        "elements",
+        "block_id"
+      ],
+      "additionalProperties": false
+    },
+    "contextBlock": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "context"
+          ]
+        },
+        "elements": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": {
+            "$ref": "#/$defs/contextElement"
+          }
+        },
+        "block_id": {
+          "$ref": "#/$defs/blockId"
+        }
+      },
+      "required": [
+        "type",
+        "elements",
+        "block_id"
+      ],
+      "additionalProperties": false
+    },
+    "dividerBlock": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "divider"
+          ]
+        },
+        "block_id": {
+          "$ref": "#/$defs/blockId"
+        }
+      },
+      "required": [
+        "type",
+        "block_id"
+      ],
+      "additionalProperties": false
+    },
+    "fileBlock": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "file"
+          ]
+        },
+        "external_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "remote"
+          ]
+        },
+        "block_id": {
+          "$ref": "#/$defs/blockId"
+        }
+      },
+      "required": [
+        "type",
+        "external_id",
+        "source",
+        "block_id"
+      ],
+      "additionalProperties": false
+    },
+    "headerBlock": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "header"
+          ]
+        },
+        "text": {
+          "$ref": "#/$defs/plainTextObject150"
+        },
+        "block_id": {
+          "$ref": "#/$defs/blockId"
+        }
+      },
+      "required": [
+        "type",
+        "text",
+        "block_id"
+      ],
+      "additionalProperties": false
+    },
+    "imageBlock": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "image"
+              ]
+            },
+            "alt_text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            "image_url": {
+              "$ref": "#/$defs/url"
+            },
+            "title": {
+              "$ref": "#/$defs/plainTextObject2000"
+            },
+            "block_id": {
+              "$ref": "#/$defs/blockId"
+            }
+          },
+          "required": [
+            "type",
+            "alt_text",
+            "image_url",
+            "title",
+            "block_id"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "image"
+              ]
+            },
+            "alt_text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            "slack_file": {
+              "$ref": "#/$defs/slackFileObject"
+            },
+            "title": {
+              "$ref": "#/$defs/plainTextObject2000"
+            },
+            "block_id": {
+              "$ref": "#/$defs/blockId"
+            }
+          },
+          "required": [
+            "type",
+            "alt_text",
+            "slack_file",
+            "title",
+            "block_id"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "inputBlock": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "input"
+          ]
+        },
+        "label": {
+          "$ref": "#/$defs/plainTextObject2000"
+        },
+        "element": {
+          "$ref": "#/$defs/inputElement"
+        },
+        "dispatch_action": {
+          "type": "boolean"
+        },
+        "hint": {
+          "$ref": "#/$defs/plainTextObject2000"
+        },
+        "optional": {
+          "type": "boolean"
+        },
+        "block_id": {
+          "$ref": "#/$defs/blockId"
+        }
+      },
+      "required": [
+        "type",
+        "label",
+        "element",
+        "dispatch_action",
+        "hint",
+        "optional",
+        "block_id"
+      ],
+      "additionalProperties": false
+    },
+    "markdownBlock": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "markdown"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 12000
+        },
+        "block_id": {
+          "$ref": "#/$defs/blockId"
+        }
+      },
+      "required": [
+        "type",
+        "text",
+        "block_id"
+      ],
+      "additionalProperties": false
+    },
+    "sectionBlock": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "section"
+          ]
+        },
+        "text": {
+          "$ref": "#/$defs/textObject"
+        },
+        "fields": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": {
+            "$ref": "#/$defs/textObject"
+          }
+        },
+        "accessory": {
+          "$ref": "#/$defs/sectionElement"
+        },
+        "expand": {
+          "type": "boolean"
+        },
+        "block_id": {
+          "$ref": "#/$defs/blockId"
+        }
+      },
+      "required": [
+        "type",
+        "text",
+        "fields",
+        "accessory",
+        "expand",
+        "block_id"
+      ],
+      "additionalProperties": false
+    },
+    "tableBlock": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "table"
+          ]
+        },
+        "rows": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 100,
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/rawTextObject"
+                },
+                {
+                  "$ref": "#/$defs/richTextBlock"
+                }
+              ]
+            }
+          }
+        },
+        "column_settings": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/columnSettingsObject"
+          }
+        },
+        "block_id": {
+          "$ref": "#/$defs/blockId"
+        }
+      },
+      "required": [
+        "type",
+        "rows",
+        "column_settings",
+        "block_id"
+      ],
+      "additionalProperties": false
+    },
+    "videoBlock": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "video"
+          ]
+        },
+        "title": {
+          "$ref": "#/$defs/plainTextObject200"
+        },
+        "title_url": {
+          "$ref": "#/$defs/url"
+        },
+        "description": {
+          "$ref": "#/$defs/plainTextObject200"
+        },
+        "alt_text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "video_url": {
+          "$ref": "#/$defs/url"
+        },
+        "thumbnail_url": {
+          "$ref": "#/$defs/url"
+        },
+        "provider_icon_url": {
+          "$ref": "#/$defs/url"
+        },
+        "provider_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 50
+        },
+        "author_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 50
+        },
+        "block_id": {
+          "$ref": "#/$defs/blockId"
+        }
+      },
+      "required": [
+        "type",
+        "title",
+        "title_url",
+        "description",
+        "alt_text",
+        "video_url",
+        "thumbnail_url",
+        "provider_icon_url",
+        "provider_name",
+        "author_name",
+        "block_id"
+      ],
+      "additionalProperties": false
+    },
+    "block": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/actionsBlock"
+        },
+        {
+          "$ref": "#/$defs/contextBlock"
+        },
+        {
+          "$ref": "#/$defs/dividerBlock"
+        },
+        {
+          "$ref": "#/$defs/fileBlock"
+        },
+        {
+          "$ref": "#/$defs/headerBlock"
+        },
+        {
+          "$ref": "#/$defs/imageBlock"
+        },
+        {
+          "$ref": "#/$defs/inputBlock"
+        },
+        {
+          "$ref": "#/$defs/markdownBlock"
+        },
+        {
+          "$ref": "#/$defs/richTextBlock"
+        },
+        {
+          "$ref": "#/$defs/sectionBlock"
+        },
+        {
+          "$ref": "#/$defs/tableBlock"
+        },
+        {
+          "$ref": "#/$defs/videoBlock"
+        }
+      ]
+    }
+  }
 }
