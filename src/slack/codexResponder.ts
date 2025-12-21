@@ -103,6 +103,8 @@ function buildRetryPrompt(basePrompt: string, error: string | null, lastOutput: 
     `Slack error: ${error ?? 'unknown'}`,
     `Previous response JSON: ${outputSnippet}`,
     'Return a corrected Block Kit JSON object that satisfies the output schema.',
+    'Do NOT include fields, accessories, buttons, or placeholder URLs unless the user explicitly asked.',
+    'For simple replies, return only: {"text": "...", "blocks":[{"type":"section","text":{"type":"mrkdwn","text":"..."}}]}',
   ].join('\n');
 }
 
