@@ -8,13 +8,13 @@ export interface CodexRunResult {
 }
 
 export interface CodexThread {
-  id: string;
+  id: string | null;
   run: (prompt: string, options: { outputSchema: object }) => Promise<CodexRunResult>;
 }
 
 export interface CodexClient {
   startThread: (options: ThreadOptions) => Promise<CodexThread>;
-  getThread: (id: string, options: ThreadOptions) => Promise<CodexThread>;
+  resumeThread: (id: string, options: ThreadOptions) => Promise<CodexThread>;
 }
 
 export interface ThreadOptions {
@@ -41,7 +41,10 @@ export async function createCodexClient(): Promise<CodexClient> {
       }
       return client.startThread(options);
     },
-    getThread: async (id, options) => {
+    resumeThread: async (id, options) => {
+      if (typeof client.resumeThread === 'function') {
+        return client.resumeThread(id, options);
+      }
       if (typeof client.getThread === 'function') {
         return client.getThread(id, options);
       }
@@ -51,7 +54,7 @@ export async function createCodexClient(): Promise<CodexClient> {
       if (typeof client.thread === 'function') {
         return client.thread(id, options);
       }
-      throw new Error('Codex SDK missing getThread() method.');
+      throw new Error('Codex SDK missing resumeThread() method.');
     },
   };
 }

@@ -52,19 +52,14 @@ export async function handleAppMention(
   const threadTs = event.thread_ts ?? event.ts;
   const threadKey = `${event.channel}:${threadTs}`;
 
-  let record = store.get(threadKey);
+  const record = store.get(threadKey);
   let thread;
   const threadOptions = buildThreadOptions(config.workDir, config.sandbox, config.codexArgs);
 
-  if (record) {
-    thread = await codex.getThread(record.codexThreadId, threadOptions);
+  if (record?.codexThreadId) {
+    thread = await codex.resumeThread(record.codexThreadId, threadOptions);
   } else {
     thread = await codex.startThread(threadOptions);
-    record = {
-      threadKey,
-      codexThreadId: thread.id,
-    };
-    await store.set(record);
   }
 
   const replies = await retryOnce(
@@ -72,13 +67,13 @@ export async function handleAppMention(
       client.conversations.replies({
         channel: event.channel,
         ts: threadTs,
-        oldest: record.lastResponseTs,
+        oldest: record?.lastResponseTs,
       }),
     logger,
     'conversations.replies',
   );
 
-  const messages = filterMessages(replies.messages ?? [], botUserId, record.lastResponseTs);
+  const messages = filterMessages(replies.messages ?? [], botUserId, record?.lastResponseTs);
   const prompt = buildPrompt(event.channel, threadTs, messages, botUserId);
 
   let output: BlockKitMessage;
@@ -113,13 +108,17 @@ export async function handleAppMention(
     'chat.postMessage',
   );
 
-  const lastResponseTs = response.ts ?? record.lastResponseTs ?? threadTs;
-  const lastSeenUserTs = messages.length > 0 ? messages[messages.length - 1].ts : record.lastSeenUserTs;
+  const lastResponseTs = response.ts ?? record?.lastResponseTs ?? threadTs;
+  const lastSeenUserTs = messages.length > 0 ? messages[messages.length - 1].ts : record?.lastSeenUserTs;
+  const threadId = thread.id ?? record?.codexThreadId;
+  const patch: Partial<ThreadRecord> = { lastResponseTs, lastSeenUserTs };
+  if (threadId) patch.codexThreadId = threadId;
 
-  await store.update(threadKey, {
-    lastResponseTs,
-    lastSeenUserTs,
-  } as Partial<ThreadRecord>);
+  if (record) {
+    await store.update(threadKey, patch);
+  } else {
+    await store.set({ threadKey, ...patch });
+  }
 
   logger.info(`Responded to ${threadKey}`);
 }

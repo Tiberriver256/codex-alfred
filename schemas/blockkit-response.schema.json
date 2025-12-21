@@ -45,49 +45,49 @@
     "plainTextObject30": {
       "allOf": [
         { "$ref": "#/$defs/plainTextObject" },
-        { "properties": { "text": { "maxLength": 30 } } }
+        { "type": "object", "properties": { "text": { "maxLength": 30 } } }
       ]
     },
     "plainTextObject75": {
       "allOf": [
         { "$ref": "#/$defs/plainTextObject" },
-        { "properties": { "text": { "maxLength": 75 } } }
+        { "type": "object", "properties": { "text": { "maxLength": 75 } } }
       ]
     },
     "plainTextObject100": {
       "allOf": [
         { "$ref": "#/$defs/plainTextObject" },
-        { "properties": { "text": { "maxLength": 100 } } }
+        { "type": "object", "properties": { "text": { "maxLength": 100 } } }
       ]
     },
     "plainTextObject150": {
       "allOf": [
         { "$ref": "#/$defs/plainTextObject" },
-        { "properties": { "text": { "maxLength": 150 } } }
+        { "type": "object", "properties": { "text": { "maxLength": 150 } } }
       ]
     },
     "plainTextObject200": {
       "allOf": [
         { "$ref": "#/$defs/plainTextObject" },
-        { "properties": { "text": { "maxLength": 200 } } }
+        { "type": "object", "properties": { "text": { "maxLength": 200 } } }
       ]
     },
     "plainTextObject300": {
       "allOf": [
         { "$ref": "#/$defs/plainTextObject" },
-        { "properties": { "text": { "maxLength": 300 } } }
+        { "type": "object", "properties": { "text": { "maxLength": 300 } } }
       ]
     },
     "plainTextObject1500": {
       "allOf": [
         { "$ref": "#/$defs/plainTextObject" },
-        { "properties": { "text": { "maxLength": 1500 } } }
+        { "type": "object", "properties": { "text": { "maxLength": 1500 } } }
       ]
     },
     "plainTextObject2000": {
       "allOf": [
         { "$ref": "#/$defs/plainTextObject" },
-        { "properties": { "text": { "maxLength": 2000 } } }
+        { "type": "object", "properties": { "text": { "maxLength": 2000 } } }
       ]
     },
     "mrkdwnTextObject": {

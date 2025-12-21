@@ -3,7 +3,7 @@ import path from 'node:path';
 
 export interface ThreadRecord {
   threadKey: string;
-  codexThreadId: string;
+  codexThreadId?: string;
   lastResponseTs?: string;
   lastSeenUserTs?: string;
 }
