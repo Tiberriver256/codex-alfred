@@ -1,5 +1,5 @@
 import { extractStructuredOutput, type CodexThread } from '../codex/client.js';
-import { type BlockKitMessage, type BlockKitValidationResult } from '../blockkit/validator.js';
+import { type BlockKitMessage } from '../blockkit/validator.js';
 import { type Logger } from '../logger.js';
 import { type SlackClientLike } from './types.js';
 
@@ -7,14 +7,13 @@ export async function runCodexAndPost(params: {
   thread: CodexThread;
   prompt: string;
   outputSchema: object;
-  validateBlockKit: (payload: unknown) => BlockKitValidationResult;
   logger: Logger;
   threadKey: string;
   client: SlackClientLike;
   channel: string;
   threadTs: string;
 }): Promise<{ response: { ts?: string }; output: BlockKitMessage }> {
-  const { thread, prompt, outputSchema, validateBlockKit, logger, threadKey, client, channel, threadTs } = params;
+  const { thread, prompt, outputSchema, logger, threadKey, client, channel, threadTs } = params;
   let lastError: string | null = null;
   let lastOutput: unknown = null;
   const thinking = await client.chat.postMessage({
@@ -41,15 +40,11 @@ export async function runCodexAndPost(params: {
     const usage = (result as { usage?: unknown }).usage;
     const structured = extractStructuredOutput(result);
     if (logger.debug) {
-      logger.debug('Codex structured output', { threadKey, attempt, output: structured });
+      const outputJson = safeStringify(structured);
+      logger.debug('Codex structured output', { threadKey, attempt, output: structured, output_json: outputJson });
     }
     lastOutput = structured;
     logger.info('Codex run complete', { threadKey, latencyMs, usage, attempt });
-
-    const validation = validateBlockKit(structured);
-    if (!validation.ok) {
-      logger.warn('Block Kit validation failed', { threadKey, attempt, errors: validation.errors });
-    }
 
     const output = coerceBlockKitMessage(structured);
     if (!output) {
@@ -115,4 +110,12 @@ function formatSlackError(error: unknown): string {
   if (error instanceof Error) return error.message;
   if (typeof error === 'string') return error;
   return 'Unknown Slack error';
+}
+
+function safeStringify(value: unknown): string {
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return '"[unserializable]"';
+  }
 }

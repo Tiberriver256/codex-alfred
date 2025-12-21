@@ -1,7 +1,6 @@
 import { type Logger } from '../logger.js';
 import { type ThreadStore, type ThreadRecord } from '../store/threadStore.js';
 import { buildThreadOptions, type CodexClient } from '../codex/client.js';
-import { type BlockKitValidationResult } from '../blockkit/validator.js';
 import { type AppConfig } from '../config.js';
 import { runCodexAndPost } from './codexResponder.js';
 import { type SlackClientLike, type SlackMessage, type MentionEvent } from './types.js';
@@ -13,8 +12,6 @@ export interface MentionDeps {
   config: AppConfig;
   logger: Logger;
   botUserId: string;
-  validateBlockKit: (payload: unknown) => BlockKitValidationResult;
-  blockKitSchema: object;
   blockKitOutputSchema: object;
 }
 
@@ -23,8 +20,7 @@ export async function handleAppMention(
   deps: MentionDeps,
 ): Promise<void> {
   const { event, ack } = params;
-  const { client, store, codex, config, logger, botUserId, validateBlockKit, blockKitSchema, blockKitOutputSchema } =
-    deps;
+  const { client, store, codex, config, logger, botUserId, blockKitOutputSchema } = deps;
 
   await ack();
 
@@ -59,7 +55,6 @@ export async function handleAppMention(
     thread,
     prompt,
     outputSchema: blockKitOutputSchema,
-    validateBlockKit,
     logger,
     threadKey,
     client,

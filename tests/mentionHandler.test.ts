@@ -5,7 +5,6 @@ import path from 'node:path';
 import os from 'node:os';
 import { ThreadStore } from '../src/store/threadStore.js';
 import { handleAppMention } from '../src/slack/mentionHandler.js';
-import { type BlockKitValidationResult } from '../src/blockkit/validator.js';
 import { type AppConfig } from '../src/config.js';
 import { type CodexClient, type CodexThread } from '../src/codex/client.js';
 
@@ -74,8 +73,6 @@ test('handleAppMention posts response and updates store', async () => {
     },
   };
 
-  const validateBlockKit = (_payload: unknown): BlockKitValidationResult => ({ ok: true });
-
   await handleAppMention(
     {
       event: { channel: 'C1', ts: '1.0', text: '<@B1> hello' },
@@ -88,8 +85,6 @@ test('handleAppMention posts response and updates store', async () => {
       config: baseConfig,
       logger,
       botUserId: 'B1',
-      validateBlockKit,
-      blockKitSchema: {},
       blockKitOutputSchema: {},
     },
   );
@@ -152,8 +147,6 @@ test('handleAppMention retries when Slack rejects the response', async () => {
     },
   };
 
-  const validateBlockKit = (_payload: unknown): BlockKitValidationResult => ({ ok: true });
-
   await handleAppMention(
     { event: { channel: 'C2', ts: '1.0', text: 'hey' }, ack: async () => undefined },
     {
@@ -163,8 +156,6 @@ test('handleAppMention retries when Slack rejects the response', async () => {
       config: baseConfig,
       logger,
       botUserId: 'B1',
-      validateBlockKit,
-      blockKitSchema: {},
       blockKitOutputSchema: {},
     },
   );
@@ -208,8 +199,6 @@ test('handleAppMention only injects guidance on first turn', async () => {
     },
   };
 
-  const validateBlockKit = (_payload: unknown): BlockKitValidationResult => ({ ok: true });
-
   await handleAppMention(
     {
       event: { channel: 'C1', ts: '1.0', text: '<@B1> hello' },
@@ -222,8 +211,6 @@ test('handleAppMention only injects guidance on first turn', async () => {
       config: baseConfig,
       logger,
       botUserId: 'B1',
-      validateBlockKit,
-      blockKitSchema: {},
       blockKitOutputSchema: {},
     },
   );
@@ -240,8 +227,6 @@ test('handleAppMention only injects guidance on first turn', async () => {
       config: baseConfig,
       logger,
       botUserId: 'B1',
-      validateBlockKit,
-      blockKitSchema: {},
       blockKitOutputSchema: {},
     },
   );

@@ -1,7 +1,6 @@
 import { type Logger } from '../logger.js';
 import { type ThreadStore, type ThreadRecord } from '../store/threadStore.js';
 import { buildThreadOptions, type CodexClient } from '../codex/client.js';
-import { type BlockKitValidationResult } from '../blockkit/validator.js';
 import { type AppConfig } from '../config.js';
 import { runCodexAndPost } from './codexResponder.js';
 import { type SlackClientLike, type ActionBody } from './types.js';
@@ -13,8 +12,6 @@ export interface ActionDeps {
   config: AppConfig;
   logger: Logger;
   botUserId: string;
-  validateBlockKit: (payload: unknown) => BlockKitValidationResult;
-  blockKitSchema: object;
   blockKitOutputSchema: object;
 }
 
@@ -23,7 +20,7 @@ export async function handleAction(
   deps: ActionDeps,
 ): Promise<void> {
   const { body, ack } = params;
-  const { client, store, codex, config, logger, botUserId, validateBlockKit, blockKitOutputSchema } = deps;
+  const { client, store, codex, config, logger, botUserId, blockKitOutputSchema } = deps;
 
   await ack();
 
@@ -61,7 +58,6 @@ export async function handleAction(
     thread,
     prompt,
     outputSchema: blockKitOutputSchema,
-    validateBlockKit,
     logger,
     threadKey,
     client,

@@ -5,7 +5,6 @@ import path from 'node:path';
 import os from 'node:os';
 import { ThreadStore } from '../src/store/threadStore.js';
 import { handleAction } from '../src/slack/actionHandler.js';
-import { type BlockKitValidationResult } from '../src/blockkit/validator.js';
 import { type AppConfig } from '../src/config.js';
 import { type CodexClient, type CodexThread } from '../src/codex/client.js';
 
@@ -74,8 +73,6 @@ test('handleAction posts response and updates store', async () => {
     },
   };
 
-  const validateBlockKit = (_payload: unknown): BlockKitValidationResult => ({ ok: true });
-
   await handleAction(
     {
       body: {
@@ -93,8 +90,6 @@ test('handleAction posts response and updates store', async () => {
       config: baseConfig,
       logger,
       botUserId: 'B1',
-      validateBlockKit,
-      blockKitSchema: {},
       blockKitOutputSchema: {},
     },
   );

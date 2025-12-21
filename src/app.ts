@@ -3,7 +3,7 @@ import { App } from '@slack/bolt';
 import { type AppConfig } from './config.js';
 import { type Logger } from './logger.js';
 import { ThreadStore } from './store/threadStore.js';
-import { loadBlockKitSchema, loadBlockKitOutputSchema, createBlockKitValidator } from './blockkit/validator.js';
+import { loadBlockKitOutputSchema } from './blockkit/validator.js';
 import { createCodexClient } from './codex/client.js';
 import { handleAppMention } from './slack/mentionHandler.js';
 import { handleAction } from './slack/actionHandler.js';
@@ -17,9 +17,7 @@ export async function startApp(config: AppConfig, logger: Logger): Promise<void>
   const store = new ThreadStore(path.join(config.dataDir, 'threads.json'));
   await store.load();
 
-  const blockKitSchema = await loadBlockKitSchema();
   const blockKitOutputSchema = await loadBlockKitOutputSchema();
-  const { validateBlockKit } = createBlockKitValidator(blockKitSchema);
 
   const codex = await createCodexClient();
 
@@ -46,8 +44,6 @@ export async function startApp(config: AppConfig, logger: Logger): Promise<void>
         config,
         logger,
         botUserId,
-        validateBlockKit,
-        blockKitSchema,
         blockKitOutputSchema,
       },
     );
@@ -64,8 +60,6 @@ export async function startApp(config: AppConfig, logger: Logger): Promise<void>
         config,
         logger,
         botUserId,
-        validateBlockKit,
-        blockKitSchema,
         blockKitOutputSchema,
       },
     );
