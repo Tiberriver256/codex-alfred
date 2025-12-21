@@ -161,8 +161,25 @@ export function buildPrompt(
     lines.push('- (no new messages)');
   }
 
+  const hints: string[] = [];
+  if (wantsChecklist(messages)) {
+    hints.push(
+      'Checklist request: respond with an input block that uses a checkboxes element (action_id required) and a short label. Do not return a plain markdown list.',
+    );
+  }
+
   const introLines = intro ? [intro, ''] : [];
-  return [...introLines, 'Messages since last response:', ...lines, '', 'Respond with Block Kit JSON that matches the output schema.'].join(
-    '\n',
-  );
+  const hintLines = hints.length > 0 ? [...hints, ''] : [];
+  return [
+    ...introLines,
+    ...hintLines,
+    'Messages since last response:',
+    ...lines,
+    '',
+    'Respond with Block Kit JSON that matches the output schema.',
+  ].join('\n');
+}
+
+function wantsChecklist(messages: SlackMessage[]): boolean {
+  return messages.some((msg) => /check\s*list|checklist|to[-\s]?do list|todo list/i.test(msg.text ?? ''));
 }

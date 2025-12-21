@@ -236,3 +236,53 @@ test('handleAppMention only injects guidance on first turn', async () => {
   assert.match(prompts[0], /Conversations in Block Kit/);
   assert.doesNotMatch(prompts[1], /Conversations in Block Kit/);
 });
+
+test('handleAppMention adds checklist hint when user requests a checklist', async () => {
+  const store = await makeStore();
+  const prompts: string[] = [];
+
+  const fakeThread: CodexThread = {
+    id: 'thread-1',
+    run: async (prompt) => {
+      prompts.push(prompt);
+      return { output: { text: 'Checklist', blocks: [{ type: 'section', text: { type: 'mrkdwn', text: 'Checklist' } }] } };
+    },
+  };
+
+  const codex: CodexClient = {
+    startThread: async () => fakeThread,
+    resumeThread: async () => fakeThread,
+  };
+
+  const client = {
+    conversations: {
+      replies: async () => ({
+        messages: [{ ts: '1.0', user: 'U1', text: '<@B1> Give me a checklist' }],
+      }),
+    },
+    chat: {
+      postMessage: async () => ({ ts: '2.0' }),
+      update: async () => ({ ts: '3.0' }),
+    },
+  };
+
+  await handleAppMention(
+    {
+      event: { channel: 'C1', ts: '1.0', text: '<@B1> Give me a checklist' },
+      ack: async () => undefined,
+    },
+    {
+      client,
+      store,
+      codex,
+      config: baseConfig,
+      logger,
+      botUserId: 'B1',
+      blockKitOutputSchema: {},
+    },
+  );
+
+  assert.equal(prompts.length, 1);
+  assert.match(prompts[0], /Checklist request:/);
+  assert.match(prompts[0], /checkboxes element/);
+});

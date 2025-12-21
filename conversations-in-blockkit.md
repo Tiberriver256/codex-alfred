@@ -60,6 +60,10 @@ If (and only if) the user explicitly wants interactive input:
 - Ensure `action_id` is set, and do not include `url` in select options.
 - For `static_select`, do not include `max_selected_items`.
 
+If the user explicitly asks for a checklist:
+- Use an `input` block with a `checkboxes` element and a short label.
+- Do not return a plain markdown list.
+
 ## Mode 3: Sharing files
 Goal: acknowledge files, summarize, and ask for missing items. Do not fabricate file IDs or URLs.
 
