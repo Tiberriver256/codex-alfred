@@ -1,4 +1,6 @@
+#!/usr/bin/env node
 import { readFileSync } from 'node:fs';
+import { mkdir } from 'node:fs/promises';
 import { parseCli, formatHelp } from './config.js';
 import { createLogger } from './logger.js';
 import { startApp } from './app.js';
@@ -24,6 +26,7 @@ async function main() {
   const logger = createLogger(config.logLevel);
 
   try {
+    await mkdir(config.dataDir, { recursive: true });
     await startApp(config, logger);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
