@@ -41,13 +41,13 @@ test('handleAppMention posts response and updates store', async () => {
     id: 'thread-1',
     run: async (prompt) => {
       prompts.push(prompt);
-      return { output: { text: 'Hello', blocks: [] } };
+      return { output: { text: 'Hello', blocks: [{ type: 'section', text: { type: 'mrkdwn', text: 'Hello' } }] } };
     },
   };
 
   const codex: CodexClient = {
     startThread: async () => fakeThread,
-    getThread: async () => fakeThread,
+    resumeThread: async () => fakeThread,
   };
 
   const posted: { text?: string; blocks?: unknown[] } = {};
@@ -85,44 +85,61 @@ test('handleAppMention posts response and updates store', async () => {
       botUserId: 'B1',
       validateBlockKit,
       blockKitSchema: {},
+      blockKitOutputSchema: {},
     },
   );
 
   assert.equal(prompts.length, 1);
   assert.match(prompts[0], /Thread: C1/);
   assert.equal(posted.text, 'Hello');
+  assert.equal(Array.isArray(posted.blocks), true);
 
   const record = store.get('C1:1.0');
   assert.equal(record?.lastResponseTs, '3.0');
+  assert.equal(record?.codexThreadId, 'thread-1');
 });
 
-test('handleAppMention falls back on invalid block kit', async () => {
+test('handleAppMention retries when Slack rejects the response', async () => {
   const store = await makeStore();
+  const prompts: string[] = [];
+  let runCount = 0;
 
   const fakeThread: CodexThread = {
     id: 'thread-1',
-    run: async () => ({ output: { text: 'Bad', blocks: [] } }),
+    run: async (prompt) => {
+      runCount += 1;
+      prompts.push(prompt);
+      if (runCount === 1) {
+        return { output: { text: 'First try', blocks: [{ type: 'section', text: { type: 'mrkdwn', text: 'First' } }] } };
+      }
+      return { output: { text: 'Second try', blocks: [{ type: 'section', text: { type: 'mrkdwn', text: 'Second' } }] } };
+    },
   };
 
   const codex: CodexClient = {
     startThread: async () => fakeThread,
-    getThread: async () => fakeThread,
+    resumeThread: async () => fakeThread,
   };
 
   let postedText = '';
+  let postCount = 0;
   const client = {
     conversations: {
       replies: async () => ({ messages: [{ ts: '1.0', user: 'U1', text: 'hey' }] }),
     },
     chat: {
       postMessage: async ({ text }: { text: string }) => {
+        postCount += 1;
+        if (postCount === 1) {
+          throw new Error('invalid_blocks');
+        }
         postedText = text;
         return { ts: '2.0' };
       },
     },
   };
 
-  const validateBlockKit = (_payload: unknown): BlockKitValidationResult => ({ ok: false, errors: ['bad'] });
+  const validateBlockKit = (_payload: unknown): BlockKitValidationResult => ({ ok: true });
 
   await handleAppMention(
     { event: { channel: 'C2', ts: '1.0', text: 'hey' }, ack: async () => undefined },
@@ -135,8 +152,12 @@ test('handleAppMention falls back on invalid block kit', async () => {
       botUserId: 'B1',
       validateBlockKit,
       blockKitSchema: {},
+      blockKitOutputSchema: {},
     },
   );
 
-  assert.match(postedText, /Alfred error/);
+  assert.equal(runCount, 2);
+  assert.equal(postCount, 2);
+  assert.equal(postedText, 'Second try');
+  assert.match(prompts[1], /Slack error: invalid_blocks/);
 });
