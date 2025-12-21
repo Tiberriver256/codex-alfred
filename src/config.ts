@@ -80,9 +80,10 @@ export function parseCli(argv: string[], env = process.env, cwd = process.cwd())
 
   const logLevel = (flags['log-level'] as AppConfig['logLevel']) ?? (env.ALFRED_LOG_LEVEL as AppConfig['logLevel']) ?? 'info';
 
-  const finalCodexArgs = sandbox.mode === 'docker' && !codexArgs.includes('--yolo')
-    ? ['--yolo', ...codexArgs]
-    : codexArgs;
+  const withDefaults = applyCodexDefaults(codexArgs);
+  const finalCodexArgs = sandbox.mode === 'docker' && !withDefaults.includes('--yolo')
+    ? ['--yolo', ...withDefaults]
+    : withDefaults;
 
   return {
     config: {
@@ -97,6 +98,39 @@ export function parseCli(argv: string[], env = process.env, cwd = process.cwd())
     showHelp: false,
     showVersion: false,
   };
+}
+
+function applyCodexDefaults(args: string[]): string[] {
+  const next = [...args];
+  const hasModel = hasFlag(next, '--model') || hasFlag(next, '-m');
+  if (!hasModel) {
+    next.push('--model', 'codex-5.2');
+  }
+
+  const hasReasoning = hasConfig(next, 'model_reasoning_effort');
+  if (!hasReasoning) {
+    next.push('--config', 'model_reasoning_effort="high"');
+  }
+  return next;
+}
+
+function hasFlag(args: string[], flag: string): boolean {
+  if (args.includes(flag)) return true;
+  return args.some((arg) => arg.startsWith(`${flag}=`));
+}
+
+function hasConfig(args: string[], key: string): boolean {
+  for (let i = 0; i < args.length; i += 1) {
+    const arg = args[i];
+    if (arg === '--config') {
+      const value = args[i + 1] ?? '';
+      if (value.includes(key)) return true;
+    }
+    if (arg.startsWith('--config=')) {
+      if (arg.includes(key)) return true;
+    }
+  }
+  return false;
 }
 
 export function formatHelp(): string {
