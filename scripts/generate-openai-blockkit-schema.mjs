@@ -55,9 +55,18 @@ function isRequiredOnlySchema(schema) {
   return keys.every((k) => k === 'required');
 }
 
-function hasOnlyRequiredAnyOf(list) {
-  if (!Array.isArray(list) || list.length === 0) return false;
-  return list.every(isRequiredOnlySchema);
+function getRequiredSets(list) {
+  if (!Array.isArray(list) || list.length === 0) return [];
+  if (!list.every(isRequiredOnlySchema)) return [];
+  return list
+    .map((entry) => entry.required)
+    .filter((value) => Array.isArray(value) && value.length > 0);
+}
+
+function choosePreferredRequired(requiredSets) {
+  if (requiredSets.length === 0) return null;
+  const withText = requiredSets.find((set) => set.includes('text'));
+  return withText ?? requiredSets[0];
 }
 
 function transform(node) {
@@ -69,11 +78,16 @@ function transform(node) {
   }
 
   let obj = clone(node);
+  const wasRequiredOnly = isRequiredOnlySchema(obj);
 
   for (const key of Object.keys(obj)) {
     if (UNSUPPORTED_KEYS.has(key)) {
       delete obj[key];
     }
+  }
+
+  if (wasRequiredOnly) {
+    return obj;
   }
 
   if (obj.allOf) {
@@ -98,33 +112,8 @@ function transform(node) {
   }
 
   if (obj.oneOf) {
-    if (hasOnlyRequiredAnyOf(obj.oneOf) && obj.properties) {
-      const requiredSets = obj.oneOf
-        .map((entry) => entry.required)
-        .filter((value) => Array.isArray(value));
-      const exclusiveKeys = new Set(requiredSets.flat());
-      const branches = requiredSets.map((requiredKeys) => {
-        const branch = clone(obj);
-        delete branch.oneOf;
-        const props = branch.properties ?? {};
-        const nextProps = {};
-        for (const [key, value] of Object.entries(props)) {
-          if (!exclusiveKeys.has(key) || requiredKeys.includes(key)) {
-            nextProps[key] = value;
-          }
-        }
-        branch.properties = nextProps;
-        return branch;
-      });
-      obj = { anyOf: branches };
-    } else {
-      obj.anyOf = obj.oneOf;
-      delete obj.oneOf;
-    }
-  }
-
-  if (obj.anyOf && hasOnlyRequiredAnyOf(obj.anyOf)) {
-    delete obj.anyOf;
+    obj.anyOf = obj.oneOf;
+    delete obj.oneOf;
   }
 
   if (obj.properties) {
@@ -149,6 +138,28 @@ function transform(node) {
       nextDefs[key] = transform(value);
     }
     obj.$defs = nextDefs;
+  }
+
+  const requiredSets = getRequiredSets(obj.anyOf);
+  if (obj.properties) {
+    let effectiveRequired = Array.isArray(obj.required) ? [...obj.required] : null;
+    const preferred = choosePreferredRequired(requiredSets);
+    if (preferred) {
+      effectiveRequired = Array.from(new Set([...(effectiveRequired ?? []), ...preferred]));
+    }
+    if (effectiveRequired) {
+      const nextProps = {};
+      for (const key of effectiveRequired) {
+        if (Object.prototype.hasOwnProperty.call(obj.properties, key)) {
+          nextProps[key] = obj.properties[key];
+        }
+      }
+      obj.properties = nextProps;
+    }
+  }
+
+  if (requiredSets.length > 0) {
+    delete obj.anyOf;
   }
 
   const hasObjectHints = obj.type === 'object' || obj.properties || obj.required || obj.additionalProperties;

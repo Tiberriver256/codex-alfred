@@ -40,199 +40,107 @@
         },
         "text": {
           "type": "string"
-        },
-        "emoji": {
-          "type": "boolean"
         }
       },
       "required": [
         "type",
-        "text",
-        "emoji"
+        "text"
       ],
       "additionalProperties": false
     },
     "plainTextObject30": {
       "type": "object",
       "properties": {
-        "type": {
-          "type": "string",
-          "enum": [
-            "plain_text"
-          ]
-        },
         "text": {
           "type": "string"
-        },
-        "emoji": {
-          "type": "boolean"
         }
       },
       "required": [
-        "type",
-        "text",
-        "emoji"
+        "text"
       ],
       "additionalProperties": false
     },
     "plainTextObject75": {
       "type": "object",
       "properties": {
-        "type": {
-          "type": "string",
-          "enum": [
-            "plain_text"
-          ]
-        },
         "text": {
           "type": "string"
-        },
-        "emoji": {
-          "type": "boolean"
         }
       },
       "required": [
-        "type",
-        "text",
-        "emoji"
+        "text"
       ],
       "additionalProperties": false
     },
     "plainTextObject100": {
       "type": "object",
       "properties": {
-        "type": {
-          "type": "string",
-          "enum": [
-            "plain_text"
-          ]
-        },
         "text": {
           "type": "string"
-        },
-        "emoji": {
-          "type": "boolean"
         }
       },
       "required": [
-        "type",
-        "text",
-        "emoji"
+        "text"
       ],
       "additionalProperties": false
     },
     "plainTextObject150": {
       "type": "object",
       "properties": {
-        "type": {
-          "type": "string",
-          "enum": [
-            "plain_text"
-          ]
-        },
         "text": {
           "type": "string"
-        },
-        "emoji": {
-          "type": "boolean"
         }
       },
       "required": [
-        "type",
-        "text",
-        "emoji"
+        "text"
       ],
       "additionalProperties": false
     },
     "plainTextObject200": {
       "type": "object",
       "properties": {
-        "type": {
-          "type": "string",
-          "enum": [
-            "plain_text"
-          ]
-        },
         "text": {
           "type": "string"
-        },
-        "emoji": {
-          "type": "boolean"
         }
       },
       "required": [
-        "type",
-        "text",
-        "emoji"
+        "text"
       ],
       "additionalProperties": false
     },
     "plainTextObject300": {
       "type": "object",
       "properties": {
-        "type": {
-          "type": "string",
-          "enum": [
-            "plain_text"
-          ]
-        },
         "text": {
           "type": "string"
-        },
-        "emoji": {
-          "type": "boolean"
         }
       },
       "required": [
-        "type",
-        "text",
-        "emoji"
+        "text"
       ],
       "additionalProperties": false
     },
     "plainTextObject1500": {
       "type": "object",
       "properties": {
-        "type": {
-          "type": "string",
-          "enum": [
-            "plain_text"
-          ]
-        },
         "text": {
           "type": "string"
-        },
-        "emoji": {
-          "type": "boolean"
         }
       },
       "required": [
-        "type",
-        "text",
-        "emoji"
+        "text"
       ],
       "additionalProperties": false
     },
     "plainTextObject2000": {
       "type": "object",
       "properties": {
-        "type": {
-          "type": "string",
-          "enum": [
-            "plain_text"
-          ]
-        },
         "text": {
           "type": "string"
-        },
-        "emoji": {
-          "type": "boolean"
         }
       },
       "required": [
-        "type",
-        "text",
-        "emoji"
+        "text"
       ],
       "additionalProperties": false
     },
@@ -247,15 +155,11 @@
         },
         "text": {
           "type": "string"
-        },
-        "verbatim": {
-          "type": "boolean"
         }
       },
       "required": [
         "type",
-        "text",
-        "verbatim"
+        "text"
       ],
       "additionalProperties": false
     },
@@ -302,21 +206,13 @@
         },
         "deny": {
           "$ref": "#/$defs/plainTextObject30"
-        },
-        "style": {
-          "enum": [
-            "primary",
-            "danger"
-          ],
-          "type": "string"
         }
       },
       "required": [
         "title",
         "text",
         "confirm",
-        "deny",
-        "style"
+        "deny"
       ],
       "additionalProperties": false
     },
@@ -328,15 +224,11 @@
         },
         "value": {
           "type": "string"
-        },
-        "description": {
-          "$ref": "#/$defs/plainTextObject75"
         }
       },
       "required": [
         "text",
-        "value",
-        "description"
+        "value"
       ],
       "additionalProperties": false
     },
@@ -348,19 +240,11 @@
         },
         "value": {
           "type": "string"
-        },
-        "description": {
-          "$ref": "#/$defs/plainTextObject75"
-        },
-        "url": {
-          "$ref": "#/$defs/url"
         }
       },
       "required": [
         "text",
-        "value",
-        "description",
-        "url"
+        "value"
       ],
       "additionalProperties": false
     },
@@ -420,19 +304,11 @@
             ],
             "type": "string"
           }
-        },
-        "exclude_bot_users": {
-          "type": "boolean"
-        },
-        "exclude_external_shared_channels": {
-          "type": "boolean"
         }
       },
       "additionalProperties": false,
       "required": [
-        "include",
-        "exclude_bot_users",
-        "exclude_external_shared_channels"
+        "include"
       ]
     },
     "inputParameterObject": {
@@ -456,19 +332,10 @@
       "properties": {
         "url": {
           "$ref": "#/$defs/url"
-        },
-        "customizable_input_parameters": {
-          "type": "array",
-          "minItems": 1,
-          "maxItems": 100,
-          "items": {
-            "$ref": "#/$defs/inputParameterObject"
-          }
         }
       },
       "required": [
-        "url",
-        "customizable_input_parameters"
+        "url"
       ],
       "additionalProperties": false
     },
@@ -485,31 +352,15 @@
       "additionalProperties": false
     },
     "slackFileObject": {
-      "anyOf": [
-        {
-          "type": "object",
-          "properties": {
-            "id": {
-              "type": "string"
-            }
-          },
-          "additionalProperties": false,
-          "required": [
-            "id"
-          ]
-        },
-        {
-          "type": "object",
-          "properties": {
-            "url": {
-              "$ref": "#/$defs/url"
-            }
-          },
-          "additionalProperties": false,
-          "required": [
-            "url"
-          ]
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
         }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id"
       ]
     },
     "richTextStyleObject": {
@@ -559,15 +410,11 @@
         },
         "text": {
           "type": "string"
-        },
-        "style": {
-          "$ref": "#/$defs/richTextStyleObject"
         }
       },
       "required": [
         "type",
-        "text",
-        "style"
+        "text"
       ],
       "additionalProperties": false
     },
@@ -582,15 +429,11 @@
         },
         "name": {
           "type": "string"
-        },
-        "unicode": {
-          "type": "string"
         }
       },
       "required": [
         "type",
-        "name",
-        "unicode"
+        "name"
       ],
       "additionalProperties": false
     },
@@ -605,23 +448,11 @@
         },
         "url": {
           "$ref": "#/$defs/url"
-        },
-        "text": {
-          "type": "string"
-        },
-        "unsafe": {
-          "type": "boolean"
-        },
-        "style": {
-          "$ref": "#/$defs/richTextStyleObject"
         }
       },
       "required": [
         "type",
-        "url",
-        "text",
-        "unsafe",
-        "style"
+        "url"
       ],
       "additionalProperties": false
     },
@@ -636,15 +467,11 @@
         },
         "user_id": {
           "type": "string"
-        },
-        "style": {
-          "$ref": "#/$defs/richTextStyleObject"
         }
       },
       "required": [
         "type",
-        "user_id",
-        "style"
+        "user_id"
       ],
       "additionalProperties": false
     },
@@ -659,15 +486,11 @@
         },
         "usergroup_id": {
           "type": "string"
-        },
-        "style": {
-          "$ref": "#/$defs/richTextStyleObject"
         }
       },
       "required": [
         "type",
-        "usergroup_id",
-        "style"
+        "usergroup_id"
       ],
       "additionalProperties": false
     },
@@ -682,15 +505,11 @@
         },
         "channel_id": {
           "type": "string"
-        },
-        "style": {
-          "$ref": "#/$defs/richTextStyleObject"
         }
       },
       "required": [
         "type",
-        "channel_id",
-        "style"
+        "channel_id"
       ],
       "additionalProperties": false
     },
@@ -708,20 +527,12 @@
         },
         "format": {
           "type": "string"
-        },
-        "url": {
-          "$ref": "#/$defs/url"
-        },
-        "fallback": {
-          "type": "string"
         }
       },
       "required": [
         "type",
         "timestamp",
-        "format",
-        "url",
-        "fallback"
+        "format"
       ],
       "additionalProperties": false
     },
@@ -845,29 +656,12 @@
           "items": {
             "$ref": "#/$defs/richTextSectionObject"
           }
-        },
-        "indent": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 8
-        },
-        "offset": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "border": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 1
         }
       },
       "required": [
         "type",
         "style",
-        "elements",
-        "indent",
-        "offset",
-        "border"
+        "elements"
       ],
       "additionalProperties": false
     },
@@ -886,17 +680,11 @@
           "items": {
             "$ref": "#/$defs/richTextElement"
           }
-        },
-        "border": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 1
         }
       },
       "required": [
         "type",
-        "elements",
-        "border"
+        "elements"
       ],
       "additionalProperties": false
     },
@@ -915,17 +703,11 @@
           "items": {
             "$ref": "#/$defs/richTextElement"
           }
-        },
-        "border": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 1
         }
       },
       "required": [
         "type",
-        "elements",
-        "border"
+        "elements"
       ],
       "additionalProperties": false
     },
@@ -957,15 +739,11 @@
               }
             ]
           }
-        },
-        "block_id": {
-          "$ref": "#/$defs/blockId"
         }
       },
       "required": [
         "type",
-        "elements",
-        "block_id"
+        "elements"
       ],
       "additionalProperties": false
     },
@@ -1004,36 +782,12 @@
         },
         "action_id": {
           "$ref": "#/$defs/actionId"
-        },
-        "url": {
-          "$ref": "#/$defs/url"
-        },
-        "value": {
-          "type": "string"
-        },
-        "style": {
-          "enum": [
-            "primary",
-            "danger"
-          ],
-          "type": "string"
-        },
-        "confirm": {
-          "$ref": "#/$defs/confirmObject"
-        },
-        "accessibility_label": {
-          "type": "string"
         }
       },
       "required": [
         "type",
         "text",
-        "action_id",
-        "url",
-        "value",
-        "style",
-        "confirm",
-        "accessibility_label"
+        "action_id"
       ],
       "additionalProperties": false
     },
@@ -1056,29 +810,12 @@
           "items": {
             "$ref": "#/$defs/optionObject"
           }
-        },
-        "initial_options": {
-          "type": "array",
-          "minItems": 1,
-          "maxItems": 10,
-          "items": {
-            "$ref": "#/$defs/optionObject"
-          }
-        },
-        "confirm": {
-          "$ref": "#/$defs/confirmObject"
-        },
-        "focus_on_load": {
-          "type": "boolean"
         }
       },
       "required": [
         "type",
         "action_id",
-        "options",
-        "initial_options",
-        "confirm",
-        "focus_on_load"
+        "options"
       ],
       "additionalProperties": false
     },
@@ -1093,28 +830,11 @@
         },
         "action_id": {
           "$ref": "#/$defs/actionId"
-        },
-        "initial_date": {
-          "type": "string",
-          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
-        },
-        "confirm": {
-          "$ref": "#/$defs/confirmObject"
-        },
-        "focus_on_load": {
-          "type": "boolean"
-        },
-        "placeholder": {
-          "$ref": "#/$defs/plainTextObject150"
         }
       },
       "required": [
         "type",
-        "action_id",
-        "initial_date",
-        "confirm",
-        "focus_on_load",
-        "placeholder"
+        "action_id"
       ],
       "additionalProperties": false
     },
@@ -1129,27 +849,11 @@
         },
         "action_id": {
           "$ref": "#/$defs/actionId"
-        },
-        "initial_date_time": {
-          "type": "integer"
-        },
-        "confirm": {
-          "$ref": "#/$defs/confirmObject"
-        },
-        "focus_on_load": {
-          "type": "boolean"
-        },
-        "placeholder": {
-          "$ref": "#/$defs/plainTextObject150"
         }
       },
       "required": [
         "type",
-        "action_id",
-        "initial_date_time",
-        "confirm",
-        "focus_on_load",
-        "placeholder"
+        "action_id"
       ],
       "additionalProperties": false
     },
@@ -1164,27 +868,11 @@
         },
         "action_id": {
           "$ref": "#/$defs/actionId"
-        },
-        "initial_value": {
-          "type": "string"
-        },
-        "dispatch_action_config": {
-          "$ref": "#/$defs/dispatchActionConfigObject"
-        },
-        "focus_on_load": {
-          "type": "boolean"
-        },
-        "placeholder": {
-          "$ref": "#/$defs/plainTextObject150"
         }
       },
       "required": [
         "type",
-        "action_id",
-        "initial_value",
-        "dispatch_action_config",
-        "focus_on_load",
-        "placeholder"
+        "action_id"
       ],
       "additionalProperties": false
     },
@@ -1199,316 +887,64 @@
         },
         "action_id": {
           "$ref": "#/$defs/actionId"
+        }
+      },
+      "required": [
+        "type",
+        "action_id"
+      ],
+      "additionalProperties": false
+    },
+    "imageElement": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "image"
+          ]
         },
-        "filetypes": {
+        "alt_text": {
+          "type": "string"
+        },
+        "image_url": {
+          "$ref": "#/$defs/url"
+        }
+      },
+      "required": [
+        "type",
+        "alt_text",
+        "image_url"
+      ],
+      "additionalProperties": false
+    },
+    "multiStaticSelectElement": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "multi_static_select"
+          ]
+        },
+        "action_id": {
+          "$ref": "#/$defs/actionId"
+        },
+        "options": {
           "type": "array",
+          "minItems": 1,
+          "maxItems": 100,
           "items": {
-            "enum": [
-              "auto",
-              "text",
-              "ai",
-              "apk",
-              "applescript",
-              "binary",
-              "bmp",
-              "boxnote",
-              "c",
-              "csharp",
-              "cpp",
-              "css",
-              "csv",
-              "clojure",
-              "coffeescript",
-              "cfm",
-              "d",
-              "dart",
-              "diff",
-              "doc",
-              "docx",
-              "dockerfile",
-              "dotx",
-              "eml",
-              "eps",
-              "epub",
-              "erlang",
-              "fla",
-              "flv",
-              "fsharp",
-              "fortran",
-              "gdoc",
-              "gdraw",
-              "gif",
-              "go",
-              "gpres",
-              "groovy",
-              "gsheet",
-              "gzip",
-              "html",
-              "handlebars",
-              "haskell",
-              "haxe",
-              "indd",
-              "java",
-              "javascript",
-              "jpg",
-              "json",
-              "keynote",
-              "kotlin",
-              "latex",
-              "lisp",
-              "lua",
-              "m4a",
-              "markdown",
-              "matlab",
-              "mhtml",
-              "mkv",
-              "mov",
-              "mp3",
-              "mp4",
-              "mpg",
-              "mumps",
-              "numbers",
-              "nzb",
-              "objc",
-              "ocaml",
-              "odg",
-              "odi",
-              "odp",
-              "ods",
-              "odt",
-              "ogg",
-              "ogv",
-              "pages",
-              "pascal",
-              "pdf",
-              "perl",
-              "php",
-              "pig",
-              "png",
-              "post",
-              "powershell",
-              "ppt",
-              "pptx",
-              "psd",
-              "puppet",
-              "python",
-              "qtz",
-              "r",
-              "rtf",
-              "ruby",
-              "rust",
-              "sql",
-              "sass",
-              "scala",
-              "scheme",
-              "sketch",
-              "shell",
-              "smalltalk",
-              "svg",
-              "swf",
-              "swift",
-              "tar",
-              "tiff",
-              "tsv",
-              "vb",
-              "vbscript",
-              "vcard",
-              "velocity",
-              "verilog",
-              "wav",
-              "webm",
-              "wmv",
-              "xls",
-              "xlsx",
-              "xlsb",
-              "xlsm",
-              "xltx",
-              "xml",
-              "yaml",
-              "zip"
-            ],
-            "type": "string"
+            "$ref": "#/$defs/optionObject"
           }
-        },
-        "max_files": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 10
         }
       },
       "required": [
         "type",
         "action_id",
-        "filetypes",
-        "max_files"
+        "options"
       ],
       "additionalProperties": false
-    },
-    "imageElement": {
-      "anyOf": [
-        {
-          "type": "object",
-          "properties": {
-            "type": {
-              "type": "string",
-              "enum": [
-                "image"
-              ]
-            },
-            "alt_text": {
-              "type": "string"
-            },
-            "image_url": {
-              "$ref": "#/$defs/url"
-            }
-          },
-          "required": [
-            "type",
-            "alt_text",
-            "image_url"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "type": {
-              "type": "string",
-              "enum": [
-                "image"
-              ]
-            },
-            "alt_text": {
-              "type": "string"
-            },
-            "slack_file": {
-              "$ref": "#/$defs/slackFileObject"
-            }
-          },
-          "required": [
-            "type",
-            "alt_text",
-            "slack_file"
-          ],
-          "additionalProperties": false
-        }
-      ]
-    },
-    "multiStaticSelectElement": {
-      "anyOf": [
-        {
-          "type": "object",
-          "properties": {
-            "type": {
-              "type": "string",
-              "enum": [
-                "multi_static_select"
-              ]
-            },
-            "action_id": {
-              "$ref": "#/$defs/actionId"
-            },
-            "options": {
-              "type": "array",
-              "minItems": 1,
-              "maxItems": 100,
-              "items": {
-                "$ref": "#/$defs/optionObject"
-              }
-            },
-            "initial_options": {
-              "type": "array",
-              "minItems": 1,
-              "maxItems": 100,
-              "items": {
-                "anyOf": [
-                  {
-                    "$ref": "#/$defs/optionObject"
-                  },
-                  {
-                    "$ref": "#/$defs/optionGroupObject"
-                  }
-                ]
-              }
-            },
-            "confirm": {
-              "$ref": "#/$defs/confirmObject"
-            },
-            "focus_on_load": {
-              "type": "boolean"
-            },
-            "placeholder": {
-              "$ref": "#/$defs/plainTextObject150"
-            }
-          },
-          "required": [
-            "type",
-            "action_id",
-            "options",
-            "initial_options",
-            "confirm",
-            "focus_on_load",
-            "placeholder"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "type": {
-              "type": "string",
-              "enum": [
-                "multi_static_select"
-              ]
-            },
-            "action_id": {
-              "$ref": "#/$defs/actionId"
-            },
-            "option_groups": {
-              "type": "array",
-              "minItems": 1,
-              "maxItems": 100,
-              "items": {
-                "$ref": "#/$defs/optionGroupObject"
-              }
-            },
-            "initial_options": {
-              "type": "array",
-              "minItems": 1,
-              "maxItems": 100,
-              "items": {
-                "anyOf": [
-                  {
-                    "$ref": "#/$defs/optionObject"
-                  },
-                  {
-                    "$ref": "#/$defs/optionGroupObject"
-                  }
-                ]
-              }
-            },
-            "confirm": {
-              "$ref": "#/$defs/confirmObject"
-            },
-            "focus_on_load": {
-              "type": "boolean"
-            },
-            "placeholder": {
-              "$ref": "#/$defs/plainTextObject150"
-            }
-          },
-          "required": [
-            "type",
-            "action_id",
-            "option_groups",
-            "initial_options",
-            "confirm",
-            "focus_on_load",
-            "placeholder"
-          ],
-          "additionalProperties": false
-        }
-      ]
     },
     "multiExternalSelectElement": {
       "type": "object",
@@ -1521,44 +957,11 @@
         },
         "action_id": {
           "$ref": "#/$defs/actionId"
-        },
-        "min_query_length": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "initial_options": {
-          "type": "array",
-          "minItems": 1,
-          "maxItems": 100,
-          "items": {
-            "anyOf": [
-              {
-                "$ref": "#/$defs/optionObject"
-              },
-              {
-                "$ref": "#/$defs/optionGroupObject"
-              }
-            ]
-          }
-        },
-        "confirm": {
-          "$ref": "#/$defs/confirmObject"
-        },
-        "focus_on_load": {
-          "type": "boolean"
-        },
-        "placeholder": {
-          "$ref": "#/$defs/plainTextObject150"
         }
       },
       "required": [
         "type",
-        "action_id",
-        "min_query_length",
-        "initial_options",
-        "confirm",
-        "focus_on_load",
-        "placeholder"
+        "action_id"
       ],
       "additionalProperties": false
     },
@@ -1573,31 +976,11 @@
         },
         "action_id": {
           "$ref": "#/$defs/actionId"
-        },
-        "initial_users": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "string"
-          }
-        },
-        "confirm": {
-          "$ref": "#/$defs/confirmObject"
-        },
-        "focus_on_load": {
-          "type": "boolean"
-        },
-        "placeholder": {
-          "$ref": "#/$defs/plainTextObject150"
         }
       },
       "required": [
         "type",
-        "action_id",
-        "initial_users",
-        "confirm",
-        "focus_on_load",
-        "placeholder"
+        "action_id"
       ],
       "additionalProperties": false
     },
@@ -1612,44 +995,11 @@
         },
         "action_id": {
           "$ref": "#/$defs/actionId"
-        },
-        "initial_conversations": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "string"
-          }
-        },
-        "default_to_current_conversation": {
-          "type": "boolean"
-        },
-        "confirm": {
-          "$ref": "#/$defs/confirmObject"
-        },
-        "max_selected_items": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "filter": {
-          "$ref": "#/$defs/conversationFilterObject"
-        },
-        "focus_on_load": {
-          "type": "boolean"
-        },
-        "placeholder": {
-          "$ref": "#/$defs/plainTextObject150"
         }
       },
       "required": [
         "type",
-        "action_id",
-        "initial_conversations",
-        "default_to_current_conversation",
-        "confirm",
-        "max_selected_items",
-        "filter",
-        "focus_on_load",
-        "placeholder"
+        "action_id"
       ],
       "additionalProperties": false
     },
@@ -1664,36 +1014,11 @@
         },
         "action_id": {
           "$ref": "#/$defs/actionId"
-        },
-        "initial_channels": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "string"
-          }
-        },
-        "confirm": {
-          "$ref": "#/$defs/confirmObject"
-        },
-        "max_selected_items": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "focus_on_load": {
-          "type": "boolean"
-        },
-        "placeholder": {
-          "$ref": "#/$defs/plainTextObject150"
         }
       },
       "required": [
         "type",
-        "action_id",
-        "initial_channels",
-        "confirm",
-        "max_selected_items",
-        "focus_on_load",
-        "placeholder"
+        "action_id"
       ],
       "additionalProperties": false
     },
@@ -1706,50 +1031,17 @@
             "number_input"
           ]
         },
-        "is_decimal_allowed": {
-          "type": "boolean"
-        },
         "action_id": {
           "$ref": "#/$defs/actionId"
         },
-        "initial_value": {
-          "type": [
-            "number",
-            "string"
-          ]
-        },
-        "min_value": {
-          "type": [
-            "number",
-            "string"
-          ]
-        },
-        "max_value": {
-          "type": [
-            "number",
-            "string"
-          ]
-        },
-        "dispatch_action_config": {
-          "$ref": "#/$defs/dispatchActionConfigObject"
-        },
-        "focus_on_load": {
+        "is_decimal_allowed": {
           "type": "boolean"
-        },
-        "placeholder": {
-          "$ref": "#/$defs/plainTextObject150"
         }
       },
       "required": [
         "type",
-        "is_decimal_allowed",
         "action_id",
-        "initial_value",
-        "min_value",
-        "max_value",
-        "dispatch_action_config",
-        "focus_on_load",
-        "placeholder"
+        "is_decimal_allowed"
       ],
       "additionalProperties": false
     },
@@ -1772,16 +1064,12 @@
           "items": {
             "$ref": "#/$defs/optionObjectWithUrl"
           }
-        },
-        "confirm": {
-          "$ref": "#/$defs/confirmObject"
         }
       },
       "required": [
         "type",
         "action_id",
-        "options",
-        "confirm"
+        "options"
       ],
       "additionalProperties": false
     },
@@ -1796,43 +1084,11 @@
         },
         "action_id": {
           "$ref": "#/$defs/actionId"
-        },
-        "initial_value": {
-          "type": "string"
-        },
-        "multiline": {
-          "type": "boolean"
-        },
-        "min_length": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 3000
-        },
-        "max_length": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 3000
-        },
-        "dispatch_action_config": {
-          "$ref": "#/$defs/dispatchActionConfigObject"
-        },
-        "focus_on_load": {
-          "type": "boolean"
-        },
-        "placeholder": {
-          "$ref": "#/$defs/plainTextObject150"
         }
       },
       "required": [
         "type",
-        "action_id",
-        "initial_value",
-        "multiline",
-        "min_length",
-        "max_length",
-        "dispatch_action_config",
-        "focus_on_load",
-        "placeholder"
+        "action_id"
       ],
       "additionalProperties": false
     },
@@ -1855,24 +1111,12 @@
           "items": {
             "$ref": "#/$defs/optionObject"
           }
-        },
-        "initial_option": {
-          "$ref": "#/$defs/optionObject"
-        },
-        "confirm": {
-          "$ref": "#/$defs/confirmObject"
-        },
-        "focus_on_load": {
-          "type": "boolean"
         }
       },
       "required": [
         "type",
         "action_id",
-        "options",
-        "initial_option",
-        "confirm",
-        "focus_on_load"
+        "options"
       ],
       "additionalProperties": false
     },
@@ -1887,135 +1131,41 @@
         },
         "action_id": {
           "$ref": "#/$defs/actionId"
+        }
+      },
+      "required": [
+        "type",
+        "action_id"
+      ],
+      "additionalProperties": false
+    },
+    "staticSelectElement": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "static_select"
+          ]
         },
-        "initial_value": {
-          "$ref": "#/$defs/richTextBlock"
+        "action_id": {
+          "$ref": "#/$defs/actionId"
         },
-        "dispatch_action_config": {
-          "$ref": "#/$defs/dispatchActionConfigObject"
-        },
-        "focus_on_load": {
-          "type": "boolean"
-        },
-        "placeholder": {
-          "$ref": "#/$defs/plainTextObject150"
+        "options": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/optionObject"
+          }
         }
       },
       "required": [
         "type",
         "action_id",
-        "initial_value",
-        "dispatch_action_config",
-        "focus_on_load",
-        "placeholder"
+        "options"
       ],
       "additionalProperties": false
-    },
-    "staticSelectElement": {
-      "anyOf": [
-        {
-          "type": "object",
-          "properties": {
-            "type": {
-              "type": "string",
-              "enum": [
-                "static_select"
-              ]
-            },
-            "action_id": {
-              "$ref": "#/$defs/actionId"
-            },
-            "options": {
-              "type": "array",
-              "minItems": 1,
-              "maxItems": 100,
-              "items": {
-                "$ref": "#/$defs/optionObject"
-              }
-            },
-            "initial_option": {
-              "anyOf": [
-                {
-                  "$ref": "#/$defs/optionObject"
-                },
-                {
-                  "$ref": "#/$defs/optionGroupObject"
-                }
-              ]
-            },
-            "confirm": {
-              "$ref": "#/$defs/confirmObject"
-            },
-            "focus_on_load": {
-              "type": "boolean"
-            },
-            "placeholder": {
-              "$ref": "#/$defs/plainTextObject150"
-            }
-          },
-          "required": [
-            "type",
-            "action_id",
-            "options",
-            "initial_option",
-            "confirm",
-            "focus_on_load",
-            "placeholder"
-          ],
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "type": {
-              "type": "string",
-              "enum": [
-                "static_select"
-              ]
-            },
-            "action_id": {
-              "$ref": "#/$defs/actionId"
-            },
-            "option_groups": {
-              "type": "array",
-              "minItems": 1,
-              "maxItems": 100,
-              "items": {
-                "$ref": "#/$defs/optionGroupObject"
-              }
-            },
-            "initial_option": {
-              "anyOf": [
-                {
-                  "$ref": "#/$defs/optionObject"
-                },
-                {
-                  "$ref": "#/$defs/optionGroupObject"
-                }
-              ]
-            },
-            "confirm": {
-              "$ref": "#/$defs/confirmObject"
-            },
-            "focus_on_load": {
-              "type": "boolean"
-            },
-            "placeholder": {
-              "$ref": "#/$defs/plainTextObject150"
-            }
-          },
-          "required": [
-            "type",
-            "action_id",
-            "option_groups",
-            "initial_option",
-            "confirm",
-            "focus_on_load",
-            "placeholder"
-          ],
-          "additionalProperties": false
-        }
-      ]
     },
     "externalSelectElement": {
       "type": "object",
@@ -2028,44 +1178,11 @@
         },
         "action_id": {
           "$ref": "#/$defs/actionId"
-        },
-        "min_query_length": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "initial_option": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/optionObject"
-            },
-            {
-              "$ref": "#/$defs/optionGroupObject"
-            }
-          ]
-        },
-        "confirm": {
-          "$ref": "#/$defs/confirmObject"
-        },
-        "max_selected_items": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "focus_on_load": {
-          "type": "boolean"
-        },
-        "placeholder": {
-          "$ref": "#/$defs/plainTextObject150"
         }
       },
       "required": [
         "type",
-        "action_id",
-        "min_query_length",
-        "initial_option",
-        "confirm",
-        "max_selected_items",
-        "focus_on_load",
-        "placeholder"
+        "action_id"
       ],
       "additionalProperties": false
     },
@@ -2080,27 +1197,11 @@
         },
         "action_id": {
           "$ref": "#/$defs/actionId"
-        },
-        "initial_user": {
-          "type": "string"
-        },
-        "confirm": {
-          "$ref": "#/$defs/confirmObject"
-        },
-        "focus_on_load": {
-          "type": "boolean"
-        },
-        "placeholder": {
-          "$ref": "#/$defs/plainTextObject150"
         }
       },
       "required": [
         "type",
-        "action_id",
-        "initial_user",
-        "confirm",
-        "focus_on_load",
-        "placeholder"
+        "action_id"
       ],
       "additionalProperties": false
     },
@@ -2115,39 +1216,11 @@
         },
         "action_id": {
           "$ref": "#/$defs/actionId"
-        },
-        "initial_conversation": {
-          "type": "string"
-        },
-        "default_to_current_conversation": {
-          "type": "boolean"
-        },
-        "confirm": {
-          "$ref": "#/$defs/confirmObject"
-        },
-        "response_url_enabled": {
-          "type": "boolean"
-        },
-        "filter": {
-          "$ref": "#/$defs/conversationFilterObject"
-        },
-        "focus_on_load": {
-          "type": "boolean"
-        },
-        "placeholder": {
-          "$ref": "#/$defs/plainTextObject150"
         }
       },
       "required": [
         "type",
-        "action_id",
-        "initial_conversation",
-        "default_to_current_conversation",
-        "confirm",
-        "response_url_enabled",
-        "filter",
-        "focus_on_load",
-        "placeholder"
+        "action_id"
       ],
       "additionalProperties": false
     },
@@ -2162,31 +1235,11 @@
         },
         "action_id": {
           "$ref": "#/$defs/actionId"
-        },
-        "initial_channel": {
-          "type": "string"
-        },
-        "confirm": {
-          "$ref": "#/$defs/confirmObject"
-        },
-        "response_url_enabled": {
-          "type": "boolean"
-        },
-        "focus_on_load": {
-          "type": "boolean"
-        },
-        "placeholder": {
-          "$ref": "#/$defs/plainTextObject150"
         }
       },
       "required": [
         "type",
-        "action_id",
-        "initial_channel",
-        "confirm",
-        "response_url_enabled",
-        "focus_on_load",
-        "placeholder"
+        "action_id"
       ],
       "additionalProperties": false
     },
@@ -2201,32 +1254,11 @@
         },
         "action_id": {
           "$ref": "#/$defs/actionId"
-        },
-        "initial_time": {
-          "type": "string",
-          "pattern": "^\\d{2}:\\d{2}$"
-        },
-        "confirm": {
-          "$ref": "#/$defs/confirmObject"
-        },
-        "focus_on_load": {
-          "type": "boolean"
-        },
-        "placeholder": {
-          "$ref": "#/$defs/plainTextObject150"
-        },
-        "timezone": {
-          "type": "string"
         }
       },
       "required": [
         "type",
-        "action_id",
-        "initial_time",
-        "confirm",
-        "focus_on_load",
-        "placeholder",
-        "timezone"
+        "action_id"
       ],
       "additionalProperties": false
     },
@@ -2241,27 +1273,11 @@
         },
         "action_id": {
           "$ref": "#/$defs/actionId"
-        },
-        "initial_value": {
-          "type": "string"
-        },
-        "dispatch_action_config": {
-          "$ref": "#/$defs/dispatchActionConfigObject"
-        },
-        "focus_on_load": {
-          "type": "boolean"
-        },
-        "placeholder": {
-          "$ref": "#/$defs/plainTextObject150"
         }
       },
       "required": [
         "type",
-        "action_id",
-        "initial_value",
-        "dispatch_action_config",
-        "focus_on_load",
-        "placeholder"
+        "action_id"
       ],
       "additionalProperties": false
     },
@@ -2277,30 +1293,14 @@
         "text": {
           "$ref": "#/$defs/plainTextObject75"
         },
-        "workflow": {
-          "$ref": "#/$defs/workflowObject"
-        },
         "action_id": {
           "$ref": "#/$defs/actionId"
-        },
-        "style": {
-          "enum": [
-            "primary",
-            "danger"
-          ],
-          "type": "string"
-        },
-        "accessibility_label": {
-          "type": "string"
         }
       },
       "required": [
         "type",
         "text",
-        "workflow",
-        "action_id",
-        "style",
-        "accessibility_label"
+        "action_id"
       ],
       "additionalProperties": false
     },
@@ -2513,15 +1513,11 @@
           "items": {
             "$ref": "#/$defs/actionElement"
           }
-        },
-        "block_id": {
-          "$ref": "#/$defs/blockId"
         }
       },
       "required": [
         "type",
-        "elements",
-        "block_id"
+        "elements"
       ],
       "additionalProperties": false
     },
@@ -2541,15 +1537,11 @@
           "items": {
             "$ref": "#/$defs/contextElement"
           }
-        },
-        "block_id": {
-          "$ref": "#/$defs/blockId"
         }
       },
       "required": [
         "type",
-        "elements",
-        "block_id"
+        "elements"
       ],
       "additionalProperties": false
     },
@@ -2561,14 +1553,10 @@
           "enum": [
             "divider"
           ]
-        },
-        "block_id": {
-          "$ref": "#/$defs/blockId"
         }
       },
       "required": [
-        "type",
-        "block_id"
+        "type"
       ],
       "additionalProperties": false
     },
@@ -2589,16 +1577,12 @@
           "enum": [
             "remote"
           ]
-        },
-        "block_id": {
-          "$ref": "#/$defs/blockId"
         }
       },
       "required": [
         "type",
         "external_id",
-        "source",
-        "block_id"
+        "source"
       ],
       "additionalProperties": false
     },
@@ -2613,83 +1597,36 @@
         },
         "text": {
           "$ref": "#/$defs/plainTextObject150"
-        },
-        "block_id": {
-          "$ref": "#/$defs/blockId"
         }
       },
       "required": [
         "type",
-        "text",
-        "block_id"
+        "text"
       ],
       "additionalProperties": false
     },
     "imageBlock": {
-      "anyOf": [
-        {
-          "type": "object",
-          "properties": {
-            "type": {
-              "type": "string",
-              "enum": [
-                "image"
-              ]
-            },
-            "alt_text": {
-              "type": "string"
-            },
-            "image_url": {
-              "$ref": "#/$defs/url"
-            },
-            "title": {
-              "$ref": "#/$defs/plainTextObject2000"
-            },
-            "block_id": {
-              "$ref": "#/$defs/blockId"
-            }
-          },
-          "required": [
-            "type",
-            "alt_text",
-            "image_url",
-            "title",
-            "block_id"
-          ],
-          "additionalProperties": false
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "image"
+          ]
         },
-        {
-          "type": "object",
-          "properties": {
-            "type": {
-              "type": "string",
-              "enum": [
-                "image"
-              ]
-            },
-            "alt_text": {
-              "type": "string"
-            },
-            "slack_file": {
-              "$ref": "#/$defs/slackFileObject"
-            },
-            "title": {
-              "$ref": "#/$defs/plainTextObject2000"
-            },
-            "block_id": {
-              "$ref": "#/$defs/blockId"
-            }
-          },
-          "required": [
-            "type",
-            "alt_text",
-            "slack_file",
-            "title",
-            "block_id"
-          ],
-          "additionalProperties": false
+        "alt_text": {
+          "type": "string"
+        },
+        "image_url": {
+          "$ref": "#/$defs/url"
         }
-      ]
+      },
+      "required": [
+        "type",
+        "alt_text",
+        "image_url"
+      ],
+      "additionalProperties": false
     },
     "inputBlock": {
       "type": "object",
@@ -2705,28 +1642,12 @@
         },
         "element": {
           "$ref": "#/$defs/inputElement"
-        },
-        "dispatch_action": {
-          "type": "boolean"
-        },
-        "hint": {
-          "$ref": "#/$defs/plainTextObject2000"
-        },
-        "optional": {
-          "type": "boolean"
-        },
-        "block_id": {
-          "$ref": "#/$defs/blockId"
         }
       },
       "required": [
         "type",
         "label",
-        "element",
-        "dispatch_action",
-        "hint",
-        "optional",
-        "block_id"
+        "element"
       ],
       "additionalProperties": false
     },
@@ -2741,15 +1662,11 @@
         },
         "text": {
           "type": "string"
-        },
-        "block_id": {
-          "$ref": "#/$defs/blockId"
         }
       },
       "required": [
         "type",
-        "text",
-        "block_id"
+        "text"
       ],
       "additionalProperties": false
     },
@@ -2764,32 +1681,11 @@
         },
         "text": {
           "$ref": "#/$defs/textObject"
-        },
-        "fields": {
-          "type": "array",
-          "minItems": 1,
-          "maxItems": 10,
-          "items": {
-            "$ref": "#/$defs/textObject"
-          }
-        },
-        "accessory": {
-          "$ref": "#/$defs/sectionElement"
-        },
-        "expand": {
-          "type": "boolean"
-        },
-        "block_id": {
-          "$ref": "#/$defs/blockId"
         }
       },
       "required": [
         "type",
-        "text",
-        "fields",
-        "accessory",
-        "expand",
-        "block_id"
+        "text"
       ],
       "additionalProperties": false
     },
@@ -2820,23 +1716,11 @@
               ]
             }
           }
-        },
-        "column_settings": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/$defs/columnSettingsObject"
-          }
-        },
-        "block_id": {
-          "$ref": "#/$defs/blockId"
         }
       },
       "required": [
         "type",
-        "rows",
-        "column_settings",
-        "block_id"
+        "rows"
       ],
       "additionalProperties": false
     },
@@ -2852,46 +1736,14 @@
         "title": {
           "$ref": "#/$defs/plainTextObject200"
         },
-        "title_url": {
-          "$ref": "#/$defs/url"
-        },
-        "description": {
-          "$ref": "#/$defs/plainTextObject200"
-        },
         "alt_text": {
           "type": "string"
-        },
-        "video_url": {
-          "$ref": "#/$defs/url"
-        },
-        "thumbnail_url": {
-          "$ref": "#/$defs/url"
-        },
-        "provider_icon_url": {
-          "$ref": "#/$defs/url"
-        },
-        "provider_name": {
-          "type": "string"
-        },
-        "author_name": {
-          "type": "string"
-        },
-        "block_id": {
-          "$ref": "#/$defs/blockId"
         }
       },
       "required": [
         "type",
         "title",
-        "title_url",
-        "description",
-        "alt_text",
-        "video_url",
-        "thumbnail_url",
-        "provider_icon_url",
-        "provider_name",
-        "author_name",
-        "block_id"
+        "alt_text"
       ],
       "additionalProperties": false
     },
