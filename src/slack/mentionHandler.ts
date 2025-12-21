@@ -127,6 +127,7 @@ const BLOCK_KIT_CHEATSHEET = [
   '- Do not include thread IDs, user IDs, or other internal metadata in the reply.',
   '- Avoid interactive elements unless the user explicitly asks for them.',
   '- If you include interactive elements, include valid action_id values and avoid placeholder URLs.',
+  "- If you can't find AGENTS.md or other internal files, do not mention it unless the user asked.",
   '- For select menus: options must not include "url"; only overflow menu options can include "url".',
   '- For static_select: do not include max_selected_items (that is only for multi-selects).',
   '- Keep blocks <= 50 and options <= 100 per Slack limits.',
