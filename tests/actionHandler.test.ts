@@ -95,7 +95,9 @@ test('handleAction posts response and updates store', async () => {
   );
 
   assert.equal(prompts.length, 1);
-  assert.match(prompts[0], /Action/);
+  assert.match(prompts[0], /Action payload/);
+  assert.doesNotMatch(prompts[0], /Thread:/);
+  assert.doesNotMatch(prompts[0], /User:/);
   assert.equal(posted.text, 'Action ok');
   const record = store.get('C1:1.0');
   assert.equal(record?.codexThreadId, 'thread-2');

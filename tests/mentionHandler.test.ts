@@ -90,7 +90,9 @@ test('handleAppMention posts response and updates store', async () => {
   );
 
   assert.equal(prompts.length, 1);
-  assert.match(prompts[0], /Thread: C1/);
+  assert.match(prompts[0], /Block Kit Response Guidance/);
+  assert.doesNotMatch(prompts[0], /Thread:/);
+  assert.doesNotMatch(prompts[0], /User:/);
   assert.equal(posted.text, 'Hello');
   assert.equal(Array.isArray(posted.blocks), true);
 
@@ -160,4 +162,78 @@ test('handleAppMention retries when Slack rejects the response', async () => {
   assert.equal(postCount, 2);
   assert.equal(postedText, 'Second try');
   assert.match(prompts[1], /Slack error: invalid_blocks/);
+});
+
+test('handleAppMention only injects guidance on first turn', async () => {
+  const store = await makeStore();
+  const prompts: string[] = [];
+
+  const fakeThread: CodexThread = {
+    id: 'thread-1',
+    run: async (prompt) => {
+      prompts.push(prompt);
+      return { output: { text: 'Hello', blocks: [{ type: 'section', text: { type: 'mrkdwn', text: 'Hello' } }] } };
+    },
+  };
+
+  const codex: CodexClient = {
+    startThread: async () => fakeThread,
+    resumeThread: async () => fakeThread,
+  };
+
+  const client = {
+    conversations: {
+      replies: async () => ({
+        messages: [
+          { ts: '1.0', user: 'U1', text: '<@B1> hello' },
+          { ts: '2.0', user: 'U2', text: 'follow up' },
+        ],
+      }),
+    },
+    chat: {
+      postMessage: async () => ({ ts: '3.0' }),
+    },
+  };
+
+  const validateBlockKit = (_payload: unknown): BlockKitValidationResult => ({ ok: true });
+
+  await handleAppMention(
+    {
+      event: { channel: 'C1', ts: '1.0', text: '<@B1> hello' },
+      ack: async () => undefined,
+    },
+    {
+      client,
+      store,
+      codex,
+      config: baseConfig,
+      logger,
+      botUserId: 'B1',
+      validateBlockKit,
+      blockKitSchema: {},
+      blockKitOutputSchema: {},
+    },
+  );
+
+  await handleAppMention(
+    {
+      event: { channel: 'C1', ts: '1.0', text: '<@B1> hello again' },
+      ack: async () => undefined,
+    },
+    {
+      client,
+      store,
+      codex,
+      config: baseConfig,
+      logger,
+      botUserId: 'B1',
+      validateBlockKit,
+      blockKitSchema: {},
+      blockKitOutputSchema: {},
+    },
+  );
+
+  assert.equal(prompts.length, 2);
+  assert.match(prompts[0], /Block Kit Response Guidance/);
+  assert.doesNotMatch(prompts[1], /Block Kit Response Guidance/);
 });

@@ -109,9 +109,7 @@ function buildActionPrompt(params: {
   }
 
   return [
-    `Thread: ${channel} / ${threadTs}`,
-    `User: @${body.user?.id ?? 'unknown'}`,
-    'Action payload:',
+    'Action payload (internal, do not repeat):',
     ...(actions.length > 0 ? actions : ['- (no actions)']),
     '',
     'Messages since last response:',

@@ -53,7 +53,7 @@ export async function handleAppMention(
   );
 
   const messages = filterMessages(replies.messages ?? [], botUserId, record?.lastResponseTs);
-  const prompt = buildPrompt(event.channel, threadTs, messages, botUserId);
+  const prompt = buildPrompt(event.channel, threadTs, messages, botUserId, !record);
 
   const { response } = await runCodexAndPost({
     thread,
@@ -121,7 +121,24 @@ export function stripBotMention(text: string, botUserId: string): string {
   return text.replace(mention, '').trim();
 }
 
-export function buildPrompt(channel: string, threadTs: string, messages: SlackMessage[], botUserId: string): string {
+const BLOCK_KIT_CHEATSHEET = [
+  'Block Kit Response Guidance (internal, do not repeat):',
+  '- Respond with a JSON object that includes "text" and "blocks".',
+  '- Do not include thread IDs, user IDs, or other internal metadata in the reply.',
+  '- Avoid interactive elements unless the user explicitly asks for them.',
+  '- If you include interactive elements, include valid action_id values and avoid placeholder URLs.',
+  '- For select menus: options must not include "url"; only overflow menu options can include "url".',
+  '- For static_select: do not include max_selected_items (that is only for multi-selects).',
+  '- Keep blocks <= 50 and options <= 100 per Slack limits.',
+].join('\n');
+
+export function buildPrompt(
+  channel: string,
+  threadTs: string,
+  messages: SlackMessage[],
+  botUserId: string,
+  includeIntro: boolean,
+): string {
   const lines = messages.map((msg) => {
     const who = msg.user ? `@${msg.user}` : '@unknown';
     const body = stripBotMention(msg.text ?? '', botUserId);
@@ -132,11 +149,8 @@ export function buildPrompt(channel: string, threadTs: string, messages: SlackMe
     lines.push('- (no new messages)');
   }
 
-  return [
-    `Thread: ${channel} / ${threadTs}`,
-    'Messages since last response:',
-    ...lines,
-    '',
-    'Respond with Block Kit JSON that matches the output schema.',
-  ].join('\n');
+  const intro = includeIntro ? [BLOCK_KIT_CHEATSHEET, ''] : [];
+  return [...intro, 'Messages since last response:', ...lines, '', 'Respond with Block Kit JSON that matches the output schema.'].join(
+    '\n',
+  );
 }
