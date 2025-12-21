@@ -40,7 +40,20 @@ test('openai blockkit schema meets strict requirements', async () => {
     }
     const obj = node as Record<string, unknown>;
 
-    const unsupportedKeys = ['oneOf', 'allOf', 'not', 'if', 'then', 'else', 'dependentRequired', 'dependentSchemas', 'patternProperties', 'const'];
+    const unsupportedKeys = [
+      'oneOf',
+      'allOf',
+      'not',
+      'if',
+      'then',
+      'else',
+      'dependentRequired',
+      'dependentSchemas',
+      'patternProperties',
+      'const',
+      'minLength',
+      'maxLength',
+    ];
     for (const key of unsupportedKeys) {
       if (key in obj) {
         violations.push(`${trail.join('.')} contains unsupported key ${key}`);

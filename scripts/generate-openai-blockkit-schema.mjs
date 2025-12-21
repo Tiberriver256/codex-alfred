@@ -14,6 +14,8 @@ const UNSUPPORTED_KEYS = new Set([
   'dependentSchemas',
   'patternProperties',
   '$id',
+  'minLength',
+  'maxLength',
 ]);
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
