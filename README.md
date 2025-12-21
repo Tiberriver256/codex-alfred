@@ -27,6 +27,16 @@ npx @tiberriver256/codex-alfred --appKey <app-key> --botKey <bot-key> --data-dir
 
 See `spec.md` for the product/technical spec.
 
+## Local restart (dev)
+Use the npm script to restart Alfred with the same command we’ve been using. It prints the new PID.
+```
+ALFRED_PID=<old-pid> npm run alfred:restart
+```
+Notes:
+- Uses `ALFRED_DATA_DIR` if set; otherwise defaults to `~/mom-data`.
+- Writes logs to `$ALFRED_DATA_DIR/alfred.log`.
+- If you don’t pass `ALFRED_PID`, it just starts a new process.
+
 ## Configuration
 You can supply tokens via CLI flags or environment variables:
 - `--appKey` or `SLACK_APP_TOKEN`
