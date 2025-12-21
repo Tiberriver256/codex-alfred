@@ -90,3 +90,17 @@ test('openai blockkit schema meets strict requirements', async () => {
   walk(schema, []);
   assert.equal(violations.length, 0, `Schema violations:\\n${violations.join('\\n')}`);
 });
+
+test('blockkit schema matches select option constraints', async () => {
+  const schemaPath = path.resolve(process.cwd(), 'schemas', 'blockkit-response.schema.json');
+  const schema = JSON.parse(await fs.readFile(schemaPath, 'utf8')) as Record<string, any>;
+  const defs = schema.$defs ?? {};
+
+  const optionObject = defs.optionObject ?? {};
+  assert.ok(optionObject.properties, 'optionObject properties missing');
+  assert.equal('url' in optionObject.properties, false, 'optionObject should not allow url for select menus');
+
+  const staticSelect = defs.staticSelectElement ?? {};
+  assert.ok(staticSelect.properties, 'staticSelectElement properties missing');
+  assert.equal('max_selected_items' in staticSelect.properties, false, 'static_select should not allow max_selected_items');
+});

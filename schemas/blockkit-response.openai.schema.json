@@ -331,6 +331,26 @@
         },
         "description": {
           "$ref": "#/$defs/plainTextObject75"
+        }
+      },
+      "required": [
+        "text",
+        "value",
+        "description"
+      ],
+      "additionalProperties": false
+    },
+    "optionObjectWithUrl": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "$ref": "#/$defs/plainTextObject75"
+        },
+        "value": {
+          "type": "string"
+        },
+        "description": {
+          "$ref": "#/$defs/plainTextObject75"
         },
         "url": {
           "$ref": "#/$defs/url"
@@ -1414,10 +1434,6 @@
             "confirm": {
               "$ref": "#/$defs/confirmObject"
             },
-            "max_selected_items": {
-              "type": "integer",
-              "minimum": 1
-            },
             "focus_on_load": {
               "type": "boolean"
             },
@@ -1431,7 +1447,6 @@
             "options",
             "initial_options",
             "confirm",
-            "max_selected_items",
             "focus_on_load",
             "placeholder"
           ],
@@ -1475,10 +1490,6 @@
             "confirm": {
               "$ref": "#/$defs/confirmObject"
             },
-            "max_selected_items": {
-              "type": "integer",
-              "minimum": 1
-            },
             "focus_on_load": {
               "type": "boolean"
             },
@@ -1492,7 +1503,6 @@
             "option_groups",
             "initial_options",
             "confirm",
-            "max_selected_items",
             "focus_on_load",
             "placeholder"
           ],
@@ -1534,10 +1544,6 @@
         "confirm": {
           "$ref": "#/$defs/confirmObject"
         },
-        "max_selected_items": {
-          "type": "integer",
-          "minimum": 1
-        },
         "focus_on_load": {
           "type": "boolean"
         },
@@ -1551,7 +1557,6 @@
         "min_query_length",
         "initial_options",
         "confirm",
-        "max_selected_items",
         "focus_on_load",
         "placeholder"
       ],
@@ -1579,10 +1584,6 @@
         "confirm": {
           "$ref": "#/$defs/confirmObject"
         },
-        "max_selected_items": {
-          "type": "integer",
-          "minimum": 1
-        },
         "focus_on_load": {
           "type": "boolean"
         },
@@ -1595,7 +1596,6 @@
         "action_id",
         "initial_users",
         "confirm",
-        "max_selected_items",
         "focus_on_load",
         "placeholder"
       ],
@@ -1770,7 +1770,7 @@
           "minItems": 1,
           "maxItems": 5,
           "items": {
-            "$ref": "#/$defs/optionObject"
+            "$ref": "#/$defs/optionObjectWithUrl"
           }
         },
         "confirm": {
@@ -1946,10 +1946,6 @@
             "confirm": {
               "$ref": "#/$defs/confirmObject"
             },
-            "max_selected_items": {
-              "type": "integer",
-              "minimum": 1
-            },
             "focus_on_load": {
               "type": "boolean"
             },
@@ -1963,7 +1959,6 @@
             "options",
             "initial_option",
             "confirm",
-            "max_selected_items",
             "focus_on_load",
             "placeholder"
           ],
@@ -2002,10 +1997,6 @@
             "confirm": {
               "$ref": "#/$defs/confirmObject"
             },
-            "max_selected_items": {
-              "type": "integer",
-              "minimum": 1
-            },
             "focus_on_load": {
               "type": "boolean"
             },
@@ -2019,7 +2010,6 @@
             "option_groups",
             "initial_option",
             "confirm",
-            "max_selected_items",
             "focus_on_load",
             "placeholder"
           ],

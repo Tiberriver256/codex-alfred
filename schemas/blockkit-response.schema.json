@@ -274,6 +274,27 @@
         },
         "description": {
           "$ref": "#/$defs/plainTextObject75"
+        }
+      },
+      "required": [
+        "text",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "optionObjectWithUrl": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "$ref": "#/$defs/plainTextObject75"
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 150
+        },
+        "description": {
+          "$ref": "#/$defs/plainTextObject75"
         },
         "url": {
           "$ref": "#/$defs/url"
@@ -1284,10 +1305,6 @@
         "confirm": {
           "$ref": "#/$defs/confirmObject"
         },
-        "max_selected_items": {
-          "type": "integer",
-          "minimum": 1
-        },
         "focus_on_load": {
           "type": "boolean"
         },
@@ -1345,10 +1362,6 @@
         "confirm": {
           "$ref": "#/$defs/confirmObject"
         },
-        "max_selected_items": {
-          "type": "integer",
-          "minimum": 1
-        },
         "focus_on_load": {
           "type": "boolean"
         },
@@ -1382,10 +1395,6 @@
         },
         "confirm": {
           "$ref": "#/$defs/confirmObject"
-        },
-        "max_selected_items": {
-          "type": "integer",
-          "minimum": 1
         },
         "focus_on_load": {
           "type": "boolean"
@@ -1545,7 +1554,7 @@
           "minItems": 1,
           "maxItems": 5,
           "items": {
-            "$ref": "#/$defs/optionObject"
+            "$ref": "#/$defs/optionObjectWithUrl"
           }
         },
         "confirm": {
@@ -1705,10 +1714,6 @@
         },
         "confirm": {
           "$ref": "#/$defs/confirmObject"
-        },
-        "max_selected_items": {
-          "type": "integer",
-          "minimum": 1
         },
         "focus_on_load": {
           "type": "boolean"
