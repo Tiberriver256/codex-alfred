@@ -38,13 +38,20 @@ export async function runCodexAndPost(params: {
     const result = await thread.run(attemptPrompt, { outputSchema });
     const latencyMs = Date.now() - startedAt;
     const usage = (result as { usage?: unknown }).usage;
+    const threadId = thread.id ?? null;
     const structured = extractStructuredOutput(result);
     if (logger.debug) {
       const outputJson = safeStringify(structured);
-      logger.debug('Codex structured output', { threadKey, attempt, output: structured, output_json: outputJson });
+      logger.debug('Codex structured output', {
+        threadKey,
+        threadId,
+        attempt,
+        output: structured,
+        output_json: outputJson,
+      });
     }
     lastOutput = structured;
-    logger.info('Codex run complete', { threadKey, latencyMs, usage, attempt });
+    logger.info('Codex run complete', { threadKey, threadId, latencyMs, usage, attempt });
 
     const output = coerceBlockKitMessage(structured);
     if (!output) {
