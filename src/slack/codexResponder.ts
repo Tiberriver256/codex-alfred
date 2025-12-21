@@ -17,6 +17,21 @@ export async function runCodexAndPost(params: {
   const { thread, prompt, outputSchema, validateBlockKit, logger, threadKey, client, channel, threadTs } = params;
   let lastError: string | null = null;
   let lastOutput: unknown = null;
+  const thinking = await client.chat.postMessage({
+    channel,
+    thread_ts: threadTs,
+    text: 'Thinking...',
+    blocks: [
+      {
+        type: 'section',
+        text: { type: 'mrkdwn', text: '_Thinking..._' },
+      },
+    ],
+  });
+  const thinkingTs = thinking.ts;
+  if (!thinkingTs) {
+    throw new Error('Unable to post thinking message.');
+  }
 
   for (let attempt = 1; attempt <= 5; attempt += 1) {
     const attemptPrompt = attempt === 1 ? prompt : buildRetryPrompt(prompt, lastError, lastOutput);
@@ -41,20 +56,36 @@ export async function runCodexAndPost(params: {
     }
 
     try {
-      const response = await client.chat.postMessage({
+      const response = await client.chat.update({
         channel,
-        thread_ts: threadTs,
+        ts: thinkingTs,
         text: output.text,
         blocks: output.blocks,
       });
       return { response, output };
     } catch (error) {
       lastError = formatSlackError(error);
-      logger.warn('Slack postMessage failed', { threadKey, attempt, error: lastError });
+      logger.warn('Slack update failed', { threadKey, attempt, error: lastError });
     }
   }
 
-  throw new Error(lastError ?? 'Slack postMessage failed after 5 attempts.');
+  const fallbackText = `Sorry — I couldn't post a response. ${lastError ?? ''}`.trim();
+  try {
+    const response = await client.chat.update({
+      channel,
+      ts: thinkingTs,
+      text: fallbackText,
+      blocks: [
+        {
+          type: 'section',
+          text: { type: 'mrkdwn', text: fallbackText },
+        },
+      ],
+    });
+    return { response, output: { text: fallbackText, blocks: [] } };
+  } catch (error) {
+    throw new Error(lastError ?? 'Slack update failed after 5 attempts.');
+  }
 }
 
 function coerceBlockKitMessage(payload: unknown): BlockKitMessage | null {

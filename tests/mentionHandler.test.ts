@@ -51,6 +51,7 @@ test('handleAppMention posts response and updates store', async () => {
   };
 
   const posted: { text?: string; blocks?: unknown[] } = {};
+  let thinkingText = '';
   const client = {
     conversations: {
       replies: async () => ({
@@ -62,6 +63,10 @@ test('handleAppMention posts response and updates store', async () => {
     },
     chat: {
       postMessage: async ({ text, blocks }: { text: string; blocks: unknown[] }) => {
+        thinkingText = text;
+        return { ts: '2.0' };
+      },
+      update: async ({ text, blocks }: { text: string; blocks: unknown[] }) => {
         posted.text = text;
         posted.blocks = blocks;
         return { ts: '3.0' };
@@ -93,6 +98,7 @@ test('handleAppMention posts response and updates store', async () => {
   assert.match(prompts[0], /Block Kit Response Guidance/);
   assert.doesNotMatch(prompts[0], /Thread:/);
   assert.doesNotMatch(prompts[0], /User:/);
+  assert.equal(thinkingText, 'Thinking...');
   assert.equal(posted.text, 'Hello');
   assert.equal(Array.isArray(posted.blocks), true);
 
@@ -125,12 +131,17 @@ test('handleAppMention retries when Slack rejects the response', async () => {
 
   let postedText = '';
   let postCount = 0;
+  let thinkingText = '';
   const client = {
     conversations: {
       replies: async () => ({ messages: [{ ts: '1.0', user: 'U1', text: 'hey' }] }),
     },
     chat: {
       postMessage: async ({ text }: { text: string }) => {
+        thinkingText = text;
+        return { ts: '2.0' };
+      },
+      update: async ({ text }: { text: string }) => {
         postCount += 1;
         if (postCount === 1) {
           throw new Error('invalid_blocks');
@@ -159,6 +170,7 @@ test('handleAppMention retries when Slack rejects the response', async () => {
   );
 
   assert.equal(runCount, 2);
+  assert.equal(thinkingText, 'Thinking...');
   assert.equal(postCount, 2);
   assert.equal(postedText, 'Second try');
   assert.match(prompts[1], /Slack error: invalid_blocks/);
@@ -191,7 +203,8 @@ test('handleAppMention only injects guidance on first turn', async () => {
       }),
     },
     chat: {
-      postMessage: async () => ({ ts: '3.0' }),
+      postMessage: async () => ({ ts: '2.0' }),
+      update: async () => ({ ts: '3.0' }),
     },
   };
 

@@ -56,15 +56,20 @@ test('handleAction posts response and updates store', async () => {
   };
 
   const posted: { text?: string; blocks?: unknown[] } = {};
+  let thinkingText = '';
   const client = {
     conversations: {
       replies: async () => ({ messages: [{ ts: '1.0', user: 'U1', text: 'hello' }] }),
     },
     chat: {
       postMessage: async ({ text, blocks }: { text: string; blocks: unknown[] }) => {
+        thinkingText = text;
+        return { ts: '2.0' };
+      },
+      update: async ({ text, blocks }: { text: string; blocks: unknown[] }) => {
         posted.text = text;
         posted.blocks = blocks;
-        return { ts: '2.0' };
+        return { ts: '3.0' };
       },
     },
   };
@@ -98,6 +103,7 @@ test('handleAction posts response and updates store', async () => {
   assert.match(prompts[0], /Action payload/);
   assert.doesNotMatch(prompts[0], /Thread:/);
   assert.doesNotMatch(prompts[0], /User:/);
+  assert.equal(thinkingText, 'Thinking...');
   assert.equal(posted.text, 'Action ok');
   const record = store.get('C1:1.0');
   assert.equal(record?.codexThreadId, 'thread-2');
