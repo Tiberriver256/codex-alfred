@@ -38,6 +38,7 @@ export interface MentionDeps {
   botUserId: string;
   validateBlockKit: (payload: unknown) => BlockKitValidationResult;
   blockKitSchema: object;
+  blockKitOutputSchema: object;
 }
 
 export async function handleAppMention(
@@ -45,7 +46,8 @@ export async function handleAppMention(
   deps: MentionDeps,
 ): Promise<void> {
   const { event, ack } = params;
-  const { client, store, codex, config, logger, botUserId, validateBlockKit, blockKitSchema } = deps;
+  const { client, store, codex, config, logger, botUserId, validateBlockKit, blockKitSchema, blockKitOutputSchema } =
+    deps;
 
   await ack();
 
@@ -80,13 +82,14 @@ export async function handleAppMention(
 
   try {
     const startedAt = Date.now();
-    const result = await thread.run(prompt, { outputSchema: blockKitSchema });
+    const result = await thread.run(prompt, { outputSchema: blockKitOutputSchema });
     const latencyMs = Date.now() - startedAt;
     const structured = extractStructuredOutput(result);
     const usage = (result as { usage?: unknown }).usage;
-    const validation = validateBlockKit(structured);
+    const normalized = normalizeStructuredOutput(structured);
+    const validation = validateBlockKit(normalized);
     if (validation.ok) {
-      output = structured as BlockKitMessage;
+      output = normalized;
     } else {
       output = buildFallbackMessage(validation.errors?.[0] ?? 'Invalid Block Kit payload');
     }
@@ -121,6 +124,32 @@ export async function handleAppMention(
   }
 
   logger.info(`Responded to ${threadKey}`);
+}
+
+function normalizeStructuredOutput(payload: unknown): BlockKitMessage {
+  if (payload && typeof payload === 'object') {
+    const candidate = payload as { text?: unknown; blocks?: unknown };
+    if (typeof candidate.text === 'string' && candidate.text.trim().length > 0) {
+      const blocks = Array.isArray(candidate.blocks) ? candidate.blocks : buildTextBlocks(candidate.text);
+      return { text: candidate.text, blocks };
+    }
+  }
+  if (typeof payload === 'string' && payload.trim().length > 0) {
+    return { text: payload, blocks: buildTextBlocks(payload) };
+  }
+  return buildFallbackMessage('Invalid response payload');
+}
+
+function buildTextBlocks(text: string): unknown[] {
+  return [
+    {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text,
+      },
+    },
+  ];
 }
 
 async function retryOnce<T>(fn: () => Promise<T>, logger: Logger, label: string): Promise<T> {
@@ -178,6 +207,6 @@ export function buildPrompt(channel: string, threadTs: string, messages: SlackMe
     'Messages since last response:',
     ...lines,
     '',
-    'Respond in Block Kit JSON according to the output schema.',
+    'Respond with JSON that matches the output schema: {"text": "..."}',
   ].join('\n');
 }

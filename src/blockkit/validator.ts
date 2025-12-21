@@ -12,6 +12,13 @@ export interface BlockKitValidationResult {
   errors?: string[];
 }
 
+export async function loadBlockKitOutputSchema(schemaPath?: string): Promise<object> {
+  const resolvedPath =
+    schemaPath ?? path.resolve(process.cwd(), 'schemas', 'blockkit-response.openai.schema.json');
+  const raw = await fs.readFile(resolvedPath, 'utf8');
+  return JSON.parse(raw) as object;
+}
+
 export async function loadBlockKitSchema(schemaPath?: string): Promise<object> {
   const resolvedPath = schemaPath ?? path.resolve(process.cwd(), 'schemas', 'blockkit-response.schema.json');
   const raw = await fs.readFile(resolvedPath, 'utf8');
