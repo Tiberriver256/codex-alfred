@@ -29,6 +29,14 @@ Follow the stages in order. Treat stage 1 as the source of truth for the *instal
    - `rg -n "export|interface|type|class|enum" <pkg-root>`
    - `rg -n "Thread|Run|outputSchema|response_format|schema" <pkg-root>`
 
+### Stage 1.5: Locate Codex session rollouts (debugging)
+
+When debugging Codex CLI behavior, locate the session JSONL rollouts stored under the Codex home directory (`~/.codex` by default or `$CODEX_HOME` if set):
+- Latest rollout file (by mtime):
+  - `ls -t "${CODEX_HOME:-$HOME/.codex}"/sessions/*/*/*/rollout-*.jsonl | head -n 1`
+- Grep for a conversation id (if known):
+  - `rg -n "<conversation-id>" "${CODEX_HOME:-$HOME/.codex}"/sessions/*/*/*/rollout-*.jsonl`
+
 ### Stage 2: Clone repo and inspect source/docs
 
 1. Clone the repo if it is not already present.
