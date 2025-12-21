@@ -1,6 +1,6 @@
 import { type Logger } from '../logger.js';
 import { type ThreadStore, type ThreadRecord } from '../store/threadStore.js';
-import { buildThreadOptions, extractStructuredOutput, type CodexClient } from '../codex/client.js';
+import { buildThreadOptions, extractStructuredOutput, type CodexClient, type CodexThread } from '../codex/client.js';
 import { type BlockKitMessage, type BlockKitValidationResult } from '../blockkit/validator.js';
 import { type AppConfig } from '../config.js';
 
@@ -106,7 +106,7 @@ export async function handleAppMention(
 }
 
 async function runWithSlackRetries(params: {
-  thread: { run: (prompt: string, options: { outputSchema: object }) => Promise<unknown>; id: string | null };
+  thread: CodexThread;
   prompt: string;
   blockKitOutputSchema: object;
   validateBlockKit: (payload: unknown) => BlockKitValidationResult;
