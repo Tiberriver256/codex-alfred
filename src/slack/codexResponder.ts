@@ -40,6 +40,9 @@ export async function runCodexAndPost(params: {
     const latencyMs = Date.now() - startedAt;
     const usage = (result as { usage?: unknown }).usage;
     const structured = extractStructuredOutput(result);
+    if (logger.debug) {
+      logger.debug('Codex structured output', { threadKey, attempt, output: structured });
+    }
     lastOutput = structured;
     logger.info('Codex run complete', { threadKey, latencyMs, usage, attempt });
 
