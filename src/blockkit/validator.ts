@@ -18,14 +18,23 @@ export async function loadBlockKitSchema(schemaPath?: string): Promise<object> {
   return JSON.parse(raw) as object;
 }
 
+type AjvValidate = ((payload: unknown) => boolean) & {
+  errors?: { instancePath?: string; message?: string }[] | null;
+};
+
 export function createBlockKitValidator(schema: object) {
-  const ajv = new Ajv({ allErrors: true, strict: false });
+  const AjvCtor = Ajv as unknown as new (options: { allErrors: boolean; strict: boolean }) => {
+    compile: (schema: object) => AjvValidate;
+  };
+  const ajv = new AjvCtor({ allErrors: true, strict: false });
   const validate = ajv.compile(schema);
 
   const validateBlockKit = (payload: unknown): BlockKitValidationResult => {
     const ok = Boolean(validate(payload));
     if (ok) return { ok: true };
-    const errors = (validate.errors ?? []).map((err) => `${err.instancePath || 'root'} ${err.message ?? 'invalid'}`);
+    const errors = (validate.errors ?? []).map((err: { instancePath?: string; message?: string }) => {
+      return `${err.instancePath || 'root'} ${err.message ?? 'invalid'}`;
+    });
     return { ok: false, errors };
   };
 

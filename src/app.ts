@@ -34,8 +34,9 @@ export async function startApp(config: AppConfig, logger: Logger): Promise<void>
   }
 
   app.event('app_mention', async ({ event, ack, client }) => {
+    const safeAck = ack ?? (async () => undefined);
     await handleAppMention(
-      { event: event as any, ack },
+      { event: event as any, ack: safeAck },
       {
         client: client as any,
         store,
