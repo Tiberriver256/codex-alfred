@@ -124,6 +124,7 @@ const BLOCK_KIT_CHEATSHEET = [
   '- If you include interactive elements, include valid action_id values and avoid placeholder URLs.',
   '- Do not mention AGENTS.md or other internal file lookups unless the user explicitly asked.',
   '- Do not include image blocks or image accessories unless the user explicitly asked for images.',
+  '- For simple replies, use a single section block with just text. Do not include fields or accessories.',
   '- For select menus: options must not include "url"; only overflow menu options can include "url".',
   '- For static_select: do not include max_selected_items (that is only for multi-selects).',
   '- Keep blocks <= 50 and options <= 100 per Slack limits.',
