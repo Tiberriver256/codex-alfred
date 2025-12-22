@@ -63,3 +63,8 @@ Use the helper script to create and manage the sandbox container:
 ./docker.sh start
 ```
 When running with `--sandbox docker:<name>`, Alfred adds `--yolo` to Codex args by default (unless you pass it explicitly).
+
+To restart Alfred using the Docker sandbox in one step:
+```
+./alfred-docker.sh
+```
