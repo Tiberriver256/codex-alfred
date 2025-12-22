@@ -52,6 +52,7 @@ export async function runCodexAndPost(params: {
     });
     let usage: { input_tokens: number; cached_input_tokens: number; output_tokens: number } | null = null;
     let finalText: string | null = null;
+    let sawTurnCompleted = false;
     let threadId = thread.id ?? null;
 
     try {
@@ -72,6 +73,7 @@ export async function runCodexAndPost(params: {
           }
           if (event.type === 'turn.completed') {
             usage = event.usage;
+            sawTurnCompleted = true;
           }
           if (event.type === 'turn.failed') {
             throw new Error(event.error.message);
@@ -87,6 +89,10 @@ export async function runCodexAndPost(params: {
           if (statusText) {
             progress.lastStatus = statusText;
             await maybeUpdateStatus(client, channel, thinkingTs, statusLimiter, statusText);
+          }
+
+          if (finalText && sawTurnCompleted) {
+            break;
           }
         }
       } else {
