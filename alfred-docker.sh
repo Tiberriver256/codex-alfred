@@ -2,6 +2,8 @@
 set -euo pipefail
 
 DATA_DIR="${ALFRED_DATA_DIR:-$HOME/mom-data}"
+CODEX_HOME_HOST="${CODEX_HOME:-$HOME/.codex}"
+CODEX_HOME_DOCKER="/workspace/.codex"
 PID_FILE="${ALFRED_PID_FILE:-$DATA_DIR/alfred.pid}"
 
 if [[ -n "${SANDBOX_NAME:-}" ]]; then
@@ -13,6 +15,13 @@ else
 fi
 
 mkdir -p "$DATA_DIR"
+mkdir -p "$DATA_DIR/.codex"
+
+AUTH_SRC="$CODEX_HOME_HOST/auth.json"
+AUTH_DEST="$DATA_DIR/.codex/auth.json"
+if [[ -f "$AUTH_SRC" ]]; then
+  cp "$AUTH_SRC" "$AUTH_DEST"
+fi
 
 if [[ "${ALFRED_SKIP_BUILD:-0}" != "1" ]]; then
   npm run build
@@ -66,6 +75,7 @@ for var in SLACK_APP_TOKEN SLACK_BOT_TOKEN ALFRED_LOG_LEVEL OPENAI_API_KEY CODEX
 done
 
 ENV_ARGS+=("-e" "ALFRED_DATA_DIR=/workspace")
+ENV_ARGS+=("-e" "CODEX_HOME=$CODEX_HOME_DOCKER")
 ENV_ARGS+=("-e" "ALFRED_SANDBOX=host")
 ENV_ARGS+=("-e" "ALFRED_WORKDIR=/workspace")
 

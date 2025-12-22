@@ -73,3 +73,4 @@ Notes:
 - Runs Alfred **inside** the Docker container and writes logs to `/workspace/alfred.log`.
 - Installs production deps inside the container if `/workspace/node_modules` is missing.
 - Kills any host `codex-alfred` processes by default (set `ALFRED_STOP_HOST=0` to skip).
+- Copies your Codex auth file to `/workspace/.codex/auth.json` and sets `CODEX_HOME` in the container.
