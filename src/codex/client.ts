@@ -10,11 +10,24 @@ export interface CodexRunResult {
 export interface CodexThread {
   id: string | null;
   run: (prompt: string, options: { outputSchema: object }) => Promise<CodexRunResult>;
+  runStreamed?: (prompt: string, options: { outputSchema: object }) => Promise<CodexStreamedTurn>;
 }
 
 export interface CodexClient {
   startThread: (options: ThreadOptions) => Promise<CodexThread>;
   resumeThread: (id: string, options: ThreadOptions) => Promise<CodexThread>;
+}
+
+export type CodexThreadEvent =
+  | { type: 'thread.started'; thread_id: string }
+  | { type: 'turn.started' }
+  | { type: 'turn.completed'; usage: { input_tokens: number; cached_input_tokens: number; output_tokens: number } }
+  | { type: 'turn.failed'; error: { message: string } }
+  | { type: 'item.started' | 'item.updated' | 'item.completed'; item: { type: string; [key: string]: unknown } }
+  | { type: 'error'; message: string };
+
+export interface CodexStreamedTurn {
+  events: AsyncGenerator<CodexThreadEvent>;
 }
 
 export type ApprovalPolicy = 'never' | 'on-request' | 'on-failure' | 'untrusted';
