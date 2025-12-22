@@ -3,7 +3,7 @@ set -euo pipefail
 
 DATA_DIR="${ALFRED_DATA_DIR:-$HOME/mom-data}"
 CODEX_HOME_HOST="${CODEX_HOME:-$HOME/.codex}"
-CODEX_HOME_DOCKER="/workspace/.codex"
+CODEX_HOME_DOCKER="/codex-home"
 PID_FILE="${ALFRED_PID_FILE:-$DATA_DIR/alfred.pid}"
 
 if [[ -n "${SANDBOX_NAME:-}" ]]; then
@@ -15,13 +15,6 @@ else
 fi
 
 mkdir -p "$DATA_DIR"
-mkdir -p "$DATA_DIR/.codex"
-
-AUTH_SRC="$CODEX_HOME_HOST/auth.json"
-AUTH_DEST="$DATA_DIR/.codex/auth.json"
-if [[ -f "$AUTH_SRC" ]]; then
-  cp "$AUTH_SRC" "$AUTH_DEST"
-fi
 
 if [[ "${ALFRED_SKIP_BUILD:-0}" != "1" ]]; then
   npm run build
@@ -44,6 +37,11 @@ if [[ "${ALFRED_STOP_HOST:-1}" == "1" ]]; then
       sleep 1
     fi
   fi
+fi
+
+docker exec "$NAME" sh -lc "mkdir -p \"$CODEX_HOME_DOCKER\""
+if [[ -d "$CODEX_HOME_HOST" ]]; then
+  docker cp "$CODEX_HOME_HOST/." "$NAME:$CODEX_HOME_DOCKER"
 fi
 
 if [[ -f "$PID_FILE" ]]; then
@@ -83,7 +81,7 @@ if ! docker exec "$NAME" sh -lc "test -d /workspace/node_modules"; then
   docker exec "$NAME" sh -lc "cd /workspace && npm ci --omit=dev"
 fi
 
-docker exec "${ENV_ARGS[@]}" "$NAME" sh -lc "cd /workspace && nohup node /workspace/dist/index.js --log-level debug > /workspace/alfred.log 2>&1 & echo \$! > /workspace/alfred.pid"
+docker exec "${ENV_ARGS[@]}" "$NAME" sh -lc "cd /workspace && nohup node /workspace/dist/index.js --log-level debug -- --yolo > /workspace/alfred.log 2>&1 & echo \$! > /workspace/alfred.pid"
 
 if [[ -f "$PID_FILE" ]]; then
   cat "$PID_FILE"
