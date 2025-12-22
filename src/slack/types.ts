@@ -39,9 +39,32 @@ export interface ActionBody {
     blocks?: unknown[];
   };
   actions?: Array<{
+    type?: string;
     action_id?: string;
     block_id?: string;
     value?: string;
     text?: { text?: string };
   }>;
+  state?: {
+    values?: Record<
+      string,
+      Record<
+        string,
+        {
+          type?: string;
+          value?: string;
+          selected_options?: Array<{ text?: { text?: string }; value?: string }>;
+          selected_option?: { text?: { text?: string }; value?: string };
+          selected_user?: string;
+          selected_users?: string[];
+          selected_channel?: string;
+          selected_channels?: string[];
+          selected_conversation?: string;
+          selected_conversations?: string[];
+          selected_date?: string;
+          selected_time?: string;
+        }
+      >
+    >;
+  };
 }
