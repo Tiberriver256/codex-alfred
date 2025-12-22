@@ -42,6 +42,14 @@ export async function runCodexAndPost(params: {
     }
 
     const startedAt = Date.now();
+    const progress = createProgressState(startedAt);
+    const stopProgress = startProgressReporter({
+      client,
+      channel,
+      ts: thinkingTs,
+      limiter: statusLimiter,
+      progress,
+    });
     let usage: { input_tokens: number; cached_input_tokens: number; output_tokens: number } | null = null;
     let finalText: string | null = null;
     let threadId = thread.id ?? null;
@@ -50,6 +58,7 @@ export async function runCodexAndPost(params: {
       if (typeof thread.runStreamed === 'function') {
         const stream = await thread.runStreamed(attemptPrompt, { outputSchema });
         for await (const event of stream.events) {
+          progress.lastEventAt = Date.now();
           if (event.type === 'thread.started') {
             threadId = event.thread_id;
           }
@@ -68,6 +77,7 @@ export async function runCodexAndPost(params: {
 
           const statusText = statusFromEvent(event);
           if (statusText) {
+            progress.lastStatus = statusText;
             await maybeUpdateStatus(client, channel, thinkingTs, statusLimiter, statusText);
           }
         }
@@ -83,6 +93,7 @@ export async function runCodexAndPost(params: {
         }
       }
     } catch (error) {
+      stopProgress();
       lastError = error instanceof Error ? error.message : 'Codex stream failed.';
       logger.warn('Codex run failed', { threadKey, threadId, attempt, error: lastError });
       continue;
@@ -90,6 +101,7 @@ export async function runCodexAndPost(params: {
 
     const latencyMs = Date.now() - startedAt;
     if (!finalText) {
+      stopProgress();
       lastError = 'Codex did not return a final response.';
       logger.warn('Codex output missing final response', { threadKey, threadId, attempt });
       continue;
@@ -111,12 +123,14 @@ export async function runCodexAndPost(params: {
 
     const output = coerceBlockKitMessage(structured);
     if (!output) {
+      stopProgress();
       lastError = 'Output must be a JSON object with text and blocks.';
       logger.warn('Codex output missing required fields', { threadKey, attempt });
       continue;
     }
 
     try {
+      stopProgress();
       const response = await client.chat.update({
         channel,
         ts: thinkingTs,
@@ -125,6 +139,7 @@ export async function runCodexAndPost(params: {
       });
       return { response, output };
     } catch (error) {
+      stopProgress();
       lastError = formatSlackError(error);
       logger.warn('Slack update failed', { threadKey, attempt, error: lastError });
     }
@@ -190,6 +205,47 @@ function createStatusLimiter() {
     lastText: '',
     lastUpdatedAt: 0,
   };
+}
+
+function createProgressState(startedAt: number) {
+  return {
+    startedAt,
+    lastEventAt: startedAt,
+    lastStatus: 'Thinking...',
+    updateInFlight: false,
+  };
+}
+
+function startProgressReporter(params: {
+  client: SlackClientLike;
+  channel: string;
+  ts: string;
+  limiter: { lastText: string; lastUpdatedAt: number };
+  progress: {
+    startedAt: number;
+    lastEventAt: number;
+    lastStatus: string;
+    updateInFlight: boolean;
+  };
+}): () => void {
+  const { client, channel, ts, limiter, progress } = params;
+  const interval = setInterval(async () => {
+    const now = Date.now();
+    if (progress.updateInFlight) return;
+    if (now - progress.lastEventAt < 30000) return;
+
+    const elapsed = formatElapsed(progress.startedAt, now);
+    const base = progress.lastStatus || 'Working...';
+    const text = `${base} (${elapsed} elapsed)`;
+    progress.updateInFlight = true;
+    try {
+      await maybeUpdateStatus(client, channel, ts, limiter, text);
+    } finally {
+      progress.updateInFlight = false;
+    }
+  }, 15000);
+
+  return () => clearInterval(interval);
 }
 
 async function maybeUpdateStatus(
@@ -285,4 +341,12 @@ function statusFromItem(item: { type?: string; [key: string]: unknown }, phase: 
 function truncate(value: string, maxLength: number): string {
   if (value.length <= maxLength) return value;
   return `${value.slice(0, maxLength - 1)}…`;
+}
+
+function formatElapsed(startedAt: number, now: number): string {
+  const totalSeconds = Math.max(0, Math.floor((now - startedAt) / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  if (minutes === 0) return `${seconds}s`;
+  return `${minutes}m ${seconds}s`;
 }
