@@ -130,6 +130,7 @@ const BLOCK_KIT_GUIDE_FALLBACK = [
   '- Avoid interactive elements unless the user explicitly asks for them.',
   '- Do not include image blocks or accessories unless the user explicitly asked for images.',
   '- For simple replies, use a single section block with just text; no fields, accessories, or buttons.',
+  '- Never emit section blocks with empty or whitespace-only text; do not use spacer blocks.',
 ].join('\n');
 
 async function loadBlockKitGuide(logger: Logger): Promise<string> {

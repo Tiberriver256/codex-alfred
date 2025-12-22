@@ -11,7 +11,8 @@ This guide is internal prompt guidance for Alfred. It is *not* user-facing. Foll
 - Never mention internal files (like AGENTS.md) unless the user explicitly asked.
 - Do not include images unless the user asked for them.
 - Do not include fields or accessories in simple replies.
-- Never include empty strings in fields; omit fields entirely unless needed.
+- Never include empty strings in fields or block text.
+- Do not use spacer blocks. Never emit `section` blocks whose `text` is empty or whitespace-only (e.g., `" "`). If you need separation, use a `divider` or omit the block.
 
 ## Mode 1: Conversation (default)
 Use simple text responses. One section block only.
