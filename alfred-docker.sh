@@ -5,6 +5,7 @@ DATA_DIR="${ALFRED_DATA_DIR:-$HOME/mom-data}"
 CODEX_HOME_HOST="${CODEX_HOME:-$HOME/.codex}"
 CODEX_HOME_DOCKER="/codex-home"
 PID_FILE="${ALFRED_PID_FILE:-$DATA_DIR/alfred.pid}"
+DOCKER_PID_FILE="$CODEX_HOME_DOCKER/alfred.pid"
 
 if [[ -n "${SANDBOX_NAME:-}" ]]; then
   NAME="$SANDBOX_NAME"
@@ -44,13 +45,8 @@ if [[ -d "$CODEX_HOME_HOST" ]]; then
   docker cp "$CODEX_HOME_HOST/." "$NAME:$CODEX_HOME_DOCKER"
 fi
 
-if [[ -f "$PID_FILE" ]]; then
-  PID=$(cat "$PID_FILE" || true)
-  if [[ -n "$PID" ]]; then
-    docker exec "$NAME" sh -lc "kill -0 $PID 2>/dev/null && kill $PID || true"
-    sleep 1
-  fi
-fi
+docker exec "$NAME" sh -lc "if [ -f \"$DOCKER_PID_FILE\" ]; then PID=\$(cat \"$DOCKER_PID_FILE\" || true); if [ -n \"\$PID\" ]; then kill -0 \"\$PID\" 2>/dev/null && kill \"\$PID\" || true; fi; fi"
+sleep 1
 
 if command -v rsync >/dev/null 2>&1; then
   rsync -a --delete dist/ "$DATA_DIR/dist/"
@@ -81,7 +77,7 @@ if ! docker exec "$NAME" sh -lc "test -d /workspace/node_modules"; then
   docker exec "$NAME" sh -lc "cd /workspace && npm ci --omit=dev"
 fi
 
-docker exec "${ENV_ARGS[@]}" "$NAME" sh -lc "cd /workspace && nohup node /workspace/dist/index.js --log-level debug -- --yolo > /workspace/alfred.log 2>&1 & echo \$! > /workspace/alfred.pid"
+docker exec "${ENV_ARGS[@]}" "$NAME" sh -lc "cd /workspace && nohup node /workspace/dist/index.js --log-level debug -- --yolo > /workspace/alfred.log 2>&1 & echo \$! | tee /workspace/alfred.pid > \"$DOCKER_PID_FILE\""
 
 if [[ -f "$PID_FILE" ]]; then
   cat "$PID_FILE"
