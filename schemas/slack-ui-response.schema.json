@@ -231,9 +231,6 @@
         },
         "action_id": {
           "type": "string"
-        },
-        "value": {
-          "type": "string"
         }
       },
       "required": [

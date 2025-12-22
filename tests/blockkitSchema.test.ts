@@ -50,4 +50,5 @@ test('openai slack ui schema does not allow button URLs', () => {
   assert.ok(button, 'buttonElement definition missing');
   const props = button?.properties ?? {};
   assert.equal('url' in props, false);
+  assert.equal('value' in props, false);
 });
