@@ -58,6 +58,14 @@ export async function runCodexAndPost(params: {
       if (typeof thread.runStreamed === 'function') {
         const stream = await thread.runStreamed(attemptPrompt, { outputSchema });
         for await (const event of stream.events) {
+          if (logger.debug) {
+            logger.debug('Codex stream event', {
+              threadKey,
+              threadId,
+              attempt,
+              event: sanitizeForLog(event),
+            });
+          }
           progress.lastEventAt = Date.now();
           if (event.type === 'thread.started') {
             threadId = event.thread_id;
@@ -349,4 +357,41 @@ function formatElapsed(startedAt: number, now: number): string {
   const seconds = totalSeconds % 60;
   if (minutes === 0) return `${seconds}s`;
   return `${minutes}m ${seconds}s`;
+}
+
+function sanitizeForLog(value: unknown, depth = 0): unknown {
+  const maxDepth = 3;
+  const maxArray = 20;
+  const maxKeys = 20;
+  const maxString = 500;
+
+  if (depth > maxDepth) return '[truncated]';
+
+  if (typeof value === 'string') {
+    if (value.length <= maxString) return value;
+    return `${value.slice(0, maxString - 1)}…`;
+  }
+
+  if (Array.isArray(value)) {
+    const limited = value.slice(0, maxArray).map((item) => sanitizeForLog(item, depth + 1));
+    if (value.length > maxArray) {
+      return [...limited, `…(${value.length - maxArray} more)`];
+    }
+    return limited;
+  }
+
+  if (value && typeof value === 'object') {
+    const entries = Object.entries(value).slice(0, maxKeys);
+    const result: Record<string, unknown> = {};
+    for (const [key, val] of entries) {
+      result[key] = sanitizeForLog(val, depth + 1);
+    }
+    const totalKeys = Object.keys(value).length;
+    if (totalKeys > maxKeys) {
+      result._truncated = `…(${totalKeys - maxKeys} more keys)`;
+    }
+    return result;
+  }
+
+  return value;
 }
