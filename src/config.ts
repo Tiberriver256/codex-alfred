@@ -104,7 +104,7 @@ function applyCodexDefaults(args: string[]): string[] {
   const next = [...args];
   const hasModel = hasFlag(next, '--model') || hasFlag(next, '-m');
   if (!hasModel) {
-    next.push('--model', 'codex-5.2');
+    next.push('--model', 'gpt-5.2-codex');
   }
 
   const hasReasoning = hasConfig(next, 'model_reasoning_effort');

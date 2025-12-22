@@ -17,12 +17,20 @@ export interface CodexClient {
   resumeThread: (id: string, options: ThreadOptions) => Promise<CodexThread>;
 }
 
+export type ApprovalPolicy = 'never' | 'on-request' | 'on-failure' | 'untrusted';
+export type SandboxMode = 'read-only' | 'workspace-write' | 'danger-full-access';
+export type ModelReasoningEffort = 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
+
 export interface ThreadOptions {
   workingDirectory: string;
   skipGitRepoCheck: boolean;
-  approvalPolicy: 'never';
-  sandbox?: SandboxConfig;
-  cliArgs?: string[];
+  approvalPolicy: ApprovalPolicy;
+  model?: string;
+  sandboxMode?: SandboxMode;
+  modelReasoningEffort?: ModelReasoningEffort;
+  networkAccessEnabled?: boolean;
+  webSearchEnabled?: boolean;
+  additionalDirectories?: string[];
 }
 
 export async function createCodexClient(): Promise<CodexClient> {
@@ -64,12 +72,13 @@ export function buildThreadOptions(
   sandbox: SandboxConfig,
   cliArgs: string[],
 ): ThreadOptions {
+  const parsed = parseCodexArgs(cliArgs);
+
   return {
     workingDirectory: workDir,
     skipGitRepoCheck: true,
     approvalPolicy: 'never',
-    sandbox,
-    cliArgs,
+    ...parsed,
   };
 }
 
@@ -85,6 +94,112 @@ export function extractStructuredOutput(result: CodexRunResult): unknown {
     return safeJsonParse((result as { finalResponse: string }).finalResponse);
   }
   return result;
+}
+
+function parseCodexArgs(args: string[]): Partial<ThreadOptions> {
+  const result: Partial<ThreadOptions> = {};
+  const additionalDirectories: string[] = [];
+
+  for (let i = 0; i < args.length; i += 1) {
+    const arg = args[i];
+
+    if (arg === '--yolo' || arg === '--dangerously-bypass-approvals-and-sandbox') {
+      result.sandboxMode = 'danger-full-access';
+      result.approvalPolicy = 'never';
+      continue;
+    }
+
+    if (arg === '--model' || arg === '-m') {
+      const value = args[i + 1];
+      if (value) {
+        result.model = value;
+        i += 1;
+      }
+      continue;
+    }
+
+    if (arg.startsWith('--model=')) {
+      result.model = arg.slice('--model='.length);
+      continue;
+    }
+
+    if (arg === '--sandbox' || arg === '-s') {
+      const value = args[i + 1];
+      if (value) {
+        result.sandboxMode = value as SandboxMode;
+        i += 1;
+      }
+      continue;
+    }
+
+    if (arg.startsWith('--sandbox=')) {
+      result.sandboxMode = arg.slice('--sandbox='.length) as SandboxMode;
+      continue;
+    }
+
+    if (arg === '--add-dir') {
+      const value = args[i + 1];
+      if (value) {
+        additionalDirectories.push(value);
+        i += 1;
+      }
+      continue;
+    }
+
+    if (arg.startsWith('--add-dir=')) {
+      additionalDirectories.push(arg.slice('--add-dir='.length));
+      continue;
+    }
+
+    if (arg === '--config') {
+      const value = args[i + 1];
+      if (value) {
+        applyConfigValue(value, result);
+        i += 1;
+      }
+      continue;
+    }
+
+    if (arg.startsWith('--config=')) {
+      applyConfigValue(arg.slice('--config='.length), result);
+      continue;
+    }
+  }
+
+  if (additionalDirectories.length) {
+    result.additionalDirectories = additionalDirectories;
+  }
+
+  return result;
+}
+
+function applyConfigValue(value: string, result: Partial<ThreadOptions>): void {
+  const [rawKey, rawVal] = value.split('=', 2);
+  if (!rawKey) return;
+
+  const key = rawKey.trim();
+  const cleanedValue = (rawVal ?? '').trim().replace(/^["']|["']$/g, '');
+
+  if (!cleanedValue) return;
+
+  if (key === 'model_reasoning_effort') {
+    result.modelReasoningEffort = cleanedValue as ModelReasoningEffort;
+    return;
+  }
+
+  if (key === 'approval_policy') {
+    result.approvalPolicy = cleanedValue as ApprovalPolicy;
+    return;
+  }
+
+  if (key === 'sandbox_workspace_write.network_access') {
+    result.networkAccessEnabled = cleanedValue === 'true';
+    return;
+  }
+
+  if (key === 'features.web_search_request') {
+    result.webSearchEnabled = cleanedValue === 'true';
+  }
 }
 
 function safeJsonParse(value: string): unknown {
