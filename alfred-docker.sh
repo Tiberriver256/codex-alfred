@@ -31,7 +31,9 @@ if [[ -f "$PID_FILE" ]]; then
   fi
 fi
 
-eval "$(mise activate zsh)"
+if command -v mise >/dev/null 2>&1; then
+  eval "$(mise activate bash)"
+fi
 ALFRED_DATA_DIR="$DATA_DIR" \
 ALFRED_SANDBOX="docker:$NAME" \
 ALFRED_WORKDIR="/workspace" \
