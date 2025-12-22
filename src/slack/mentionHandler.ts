@@ -164,7 +164,7 @@ export function buildPrompt(
   const hints: string[] = [];
   if (wantsChecklist(messages)) {
     hints.push(
-      'Checklist request: respond with an input block that uses a checkboxes element (action_id required) and a short label. Do not return a plain markdown list.',
+      'Checklist request: respond with an input block that uses a checkboxes element (action_id required) and a short label. End with an actions block containing a Submit button. Do not return a plain markdown list.',
     );
   }
 

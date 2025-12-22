@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 
-test('openai blockkit schema keeps section blocks minimal for simple replies', () => {
+test('openai slack ui schema keeps section blocks minimal for simple replies', () => {
   const schemaPath = path.resolve(process.cwd(), 'schemas', 'blockkit-response.openai.schema.json');
   const raw = fs.readFileSync(schemaPath, 'utf8');
   const schema = JSON.parse(raw) as {
@@ -19,4 +19,35 @@ test('openai blockkit schema keeps section blocks minimal for simple replies', (
 
   const required = (section?.required ?? []).slice().sort();
   assert.deepEqual(required, ['text', 'type']);
+});
+
+test('openai slack ui schema includes input + actions blocks for forms', () => {
+  const schemaPath = path.resolve(process.cwd(), 'schemas', 'blockkit-response.openai.schema.json');
+  const raw = fs.readFileSync(schemaPath, 'utf8');
+  const schema = JSON.parse(raw) as {
+    $defs?: Record<string, { properties?: Record<string, unknown>; required?: string[] }>;
+  };
+
+  const inputBlock = schema.$defs?.inputBlock;
+  assert.ok(inputBlock, 'inputBlock definition missing');
+  const inputRequired = (inputBlock?.required ?? []).slice().sort();
+  assert.deepEqual(inputRequired, ['element', 'label', 'type']);
+
+  const actionsBlock = schema.$defs?.actionsBlock;
+  assert.ok(actionsBlock, 'actionsBlock definition missing');
+  const actionsRequired = (actionsBlock?.required ?? []).slice().sort();
+  assert.deepEqual(actionsRequired, ['elements', 'type']);
+});
+
+test('openai slack ui schema does not allow button URLs', () => {
+  const schemaPath = path.resolve(process.cwd(), 'schemas', 'blockkit-response.openai.schema.json');
+  const raw = fs.readFileSync(schemaPath, 'utf8');
+  const schema = JSON.parse(raw) as {
+    $defs?: Record<string, { properties?: Record<string, unknown> }>;
+  };
+
+  const button = schema.$defs?.buttonElement;
+  assert.ok(button, 'buttonElement definition missing');
+  const props = button?.properties ?? {};
+  assert.equal('url' in props, false);
 });
