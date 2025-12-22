@@ -71,4 +71,5 @@ To restart Alfred using the Docker sandbox in one step:
 Notes:
 - Builds the repo and syncs `dist/`, `schemas/`, and `conversations-in-blockkit.md` into the data dir.
 - Runs Alfred **inside** the Docker container and writes logs to `/workspace/alfred.log`.
+- Installs production deps inside the container if `/workspace/node_modules` is missing.
 - Kills any host `codex-alfred` processes by default (set `ALFRED_STOP_HOST=0` to skip).

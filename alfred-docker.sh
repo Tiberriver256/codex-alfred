@@ -48,10 +48,12 @@ fi
 if command -v rsync >/dev/null 2>&1; then
   rsync -a --delete dist/ "$DATA_DIR/dist/"
   rsync -a --delete schemas/ "$DATA_DIR/schemas/"
+  rsync -a package.json package-lock.json "$DATA_DIR/"
 else
   rm -rf "$DATA_DIR/dist" "$DATA_DIR/schemas"
   cp -R dist "$DATA_DIR/dist"
   cp -R schemas "$DATA_DIR/schemas"
+  cp package.json package-lock.json "$DATA_DIR/"
 fi
 
 cp conversations-in-blockkit.md "$DATA_DIR/conversations-in-blockkit.md"
@@ -66,6 +68,10 @@ done
 ENV_ARGS+=("-e" "ALFRED_DATA_DIR=/workspace")
 ENV_ARGS+=("-e" "ALFRED_SANDBOX=host")
 ENV_ARGS+=("-e" "ALFRED_WORKDIR=/workspace")
+
+if ! docker exec "$NAME" sh -lc "test -d /workspace/node_modules"; then
+  docker exec "$NAME" sh -lc "cd /workspace && npm ci --omit=dev"
+fi
 
 docker exec "${ENV_ARGS[@]}" "$NAME" sh -lc "cd /workspace && nohup node /workspace/dist/index.js --log-level debug > /workspace/alfred.log 2>&1 & echo \$! > /workspace/alfred.pid"
 
