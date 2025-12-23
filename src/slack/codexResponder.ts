@@ -61,6 +61,7 @@ export async function runCodexAndPost(params: {
     });
     let usage: { input_tokens: number; cached_input_tokens: number; output_tokens: number } | null = null;
     let finalText: string | null = null;
+    let structuredOutput: unknown | null = null;
     let sawTurnCompleted = false;
     let threadId = thread.id ?? null;
 
@@ -104,16 +105,14 @@ export async function runCodexAndPost(params: {
             break;
           }
         }
+        if (finalText) {
+          structuredOutput = extractStructuredOutput({ text: finalText });
+        }
       } else {
         const result = await thread.run(attemptPrompt, { outputSchema });
         usage = (result as { usage?: { input_tokens: number; cached_input_tokens: number; output_tokens: number } }).usage ?? null;
         threadId = thread.id ?? null;
-        const text = (result as { finalResponse?: unknown }).finalResponse;
-        if (typeof text === 'string') {
-          finalText = text;
-        } else {
-          finalText = JSON.stringify(result);
-        }
+        structuredOutput = extractStructuredOutput(result);
       }
     } catch (error) {
       stopProgress();
@@ -123,14 +122,17 @@ export async function runCodexAndPost(params: {
     }
 
     const latencyMs = Date.now() - startedAt;
-    if (!finalText) {
+    if (!structuredOutput && !finalText) {
       stopProgress();
       lastError = 'Codex did not return a final response.';
       logger.warn('Codex output missing final response', { threadKey, threadId, attempt });
       continue;
     }
+    if (!structuredOutput && finalText) {
+      structuredOutput = extractStructuredOutput({ text: finalText });
+    }
 
-    const structured = extractStructuredOutput({ text: finalText });
+    const structured = structuredOutput;
     if (logger.debug) {
       const outputJson = safeStringify(structured);
       logger.debug('Codex structured output', {
