@@ -10,6 +10,9 @@ on:
       - "README.md"
       - "scripts/update-readme-manifest-link.py"
 
+permissions:
+  contents: write
+
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -20,5 +23,16 @@ jobs:
           python-version: "3.x"
       - name: Update README link
         run: python3 scripts/update-readme-manifest-link.py
+      - name: Commit README update on main
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          if ! git diff --quiet README.md; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add README.md
+            git commit -m "Update README manifest link"
+            git push
+          fi
       - name: Verify README is up to date
+        if: github.event_name == 'pull_request'
         run: git diff --exit-code README.md
