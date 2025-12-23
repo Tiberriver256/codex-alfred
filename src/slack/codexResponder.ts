@@ -487,6 +487,11 @@ function statusFromItem(item: { type?: string; [key: string]: unknown }, phase: 
   }
 
   if (type === 'reasoning') {
+    const text = typeof item.text === 'string' ? item.text : '';
+    const cleaned = sanitizeStatusText(text);
+    if (cleaned) {
+      return cleaned;
+    }
     return phase === 'item.completed' ? 'Drafting response...' : 'Thinking...';
   }
 
@@ -504,6 +509,14 @@ function statusFromItem(item: { type?: string; [key: string]: unknown }, phase: 
 function truncate(value: string, maxLength: number): string {
   if (value.length <= maxLength) return value;
   return `${value.slice(0, maxLength - 1)}…`;
+}
+
+function sanitizeStatusText(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+  const unwrapped = trimmed.replace(/^\*+\s*/, '').replace(/\s*\*+$/, '');
+  const squashed = unwrapped.replace(/\s+/g, ' ');
+  return truncate(squashed, 120);
 }
 
 function formatElapsed(startedAt: number, now: number): string {
