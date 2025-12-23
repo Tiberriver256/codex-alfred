@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import fsSync from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { type ThreadStore, type ThreadRecord } from '../store/threadStore.js';
+import { type ThreadStore, type ThreadRecord, type PendingAttachment } from '../store/threadStore.js';
 import { buildThreadOptions, type CodexClient } from '../codex/client.js';
 import { type AppConfig } from '../config.js';
 import { runCodexAndPost, type FileAttachment } from './codexResponder.js';
@@ -53,7 +53,7 @@ export async function handleAppMention(
   );
 
   const messages = filterMessages(replies.messages ?? [], botUserId, record?.lastResponseTs);
-  const attachmentRequest = resolveAttachmentRequest(messages, config.workDir);
+  const attachmentRequest = resolveAttachmentRequest(messages, config.workDir, record?.pendingAttachment);
   if (attachmentRequest) {
     logger.info('Attachment resolved', { threadKey, path: attachmentRequest.path });
   } else if (logger.debug) {
@@ -63,7 +63,7 @@ export async function handleAppMention(
   const intro = record ? undefined : await loadBlockKitGuide(logger);
   const prompt = buildPrompt(event.channel, threadTs, messages, botUserId, intro, attachmentRequest);
 
-  const { response } = await runCodexAndPost({
+  const { response, attachments } = await runCodexAndPost({
     thread,
     prompt,
     outputSchema: blockKitOutputSchema,
@@ -78,7 +78,15 @@ export async function handleAppMention(
   const lastResponseTs = response.ts ?? record?.lastResponseTs ?? threadTs;
   const lastSeenUserTs = messages.length > 0 ? messages[messages.length - 1].ts : record?.lastSeenUserTs;
   const threadId = thread.id ?? record?.codexThreadId;
-  const patch: Partial<ThreadRecord> = { lastResponseTs, lastSeenUserTs };
+  let nextPending = record?.pendingAttachment;
+  if (attachmentRequest) {
+    nextPending = { ...attachmentRequest };
+  }
+  if (attachments && attachments.succeeded.length > 0 && attachments.failed.length === 0) {
+    nextPending = undefined;
+  }
+
+  const patch: Partial<ThreadRecord> = { lastResponseTs, lastSeenUserTs, pendingAttachment: nextPending };
   if (threadId) patch.codexThreadId = threadId;
 
   if (record) {
@@ -197,11 +205,19 @@ export function buildPrompt(
   ].join('\n');
 }
 
-export function resolveAttachmentRequest(messages: SlackMessage[], workDir: string): FileAttachment | null {
+export function resolveAttachmentRequest(
+  messages: SlackMessage[],
+  workDir: string,
+  pending?: PendingAttachment,
+): FileAttachment | null {
   if (messages.length === 0) return null;
   const latest = messages[messages.length - 1];
   const text = latest.text ?? '';
   if (!text) return null;
+
+  if (pending && wantsRetry(text)) {
+    return { ...pending };
+  }
 
   const readme = resolveReadmeAttachment(text, workDir);
   if (readme) return readme;
@@ -212,6 +228,10 @@ export function resolveAttachmentRequest(messages: SlackMessage[], workDir: stri
   const resolved = resolveSafePath(candidate, workDir);
   if (!resolved) return null;
   return { path: resolved };
+}
+
+function wantsRetry(text: string): boolean {
+  return /\b(try again|retry|re-?attach|attach again|send again)\b/i.test(text);
 }
 
 function resolveReadmeAttachment(text: string, workDir: string): FileAttachment | null {

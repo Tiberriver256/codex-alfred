@@ -11,6 +11,12 @@ export interface FileAttachment {
   title?: string;
 }
 
+export interface AttachmentResult {
+  attempted: boolean;
+  succeeded: string[];
+  failed: Array<{ filename: string; reason: string }>;
+}
+
 export async function runCodexAndPost(params: {
   thread: CodexThread;
   prompt: string;
@@ -21,7 +27,7 @@ export async function runCodexAndPost(params: {
   channel: string;
   threadTs: string;
   attachments?: FileAttachment[];
-}): Promise<{ response: { ts?: string }; output: BlockKitMessage }> {
+}): Promise<{ response: { ts?: string }; output: BlockKitMessage; attachments?: AttachmentResult }> {
   const { thread, prompt, outputSchema, logger, threadKey, client, channel, threadTs, attachments } = params;
   let lastError: string | null = null;
   let lastOutput: unknown = null;
@@ -162,11 +168,12 @@ export async function runCodexAndPost(params: {
         text: output.text,
         blocks: output.blocks,
       });
+      let attachmentResult: AttachmentResult | undefined;
       if (attachments && attachments.length > 0) {
         logger.info('Uploading attachments', { threadKey, attachments: attachments.map((item) => item.path) });
-        await uploadAttachments({ client, channel, threadTs, attachments, logger, threadKey });
+        attachmentResult = await uploadAttachments({ client, channel, threadTs, attachments, logger, threadKey });
       }
-      return { response, output };
+      return { response, output, attachments: attachmentResult };
     } catch (error) {
       stopProgress();
       lastError = formatSlackError(error);
@@ -208,14 +215,18 @@ async function uploadAttachments(params: {
   attachments: FileAttachment[];
   logger: Logger;
   threadKey: string;
-}): Promise<void> {
+}): Promise<AttachmentResult> {
   const { client, channel, threadTs, attachments, logger, threadKey } = params;
   if (!client.files?.upload && !client.files?.uploadV2) {
     logger.warn('Slack client missing files.upload methods', { threadKey });
-    return;
+    return { attempted: true, succeeded: [], failed: attachments.map((item) => ({
+      filename: item.filename ?? path.basename(item.path),
+      reason: 'Slack client missing files.upload methods',
+    })) };
   }
 
   const failures: Array<{ filename: string; reason: string }> = [];
+  const successes: string[] = [];
 
   for (const attachment of attachments) {
     try {
@@ -233,22 +244,24 @@ async function uploadAttachments(params: {
             filename,
             title: attachment.title ?? filename,
           });
+          successes.push(filename);
           continue;
         } catch (error) {
           logger.warn('Slack uploadV2 failed, falling back to upload', { threadKey, error });
         }
       }
 
-        if (client.files?.upload) {
-          await client.files.upload({
-            channels: channel,
-            thread_ts: threadTs,
-            filename,
-            file: data,
-            initial_comment: initialComment,
-          });
-        }
-      } catch (error) {
+      if (client.files?.upload) {
+        await client.files.upload({
+          channels: channel,
+          thread_ts: threadTs,
+          filename,
+          file: data,
+          initial_comment: initialComment,
+        });
+        successes.push(filename);
+      }
+    } catch (error) {
       const reason = formatSlackError(error);
       failures.push({ filename: attachment.filename ?? path.basename(attachment.path), reason });
       logger.warn('Failed to upload attachment', { threadKey, path: attachment.path, error });
@@ -279,6 +292,8 @@ async function uploadAttachments(params: {
       logger.warn('Failed to post attachment error message', { threadKey, error });
     }
   }
+
+  return { attempted: true, succeeded: successes, failed: failures };
 }
 
 function buildRetryPrompt(basePrompt: string, error: string | null, lastOutput: unknown): string {

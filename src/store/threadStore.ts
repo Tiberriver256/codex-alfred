@@ -6,6 +6,13 @@ export interface ThreadRecord {
   codexThreadId?: string;
   lastResponseTs?: string;
   lastSeenUserTs?: string;
+  pendingAttachment?: PendingAttachment;
+}
+
+export interface PendingAttachment {
+  path: string;
+  filename?: string;
+  title?: string;
 }
 
 interface ThreadStoreFile {
