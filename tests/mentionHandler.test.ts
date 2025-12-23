@@ -237,6 +237,69 @@ test('handleAppMention only injects guidance on first turn', async () => {
   assert.doesNotMatch(prompts[1], /Conversations in Block Kit/);
 });
 
+test('handleAppMention uploads requested file attachments', async () => {
+  const store = await makeStore();
+  const prompts: string[] = [];
+  const workDir = await fs.mkdtemp(path.join(os.tmpdir(), 'alfred-work-'));
+  const readmePath = path.join(workDir, 'README.md');
+  await fs.writeFile(readmePath, 'hello');
+
+  const fakeThread: CodexThread = {
+    id: 'thread-2',
+    run: async (prompt) => {
+      prompts.push(prompt);
+      return { output: { text: 'Attached.', blocks: [{ type: 'section', text: { type: 'mrkdwn', text: 'Attached.' } }] } };
+    },
+  };
+
+  const codex: CodexClient = {
+    startThread: async () => fakeThread,
+    resumeThread: async () => fakeThread,
+  };
+
+  const uploads: any[] = [];
+  const client = {
+    conversations: {
+      replies: async () => ({
+        messages: [{ ts: '1.0', user: 'U1', text: 'Please attach readme.md' }],
+      }),
+    },
+    chat: {
+      postMessage: async () => ({ ts: '1.0' }),
+      update: async () => ({ ts: '2.0' }),
+    },
+    files: {
+      upload: async (args: any) => {
+        uploads.push(args);
+        return { file: { id: 'F1' } };
+      },
+    },
+  };
+
+  await handleAppMention(
+    {
+      event: { channel: 'C1', ts: '1.0', text: 'Please attach readme.md' },
+      ack: async () => undefined,
+    },
+    {
+      client,
+      store,
+      codex,
+      config: { ...baseConfig, workDir },
+      logger,
+      botUserId: 'B1',
+      blockKitOutputSchema: {},
+    },
+  );
+
+  assert.equal(prompts.length, 1);
+  assert.match(prompts[0], /Attachment request: the system will attach README.md/i);
+  assert.equal(uploads.length, 1);
+  assert.equal(uploads[0].channels, 'C1');
+  assert.equal(uploads[0].thread_ts, '1.0');
+  assert.equal(uploads[0].filename, 'README.md');
+});
+
 test('handleAppMention adds checklist hint when user requests a checklist', async () => {
   const store = await makeStore();
   const prompts: string[] = [];

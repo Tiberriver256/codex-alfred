@@ -1,7 +1,15 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import { extractStructuredOutput, type CodexThread, type CodexThreadEvent } from '../codex/client.js';
 import { type BlockKitMessage } from '../blockkit/validator.js';
 import { type Logger } from '../logger.js';
 import { type SlackClientLike } from './types.js';
+
+export interface FileAttachment {
+  path: string;
+  filename?: string;
+  title?: string;
+}
 
 export async function runCodexAndPost(params: {
   thread: CodexThread;
@@ -12,8 +20,9 @@ export async function runCodexAndPost(params: {
   client: SlackClientLike;
   channel: string;
   threadTs: string;
+  attachments?: FileAttachment[];
 }): Promise<{ response: { ts?: string }; output: BlockKitMessage }> {
-  const { thread, prompt, outputSchema, logger, threadKey, client, channel, threadTs } = params;
+  const { thread, prompt, outputSchema, logger, threadKey, client, channel, threadTs, attachments } = params;
   let lastError: string | null = null;
   let lastOutput: unknown = null;
   const statusLimiter = createStatusLimiter();
@@ -151,6 +160,9 @@ export async function runCodexAndPost(params: {
         text: output.text,
         blocks: output.blocks,
       });
+      if (attachments && attachments.length > 0) {
+        await uploadAttachments({ client, channel, threadTs, attachments, logger, threadKey });
+      }
       return { response, output };
     } catch (error) {
       stopProgress();
@@ -184,6 +196,59 @@ function coerceBlockKitMessage(payload: unknown): BlockKitMessage | null {
   if (typeof candidate.text !== 'string') return null;
   if (!Array.isArray(candidate.blocks)) return null;
   return { text: candidate.text, blocks: candidate.blocks };
+}
+
+async function uploadAttachments(params: {
+  client: SlackClientLike;
+  channel: string;
+  threadTs: string;
+  attachments: FileAttachment[];
+  logger: Logger;
+  threadKey: string;
+}): Promise<void> {
+  const { client, channel, threadTs, attachments, logger, threadKey } = params;
+  if (!client.files?.upload && !client.files?.uploadV2) {
+    logger.warn('Slack client missing files.upload methods', { threadKey });
+    return;
+  }
+
+  for (const attachment of attachments) {
+    try {
+      const data = await fs.readFile(attachment.path);
+      const filename = attachment.filename ?? path.basename(attachment.path);
+      const initialComment = attachment.title;
+
+      if (client.files?.uploadV2) {
+        try {
+          await client.files.uploadV2({
+            channel_id: channel,
+            thread_ts: threadTs,
+            initial_comment: initialComment,
+            file: {
+              file: data,
+              filename,
+              title: attachment.title,
+            },
+          });
+          continue;
+        } catch (error) {
+          logger.warn('Slack uploadV2 failed, falling back to upload', { threadKey, error });
+        }
+      }
+
+      if (client.files?.upload) {
+        await client.files.upload({
+          channels: channel,
+          thread_ts: threadTs,
+          filename,
+          file: data,
+          initial_comment: initialComment,
+        });
+      }
+    } catch (error) {
+      logger.warn('Failed to upload attachment', { threadKey, path: attachment.path, error });
+    }
+  }
 }
 
 function buildRetryPrompt(basePrompt: string, error: string | null, lastOutput: unknown): string {

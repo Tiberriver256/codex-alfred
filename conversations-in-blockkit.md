@@ -76,6 +76,7 @@ Goal: acknowledge files, summarize, and ask for missing items. Do not fabricate 
 Recommended Block Kit:
 - `section` explaining what you received or need.
 - If a file ID is provided, you may include a `file` block using `external_id` + `source: "remote"`.
+- If the user asks to attach a local file, acknowledge the request; the system will handle the upload.
 
 Example (file received):
 ```

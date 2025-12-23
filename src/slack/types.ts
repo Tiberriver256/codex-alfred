@@ -6,6 +6,21 @@ export interface SlackClientLike {
     postMessage: (args: { channel: string; thread_ts: string; text: string; blocks: unknown[] }) => Promise<{ ts?: string }>;
     update: (args: { channel: string; ts: string; text: string; blocks: unknown[] }) => Promise<{ ts?: string }>;
   };
+  files?: {
+    upload?: (args: {
+      channels: string;
+      thread_ts?: string;
+      filename?: string;
+      file: Buffer | Uint8Array | string;
+      initial_comment?: string;
+    }) => Promise<{ file?: { id?: string } }>;
+    uploadV2?: (args: {
+      channel_id: string;
+      thread_ts?: string;
+      initial_comment?: string;
+      file: { file: Buffer | Uint8Array | string; filename?: string; title?: string };
+    }) => Promise<{ files?: Array<{ id?: string }> }>;
+  };
 }
 
 export interface SlackMessage {

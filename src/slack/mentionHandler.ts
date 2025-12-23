@@ -1,11 +1,12 @@
 import { type Logger } from '../logger.js';
 import fs from 'node:fs/promises';
+import fsSync from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { type ThreadStore, type ThreadRecord } from '../store/threadStore.js';
 import { buildThreadOptions, type CodexClient } from '../codex/client.js';
 import { type AppConfig } from '../config.js';
-import { runCodexAndPost } from './codexResponder.js';
+import { runCodexAndPost, type FileAttachment } from './codexResponder.js';
 import { type SlackClientLike, type SlackMessage, type MentionEvent } from './types.js';
 
 export interface MentionDeps {
@@ -52,8 +53,9 @@ export async function handleAppMention(
   );
 
   const messages = filterMessages(replies.messages ?? [], botUserId, record?.lastResponseTs);
+  const attachmentRequest = resolveAttachmentRequest(messages, config.workDir);
   const intro = record ? undefined : await loadBlockKitGuide(logger);
-  const prompt = buildPrompt(event.channel, threadTs, messages, botUserId, intro);
+  const prompt = buildPrompt(event.channel, threadTs, messages, botUserId, intro, attachmentRequest);
 
   const { response } = await runCodexAndPost({
     thread,
@@ -64,6 +66,7 @@ export async function handleAppMention(
     client,
     channel: event.channel,
     threadTs,
+    attachments: attachmentRequest ? [attachmentRequest] : undefined,
   });
 
   const lastResponseTs = response.ts ?? record?.lastResponseTs ?? threadTs;
@@ -151,6 +154,7 @@ export function buildPrompt(
   messages: SlackMessage[],
   botUserId: string,
   intro?: string,
+  attachment?: FileAttachment | null,
 ): string {
   const lines = messages.map((msg) => {
     const who = msg.user ? `@${msg.user}` : '@unknown';
@@ -169,6 +173,12 @@ export function buildPrompt(
     );
   }
 
+  if (attachment) {
+    hints.push(
+      `Attachment request: the system will attach ${path.basename(attachment.path)} to this thread. Respond with a brief confirmation and do not refuse.`,
+    );
+  }
+
   const introLines = intro ? [intro, ''] : [];
   const hintLines = hints.length > 0 ? [...hints, ''] : [];
   return [
@@ -179,6 +189,50 @@ export function buildPrompt(
     '',
     'Respond with Block Kit JSON that matches the output schema.',
   ].join('\n');
+}
+
+export function resolveAttachmentRequest(messages: SlackMessage[], workDir: string): FileAttachment | null {
+  if (messages.length === 0) return null;
+  const latest = messages[messages.length - 1];
+  const text = latest.text ?? '';
+  if (!text) return null;
+
+  const readme = resolveReadmeAttachment(text, workDir);
+  if (readme) return readme;
+
+  const match = text.match(/\b(?:attach|upload|send)\s+[`"'(]*([^`"')\s]+)[`"')]*?/i);
+  if (!match) return null;
+  const candidate = match[1].replace(/[.,!?]+$/, '');
+  const resolved = resolveSafePath(candidate, workDir);
+  if (!resolved) return null;
+  return { path: resolved };
+}
+
+function resolveReadmeAttachment(text: string, workDir: string): FileAttachment | null {
+  if (!/readme/i.test(text)) return null;
+  const candidates = ['README.md', 'readme.md'];
+  for (const filename of candidates) {
+    const fullPath = path.resolve(workDir, filename);
+    if (isSafePath(fullPath, workDir) && fsSync.existsSync(fullPath)) {
+      return { path: fullPath, filename };
+    }
+  }
+  return null;
+}
+
+function resolveSafePath(inputPath: string, workDir: string): string | null {
+  const resolved = path.isAbsolute(inputPath) ? path.resolve(inputPath) : path.resolve(workDir, inputPath);
+  if (!isSafePath(resolved, workDir)) return null;
+  return resolved;
+}
+
+function isSafePath(targetPath: string, workDir: string): boolean {
+  const normalizedWorkDir = path.resolve(workDir);
+  const normalizedTarget = path.resolve(targetPath);
+  if (!normalizedTarget.startsWith(`${normalizedWorkDir}${path.sep}`) && normalizedTarget !== normalizedWorkDir) {
+    return false;
+  }
+  return true;
 }
 
 function wantsChecklist(messages: SlackMessage[]): boolean {
