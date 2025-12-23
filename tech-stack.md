@@ -8,7 +8,7 @@ Modern, minimalist stack optimized for a thin Slack <-> Codex bridge.
 
 ## Slack Integration
 - Slack Socket Mode via `@slack/bolt`
-- Block Kit messages validated against `schemas/blockkit-response.schema.json`
+- Block Kit messages validated against `schemas/blockkit-response.openai.schema.json`
 - App manifest flow for self-serve app creation (`slack-app-manifest.yaml`)
 
 ## Codex Integration

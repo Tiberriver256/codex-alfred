@@ -35,7 +35,7 @@
 - [x] Record usage/latency for logging.
 
 ## Block Kit Validation + Posting
-- [x] Load `schemas/blockkit-response.schema.json`.
+- [x] Load `schemas/blockkit-response.openai.schema.json`.
 - [x] Validate Codex output JSON; on failure, post fallback error Block Kit.
 - [x] Post response to the correct thread (`chat.postMessage`).
 - [x] Update `last_response_ts` and persist.

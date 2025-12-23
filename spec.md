@@ -129,7 +129,7 @@ Core constraints derived from Slack docs and blockkit library:
 - Text object type is `plain_text` or `mrkdwn` (with length limits per object).
 - All interactive elements require `action_id`.
 
-Schema file: `schemas/blockkit-response.schema.json`.
+Schema file: `schemas/blockkit-response.openai.schema.json`.
 
 ### Example output
 ```
