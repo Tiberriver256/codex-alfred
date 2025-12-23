@@ -47,16 +47,6 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 3000
-        },
-        "filename": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 3000
-        },
-        "title": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 3000
         }
       },
       "required": [

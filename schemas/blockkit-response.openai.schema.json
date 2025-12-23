@@ -278,12 +278,6 @@
       "properties": {
         "path": {
           "type": "string"
-        },
-        "filename": {
-          "type": "string"
-        },
-        "title": {
-          "type": "string"
         }
       },
       "required": [
