@@ -65,6 +65,7 @@ export async function handleAppMention(
     channel: event.channel,
     threadTs,
     workDir: config.workDir,
+    dataDir: config.dataDir,
   });
 
   const lastResponseTs = response.ts ?? record?.lastResponseTs ?? threadTs;
@@ -134,6 +135,7 @@ const BLOCK_KIT_GUIDE_FALLBACK = [
   '- For simple replies, use a single section block with just text; no fields, accessories, or buttons.',
   '- Never emit section blocks with empty or whitespace-only text; do not use spacer blocks.',
   '- If no files should be attached, set "attachments" to [].',
+  '- Attachments must use workspace-relative paths; do not reference /tmp.',
 ].join('\n');
 
 async function loadBlockKitGuide(logger: Logger): Promise<string> {

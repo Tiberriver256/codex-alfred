@@ -79,6 +79,7 @@ Recommended Block Kit:
 - `section` explaining what you received or need.
 - If a file ID is provided, you may include a `file` block using `external_id` + `source: "remote"`.
 - If the user asks to attach a local file, include it in `attachments` with a workspace-relative path. The system will handle the upload.
+- If you create a file for attachment, write it under `attachments/` in the workspace (not `/tmp`).
 - If no file should be attached, return `"attachments": []`.
 
 Example (file received):

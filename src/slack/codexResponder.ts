@@ -27,8 +27,9 @@ export async function runCodexAndPost(params: {
   channel: string;
   threadTs: string;
   workDir: string;
+  dataDir: string;
 }): Promise<{ response: { ts?: string }; output: BlockKitMessage; attachments?: AttachmentResult }> {
-  const { thread, prompt, outputSchema, logger, threadKey, client, channel, threadTs, workDir } = params;
+  const { thread, prompt, outputSchema, logger, threadKey, client, channel, threadTs, workDir, dataDir } = params;
   let lastError: string | null = null;
   let lastOutput: unknown = null;
   const statusLimiter = createStatusLimiter();
@@ -171,7 +172,11 @@ export async function runCodexAndPost(params: {
       let attachmentResult: AttachmentResult | undefined;
       const requestedAttachments = output.attachments ?? [];
       if (requestedAttachments.length > 0) {
-        const { resolved, failures: invalidFailures } = resolveAttachments(requestedAttachments, workDir);
+        const { resolved, failures: invalidFailures } = await resolveAttachments(
+          requestedAttachments,
+          workDir,
+          dataDir,
+        );
         attachmentResult = { attempted: true, succeeded: [], failed: [] };
         if (resolved.length > 0) {
           logger.info('Uploading attachments', { threadKey, attachments: resolved.map((item) => item.path) });
@@ -297,30 +302,48 @@ async function uploadAttachments(params: {
   return { attempted: true, succeeded: successes, failed: failures };
 }
 
-function resolveAttachments(
+async function resolveAttachments(
   attachments: FileAttachment[],
   workDir: string,
-): { resolved: FileAttachment[]; failures: Array<{ filename: string; reason: string }> } {
+  dataDir: string,
+): Promise<{ resolved: FileAttachment[]; failures: Array<{ filename: string; reason: string }> }> {
   const resolved: FileAttachment[] = [];
   const failures: Array<{ filename: string; reason: string }> = [];
   const normalizedWorkDir = path.resolve(workDir);
+  const normalizedDataDir = path.resolve(dataDir);
+  const stagingDir = path.join(normalizedDataDir, 'attachments');
+  await fs.mkdir(stagingDir, { recursive: true });
 
   for (const attachment of attachments) {
     const candidatePath = attachment.path;
     const resolvedPath = path.isAbsolute(candidatePath)
       ? path.resolve(candidatePath)
       : path.resolve(workDir, candidatePath);
-    if (!isSafePath(resolvedPath, normalizedWorkDir)) {
-      failures.push({
-        filename: attachment.filename ?? path.basename(candidatePath),
-        reason: 'Attachment path must be inside the workspace.',
-      });
+    const filename = attachment.filename ?? path.basename(resolvedPath);
+
+    if (isSafePath(resolvedPath, normalizedWorkDir) || isSafePath(resolvedPath, normalizedDataDir)) {
+      if (!(await exists(resolvedPath))) {
+        failures.push({ filename, reason: 'File not found.' });
+        continue;
+      }
+      resolved.push({ ...attachment, path: resolvedPath, filename });
       continue;
     }
-    resolved.push({
-      ...attachment,
-      path: resolvedPath,
-      filename: attachment.filename ?? path.basename(resolvedPath),
+
+    if (isTempPath(resolvedPath)) {
+      if (!(await exists(resolvedPath))) {
+        failures.push({ filename, reason: 'Temp file not found.' });
+        continue;
+      }
+      const destination = await ensureUniqueDestination(stagingDir, filename);
+      await fs.copyFile(resolvedPath, destination);
+      resolved.push({ ...attachment, path: destination, filename: path.basename(destination) });
+      continue;
+    }
+
+    failures.push({
+      filename,
+      reason: 'Attachment path must be inside the workspace or data directory.',
     });
   }
 
@@ -333,6 +356,32 @@ function isSafePath(targetPath: string, workDir: string): boolean {
     return false;
   }
   return true;
+}
+
+function isTempPath(targetPath: string): boolean {
+  return targetPath.startsWith('/tmp/') || targetPath.startsWith('/var/tmp/');
+}
+
+async function ensureUniqueDestination(dir: string, filename: string): Promise<string> {
+  const base = path.basename(filename);
+  const ext = path.extname(base);
+  const stem = ext ? base.slice(0, -ext.length) : base;
+  let attempt = 0;
+  let candidate = path.join(dir, base);
+  while (await exists(candidate)) {
+    attempt += 1;
+    candidate = path.join(dir, `${stem}-${attempt}${ext}`);
+  }
+  return candidate;
+}
+
+async function exists(filePath: string): Promise<boolean> {
+  try {
+    await fs.stat(filePath);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 async function postAttachmentFailures(params: {

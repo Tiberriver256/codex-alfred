@@ -300,6 +300,71 @@ test('handleAppMention uploads attachments returned by the model', async () => {
   assert.equal(uploads[0].filename, 'README.md');
 });
 
+test('handleAppMention stages temp attachments outside the workspace', async () => {
+  const store = await makeStore();
+  const workDir = await fs.mkdtemp(path.join(os.tmpdir(), 'alfred-work-'));
+  const dataDir = await fs.mkdtemp(path.join(os.tmpdir(), 'alfred-data-'));
+  const externalDir = await fs.mkdtemp(path.join(os.tmpdir(), 'alfred-external-'));
+  const externalPath = path.join(externalDir, 'report.txt');
+  await fs.writeFile(externalPath, 'report');
+
+  const fakeThread: CodexThread = {
+    id: 'thread-5',
+    run: async () => ({
+      output: {
+        text: 'Attached.',
+        blocks: [{ type: 'section', text: { type: 'mrkdwn', text: 'Attached.' } }],
+        attachments: [{ path: externalPath }],
+      },
+    }),
+  };
+
+  const codex: CodexClient = {
+    startThread: async () => fakeThread,
+    resumeThread: async () => fakeThread,
+  };
+
+  const uploads: any[] = [];
+  const client = {
+    conversations: {
+      replies: async () => ({
+        messages: [{ ts: '1.0', user: 'U1', text: 'Attach the report' }],
+      }),
+    },
+    chat: {
+      postMessage: async () => ({ ts: '1.0' }),
+      update: async () => ({ ts: '2.0' }),
+    },
+    files: {
+      upload: async (args: any) => {
+        uploads.push(args);
+        return { file: { id: 'F4' } };
+      },
+    },
+  };
+
+  await handleAppMention(
+    {
+      event: { channel: 'C1', ts: '1.0', text: 'Attach the report' },
+      ack: async () => undefined,
+    },
+    {
+      client,
+      store,
+      codex,
+      config: { ...baseConfig, workDir, dataDir },
+      logger,
+      botUserId: 'B1',
+      blockKitOutputSchema: {},
+    },
+  );
+
+  assert.equal(uploads.length, 1);
+  const stagedDir = path.join(dataDir, 'attachments');
+  const stagedFiles = await fs.readdir(stagedDir);
+  assert.ok(stagedFiles.some((name) => name.startsWith('report')));
+});
+
 test('handleAppMention adds checklist hint when user requests a checklist', async () => {
   const store = await makeStore();
   const prompts: string[] = [];
