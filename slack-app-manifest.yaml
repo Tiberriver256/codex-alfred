@@ -19,6 +19,7 @@ oauth_config:
       - mpim:history
       - mpim:read
       - chat:write
+      - files:write
       - users:read
 settings:
   socket_mode_enabled: true

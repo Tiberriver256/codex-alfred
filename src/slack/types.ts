@@ -18,7 +18,9 @@ export interface SlackClientLike {
       channel_id: string;
       thread_ts?: string;
       initial_comment?: string;
-      file: { file: Buffer | Uint8Array | string; filename?: string; title?: string };
+      file: Buffer | Uint8Array | string;
+      filename?: string;
+      title?: string;
     }) => Promise<{ files?: Array<{ id?: string }> }>;
   };
 }

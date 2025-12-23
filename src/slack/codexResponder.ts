@@ -226,11 +226,9 @@ async function uploadAttachments(params: {
             channel_id: channel,
             thread_ts: threadTs,
             initial_comment: initialComment,
-            file: {
-              file: data,
-              filename,
-              title: attachment.title,
-            },
+            file: data,
+            filename,
+            title: attachment.title ?? filename,
           });
           continue;
         } catch (error) {
