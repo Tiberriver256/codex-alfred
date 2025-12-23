@@ -4,12 +4,7 @@ import { extractStructuredOutput, type CodexThread, type CodexThreadEvent } from
 import { type BlockKitMessage } from '../blockkit/validator.js';
 import { type Logger } from '../logger.js';
 import { type SlackClientLike } from './types.js';
-
-export interface FileAttachment {
-  path: string;
-  filename?: string;
-  title?: string;
-}
+import { cleanupAttachments, resolveAttachments, type FileAttachment } from './attachmentResolver.js';
 
 export interface AttachmentResult {
   attempted: boolean;
@@ -28,8 +23,9 @@ export async function runCodexAndPost(params: {
   threadTs: string;
   workDir: string;
   dataDir: string;
+  sandbox: { mode: 'host' } | { mode: 'docker'; name: string };
 }): Promise<{ response: { ts?: string }; output: BlockKitMessage; attachments?: AttachmentResult }> {
-  const { thread, prompt, outputSchema, logger, threadKey, client, channel, threadTs, workDir, dataDir } = params;
+  const { thread, prompt, outputSchema, logger, threadKey, client, channel, threadTs, workDir, dataDir, sandbox } = params;
   let lastError: string | null = null;
   let lastOutput: unknown = null;
   const statusLimiter = createStatusLimiter();
@@ -172,11 +168,11 @@ export async function runCodexAndPost(params: {
       let attachmentResult: AttachmentResult | undefined;
       const requestedAttachments = output.attachments ?? [];
       if (requestedAttachments.length > 0) {
-        const { resolved, failures: invalidFailures } = await resolveAttachments(
-          requestedAttachments,
+        const { resolved, failures: invalidFailures, cleanup } = await resolveAttachments(requestedAttachments, {
           workDir,
           dataDir,
-        );
+          sandbox,
+        });
         attachmentResult = { attempted: true, succeeded: [], failed: [] };
         if (resolved.length > 0) {
           logger.info('Uploading attachments', { threadKey, attachments: resolved.map((item) => item.path) });
@@ -189,6 +185,9 @@ export async function runCodexAndPost(params: {
         }
         if (attachmentResult.failed.length > 0) {
           await postAttachmentFailures({ client, channel, threadTs, failures: attachmentResult.failed, logger, threadKey });
+        }
+        if (cleanup.length > 0) {
+          await cleanupAttachments(cleanup);
         }
       }
       return { response, output, attachments: attachmentResult };
@@ -300,88 +299,6 @@ async function uploadAttachments(params: {
   }
 
   return { attempted: true, succeeded: successes, failed: failures };
-}
-
-async function resolveAttachments(
-  attachments: FileAttachment[],
-  workDir: string,
-  dataDir: string,
-): Promise<{ resolved: FileAttachment[]; failures: Array<{ filename: string; reason: string }> }> {
-  const resolved: FileAttachment[] = [];
-  const failures: Array<{ filename: string; reason: string }> = [];
-  const normalizedWorkDir = path.resolve(workDir);
-  const normalizedDataDir = path.resolve(dataDir);
-  const stagingDir = path.join(normalizedDataDir, 'attachments');
-  await fs.mkdir(stagingDir, { recursive: true });
-
-  for (const attachment of attachments) {
-    const candidatePath = attachment.path;
-    const resolvedPath = path.isAbsolute(candidatePath)
-      ? path.resolve(candidatePath)
-      : path.resolve(workDir, candidatePath);
-    const filename = attachment.filename ?? path.basename(resolvedPath);
-
-    if (isSafePath(resolvedPath, normalizedWorkDir) || isSafePath(resolvedPath, normalizedDataDir)) {
-      if (!(await exists(resolvedPath))) {
-        failures.push({ filename, reason: 'File not found.' });
-        continue;
-      }
-      resolved.push({ ...attachment, path: resolvedPath, filename });
-      continue;
-    }
-
-    if (isTempPath(resolvedPath)) {
-      if (!(await exists(resolvedPath))) {
-        failures.push({ filename, reason: 'Temp file not found.' });
-        continue;
-      }
-      const destination = await ensureUniqueDestination(stagingDir, filename);
-      await fs.copyFile(resolvedPath, destination);
-      resolved.push({ ...attachment, path: destination, filename: path.basename(destination) });
-      continue;
-    }
-
-    failures.push({
-      filename,
-      reason: 'Attachment path must be inside the workspace or data directory.',
-    });
-  }
-
-  return { resolved, failures };
-}
-
-function isSafePath(targetPath: string, workDir: string): boolean {
-  const normalizedTarget = path.resolve(targetPath);
-  if (!normalizedTarget.startsWith(`${workDir}${path.sep}`) && normalizedTarget !== workDir) {
-    return false;
-  }
-  return true;
-}
-
-function isTempPath(targetPath: string): boolean {
-  return targetPath.startsWith('/tmp/') || targetPath.startsWith('/var/tmp/');
-}
-
-async function ensureUniqueDestination(dir: string, filename: string): Promise<string> {
-  const base = path.basename(filename);
-  const ext = path.extname(base);
-  const stem = ext ? base.slice(0, -ext.length) : base;
-  let attempt = 0;
-  let candidate = path.join(dir, base);
-  while (await exists(candidate)) {
-    attempt += 1;
-    candidate = path.join(dir, `${stem}-${attempt}${ext}`);
-  }
-  return candidate;
-}
-
-async function exists(filePath: string): Promise<boolean> {
-  try {
-    await fs.stat(filePath);
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 async function postAttachmentFailures(params: {

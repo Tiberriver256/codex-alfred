@@ -75,6 +75,7 @@ export async function handleAction(
     threadTs,
     workDir: config.workDir,
     dataDir: config.dataDir,
+    sandbox: config.sandbox,
   });
 
   const lastResponseTs = response.ts ?? record?.lastResponseTs ?? threadTs;

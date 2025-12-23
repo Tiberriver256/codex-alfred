@@ -361,8 +361,8 @@ test('handleAppMention stages temp attachments outside the workspace', async () 
 
   assert.equal(uploads.length, 1);
   const stagedDir = path.join(dataDir, 'attachments');
-  const stagedFiles = await fs.readdir(stagedDir);
-  assert.ok(stagedFiles.some((name) => name.startsWith('report')));
+  const stagedFiles = await fs.readdir(stagedDir).catch(() => []);
+  assert.equal(stagedFiles.some((name) => name.startsWith('report')), false);
 });
 
 test('handleAppMention adds checklist hint when user requests a checklist', async () => {

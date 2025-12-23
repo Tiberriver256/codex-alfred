@@ -66,6 +66,7 @@ export async function handleAppMention(
     threadTs,
     workDir: config.workDir,
     dataDir: config.dataDir,
+    sandbox: config.sandbox,
   });
 
   const lastResponseTs = response.ts ?? record?.lastResponseTs ?? threadTs;
