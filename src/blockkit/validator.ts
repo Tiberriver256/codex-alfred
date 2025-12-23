@@ -4,6 +4,11 @@ import path from 'node:path';
 export interface BlockKitMessage {
   text: string;
   blocks: unknown[];
+  attachments?: Array<{
+    path: string;
+    filename?: string;
+    title?: string;
+  }>;
 }
 
 export async function loadBlockKitOutputSchema(schemaPath?: string): Promise<object> {

@@ -73,6 +73,7 @@ export async function handleAction(
     client,
     channel,
     threadTs,
+    workDir: config.workDir,
   });
 
   const lastResponseTs = response.ts ?? record?.lastResponseTs ?? threadTs;

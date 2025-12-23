@@ -12,11 +12,20 @@
       "items": {
         "$ref": "#/$defs/block"
       }
+    },
+    "attachments": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 5,
+      "items": {
+        "$ref": "#/$defs/attachment"
+      }
     }
   },
   "required": [
     "text",
-    "blocks"
+    "blocks",
+    "attachments"
   ],
   "additionalProperties": false,
   "$defs": {
@@ -261,6 +270,18 @@
       "required": [
         "type",
         "elements"
+      ],
+      "additionalProperties": false
+    },
+    "attachment": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path"
       ],
       "additionalProperties": false
     },

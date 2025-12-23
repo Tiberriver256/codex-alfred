@@ -26,9 +26,9 @@ export async function runCodexAndPost(params: {
   client: SlackClientLike;
   channel: string;
   threadTs: string;
-  attachments?: FileAttachment[];
+  workDir: string;
 }): Promise<{ response: { ts?: string }; output: BlockKitMessage; attachments?: AttachmentResult }> {
-  const { thread, prompt, outputSchema, logger, threadKey, client, channel, threadTs, attachments } = params;
+  const { thread, prompt, outputSchema, logger, threadKey, client, channel, threadTs, workDir } = params;
   let lastError: string | null = null;
   let lastOutput: unknown = null;
   const statusLimiter = createStatusLimiter();
@@ -155,7 +155,7 @@ export async function runCodexAndPost(params: {
     const output = coerceBlockKitMessage(structured);
     if (!output) {
       stopProgress();
-      lastError = 'Output must be a JSON object with text and blocks.';
+      lastError = 'Output must be a JSON object with text, blocks, and attachments (array).';
       logger.warn('Codex output missing required fields', { threadKey, attempt });
       continue;
     }
@@ -169,9 +169,22 @@ export async function runCodexAndPost(params: {
         blocks: output.blocks,
       });
       let attachmentResult: AttachmentResult | undefined;
-      if (attachments && attachments.length > 0) {
-        logger.info('Uploading attachments', { threadKey, attachments: attachments.map((item) => item.path) });
-        attachmentResult = await uploadAttachments({ client, channel, threadTs, attachments, logger, threadKey });
+      const requestedAttachments = output.attachments ?? [];
+      if (requestedAttachments.length > 0) {
+        const { resolved, failures: invalidFailures } = resolveAttachments(requestedAttachments, workDir);
+        attachmentResult = { attempted: true, succeeded: [], failed: [] };
+        if (resolved.length > 0) {
+          logger.info('Uploading attachments', { threadKey, attachments: resolved.map((item) => item.path) });
+          const uploaded = await uploadAttachments({ client, channel, threadTs, attachments: resolved, logger, threadKey });
+          attachmentResult.succeeded = uploaded.succeeded;
+          attachmentResult.failed = uploaded.failed;
+        }
+        if (invalidFailures.length > 0) {
+          attachmentResult.failed.push(...invalidFailures);
+        }
+        if (attachmentResult.failed.length > 0) {
+          await postAttachmentFailures({ client, channel, threadTs, failures: attachmentResult.failed, logger, threadKey });
+        }
       }
       return { response, output, attachments: attachmentResult };
     } catch (error) {
@@ -202,9 +215,22 @@ export async function runCodexAndPost(params: {
 
 function coerceBlockKitMessage(payload: unknown): BlockKitMessage | null {
   if (!payload || typeof payload !== 'object') return null;
-  const candidate = payload as { text?: unknown; blocks?: unknown };
+  const candidate = payload as { text?: unknown; blocks?: unknown; attachments?: unknown };
   if (typeof candidate.text !== 'string') return null;
   if (!Array.isArray(candidate.blocks)) return null;
+  if (candidate.attachments !== undefined) {
+    if (!Array.isArray(candidate.attachments)) return null;
+    const attachments: FileAttachment[] = [];
+    for (const item of candidate.attachments) {
+      if (!item || typeof item !== 'object') return null;
+      const raw = item as { path?: unknown; filename?: unknown; title?: unknown };
+      if (typeof raw.path !== 'string') return null;
+      if (raw.filename !== undefined && typeof raw.filename !== 'string') return null;
+      if (raw.title !== undefined && typeof raw.title !== 'string') return null;
+      attachments.push({ path: raw.path, filename: raw.filename, title: raw.title });
+    }
+    return { text: candidate.text, blocks: candidate.blocks, attachments };
+  }
   return { text: candidate.text, blocks: candidate.blocks };
 }
 
@@ -268,32 +294,79 @@ async function uploadAttachments(params: {
     }
   }
 
-  if (failures.length > 0) {
-    const lines = failures.map((failure) => `• ${failure.filename}: ${failure.reason}`);
-    const text = [
-      'I couldn’t attach the file(s).',
-      ...lines,
-      'If this is a permissions issue, ensure the Slack app has `files:write` and is reinstalled.',
-    ].join('\n');
+  return { attempted: true, succeeded: successes, failed: failures };
+}
 
-    try {
-      await client.chat.postMessage({
-        channel,
-        thread_ts: threadTs,
-        text,
-        blocks: [
-          {
-            type: 'section',
-            text: { type: 'mrkdwn', text },
-          },
-        ],
+function resolveAttachments(
+  attachments: FileAttachment[],
+  workDir: string,
+): { resolved: FileAttachment[]; failures: Array<{ filename: string; reason: string }> } {
+  const resolved: FileAttachment[] = [];
+  const failures: Array<{ filename: string; reason: string }> = [];
+  const normalizedWorkDir = path.resolve(workDir);
+
+  for (const attachment of attachments) {
+    const candidatePath = attachment.path;
+    const resolvedPath = path.isAbsolute(candidatePath)
+      ? path.resolve(candidatePath)
+      : path.resolve(workDir, candidatePath);
+    if (!isSafePath(resolvedPath, normalizedWorkDir)) {
+      failures.push({
+        filename: attachment.filename ?? path.basename(candidatePath),
+        reason: 'Attachment path must be inside the workspace.',
       });
-    } catch (error) {
-      logger.warn('Failed to post attachment error message', { threadKey, error });
+      continue;
     }
+    resolved.push({
+      ...attachment,
+      path: resolvedPath,
+      filename: attachment.filename ?? path.basename(resolvedPath),
+    });
   }
 
-  return { attempted: true, succeeded: successes, failed: failures };
+  return { resolved, failures };
+}
+
+function isSafePath(targetPath: string, workDir: string): boolean {
+  const normalizedTarget = path.resolve(targetPath);
+  if (!normalizedTarget.startsWith(`${workDir}${path.sep}`) && normalizedTarget !== workDir) {
+    return false;
+  }
+  return true;
+}
+
+async function postAttachmentFailures(params: {
+  client: SlackClientLike;
+  channel: string;
+  threadTs: string;
+  failures: Array<{ filename: string; reason: string }>;
+  logger: Logger;
+  threadKey: string;
+}): Promise<void> {
+  const { client, channel, threadTs, failures, logger, threadKey } = params;
+  if (failures.length === 0) return;
+  const lines = failures.map((failure) => `• ${failure.filename}: ${failure.reason}`);
+  const text = [
+    'I couldn’t attach the file(s).',
+    ...lines,
+    'If this is a permissions issue, ensure the Slack app has `files:write` and is reinstalled.',
+  ].join('\n');
+
+  try {
+    await client.chat.postMessage({
+      channel,
+      thread_ts: threadTs,
+      text,
+      blocks: [
+        {
+          type: 'section',
+          text: { type: 'mrkdwn', text },
+        },
+      ],
+    });
+  } catch (error) {
+    logger.warn('Failed to post attachment error message', { threadKey, error });
+  }
 }
 
 function buildRetryPrompt(basePrompt: string, error: string | null, lastOutput: unknown): string {
@@ -306,7 +379,7 @@ function buildRetryPrompt(basePrompt: string, error: string | null, lastOutput: 
     `Previous response JSON: ${outputSnippet}`,
     'Return a corrected Block Kit JSON object that satisfies the output schema.',
     'Do NOT include fields, accessories, buttons, or placeholder URLs unless the user explicitly asked.',
-    'For simple replies, return only: {"text": "...", "blocks":[{"type":"section","text":{"type":"mrkdwn","text":"..."}}]}',
+    'For simple replies, return only: {"text": "...", "blocks":[{"type":"section","text":{"type":"mrkdwn","text":"..."}}], "attachments":[]}',
   ].join('\n');
 }
 

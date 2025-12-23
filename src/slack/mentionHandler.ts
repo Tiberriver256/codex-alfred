@@ -1,12 +1,11 @@
 import { type Logger } from '../logger.js';
 import fs from 'node:fs/promises';
-import fsSync from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { type ThreadStore, type ThreadRecord, type PendingAttachment } from '../store/threadStore.js';
+import { type ThreadStore, type ThreadRecord } from '../store/threadStore.js';
 import { buildThreadOptions, type CodexClient } from '../codex/client.js';
 import { type AppConfig } from '../config.js';
-import { runCodexAndPost, type FileAttachment } from './codexResponder.js';
+import { runCodexAndPost } from './codexResponder.js';
 import { type SlackClientLike, type SlackMessage, type MentionEvent } from './types.js';
 
 export interface MentionDeps {
@@ -53,34 +52,10 @@ export async function handleAppMention(
   );
 
   const messages = filterMessages(replies.messages ?? [], botUserId, record?.lastResponseTs);
-  const attachmentIntent = detectAttachmentIntent(messages);
-  const attachmentRequest = resolveAttachmentRequest(messages, config.workDir, record?.pendingAttachment);
-  const attachmentSuggestions =
-    attachmentIntent && !attachmentRequest ? await listAttachmentSuggestions(config.workDir) : [];
-  if (attachmentRequest) {
-    logger.info('Attachment resolved', { threadKey, path: attachmentRequest.path });
-  } else if (attachmentIntent && logger.info) {
-    logger.info('Attachment intent detected but unresolved', {
-      threadKey,
-      suggestions: attachmentSuggestions,
-    });
-  } else if (logger.debug) {
-    const lastText = messages.length > 0 ? messages[messages.length - 1].text : undefined;
-    logger.debug('No attachment resolved', { threadKey, lastText });
-  }
   const intro = record ? undefined : await loadBlockKitGuide(logger);
-  const prompt = buildPrompt(
-    event.channel,
-    threadTs,
-    messages,
-    botUserId,
-    intro,
-    attachmentRequest,
-    attachmentIntent,
-    attachmentSuggestions,
-  );
+  const prompt = buildPrompt(event.channel, threadTs, messages, botUserId, intro);
 
-  const { response, attachments } = await runCodexAndPost({
+  const { response } = await runCodexAndPost({
     thread,
     prompt,
     outputSchema: blockKitOutputSchema,
@@ -89,21 +64,14 @@ export async function handleAppMention(
     client,
     channel: event.channel,
     threadTs,
-    attachments: attachmentRequest ? [attachmentRequest] : undefined,
+    workDir: config.workDir,
   });
 
   const lastResponseTs = response.ts ?? record?.lastResponseTs ?? threadTs;
   const lastSeenUserTs = messages.length > 0 ? messages[messages.length - 1].ts : record?.lastSeenUserTs;
   const threadId = thread.id ?? record?.codexThreadId;
-  let nextPending = record?.pendingAttachment;
-  if (attachmentRequest) {
-    nextPending = { ...attachmentRequest };
-  }
-  if (attachments && attachments.succeeded.length > 0 && attachments.failed.length === 0) {
-    nextPending = undefined;
-  }
 
-  const patch: Partial<ThreadRecord> = { lastResponseTs, lastSeenUserTs, pendingAttachment: nextPending };
+  const patch: Partial<ThreadRecord> = { lastResponseTs, lastSeenUserTs };
   if (threadId) patch.codexThreadId = threadId;
 
   if (record) {
@@ -160,11 +128,12 @@ let blockKitGuideCache: string | null = null;
 
 const BLOCK_KIT_GUIDE_FALLBACK = [
   'Block Kit Response Guidance (internal, do not repeat):',
-  '- Respond with a JSON object that includes "text" and "blocks".',
+  '- Respond with a JSON object that includes "text", "blocks", and "attachments" (array).',
   '- Avoid interactive elements unless the user explicitly asks for them.',
   '- Do not include image blocks or accessories unless the user explicitly asked for images.',
   '- For simple replies, use a single section block with just text; no fields, accessories, or buttons.',
   '- Never emit section blocks with empty or whitespace-only text; do not use spacer blocks.',
+  '- If no files should be attached, set "attachments" to [].',
 ].join('\n');
 
 async function loadBlockKitGuide(logger: Logger): Promise<string> {
@@ -185,9 +154,6 @@ export function buildPrompt(
   messages: SlackMessage[],
   botUserId: string,
   intro?: string,
-  attachment?: FileAttachment | null,
-  attachmentIntent = false,
-  attachmentSuggestions: string[] = [],
 ): string {
   const lines = messages.map((msg) => {
     const who = msg.user ? `@${msg.user}` : '@unknown';
@@ -206,20 +172,6 @@ export function buildPrompt(
     );
   }
 
-  if (attachment) {
-    hints.push(
-      `Attachment request: the system will attach ${path.basename(attachment.path)} to this thread. Respond with a brief confirmation and do not refuse.`,
-    );
-  } else if (attachmentIntent) {
-    const suggestionLine =
-      attachmentSuggestions.length > 0
-        ? `Available files in workspace: ${attachmentSuggestions.join(', ')}.`
-        : 'No file was resolved.';
-    hints.push(
-      `Attachment request unresolved: do NOT claim a file was attached. Ask the user which file to attach. ${suggestionLine}`,
-    );
-  }
-
   const introLines = intro ? [intro, ''] : [];
   const hintLines = hints.length > 0 ? [...hints, ''] : [];
   return [
@@ -230,83 +182,6 @@ export function buildPrompt(
     '',
     'Respond with Block Kit JSON that matches the output schema.',
   ].join('\n');
-}
-
-export function resolveAttachmentRequest(
-  messages: SlackMessage[],
-  workDir: string,
-  pending?: PendingAttachment,
-): FileAttachment | null {
-  if (messages.length === 0) return null;
-  const latest = messages[messages.length - 1];
-  const text = latest.text ?? '';
-  if (!text) return null;
-
-  if (pending && wantsRetry(text)) {
-    return { ...pending };
-  }
-
-  const readme = resolveReadmeAttachment(text, workDir);
-  if (readme) return readme;
-
-  const match = text.match(/\b(?:attach|upload|send)\s+[`"'(]*([^`"')\s]+)[`"')]*?/i);
-  if (!match) return null;
-  const candidate = match[1].replace(/[.,!?]+$/, '');
-  const resolved = resolveSafePath(candidate, workDir);
-  if (!resolved) return null;
-  if (!fsSync.existsSync(resolved)) return null;
-  return { path: resolved };
-}
-
-function wantsRetry(text: string): boolean {
-  return /\b(try again|retry|re-?attach|attach again|send again)\b/i.test(text);
-}
-
-function detectAttachmentIntent(messages: SlackMessage[]): boolean {
-  if (messages.length === 0) return false;
-  const latest = messages[messages.length - 1];
-  const text = latest.text ?? '';
-  return /\b(attach|upload|send)\b/i.test(text);
-}
-
-async function listAttachmentSuggestions(workDir: string): Promise<string[]> {
-  try {
-    const entries = await fs.readdir(workDir, { withFileTypes: true });
-    return entries
-      .filter((entry) => entry.isFile())
-      .map((entry) => entry.name)
-      .filter((name) => !name.startsWith('.'))
-      .slice(0, 8);
-  } catch {
-    return [];
-  }
-}
-
-function resolveReadmeAttachment(text: string, workDir: string): FileAttachment | null {
-  if (!/readme/i.test(text)) return null;
-  const candidates = ['README.md', 'readme.md'];
-  for (const filename of candidates) {
-    const fullPath = path.resolve(workDir, filename);
-    if (isSafePath(fullPath, workDir) && fsSync.existsSync(fullPath)) {
-      return { path: fullPath, filename };
-    }
-  }
-  return null;
-}
-
-function resolveSafePath(inputPath: string, workDir: string): string | null {
-  const resolved = path.isAbsolute(inputPath) ? path.resolve(inputPath) : path.resolve(workDir, inputPath);
-  if (!isSafePath(resolved, workDir)) return null;
-  return resolved;
-}
-
-function isSafePath(targetPath: string, workDir: string): boolean {
-  const normalizedWorkDir = path.resolve(workDir);
-  const normalizedTarget = path.resolve(targetPath);
-  if (!normalizedTarget.startsWith(`${normalizedWorkDir}${path.sep}`) && normalizedTarget !== normalizedWorkDir) {
-    return false;
-  }
-  return true;
 }
 
 function wantsChecklist(messages: SlackMessage[]): boolean {
