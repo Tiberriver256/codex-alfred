@@ -53,15 +53,32 @@ export async function handleAppMention(
   );
 
   const messages = filterMessages(replies.messages ?? [], botUserId, record?.lastResponseTs);
+  const attachmentIntent = detectAttachmentIntent(messages);
   const attachmentRequest = resolveAttachmentRequest(messages, config.workDir, record?.pendingAttachment);
+  const attachmentSuggestions =
+    attachmentIntent && !attachmentRequest ? await listAttachmentSuggestions(config.workDir) : [];
   if (attachmentRequest) {
     logger.info('Attachment resolved', { threadKey, path: attachmentRequest.path });
+  } else if (attachmentIntent && logger.info) {
+    logger.info('Attachment intent detected but unresolved', {
+      threadKey,
+      suggestions: attachmentSuggestions,
+    });
   } else if (logger.debug) {
     const lastText = messages.length > 0 ? messages[messages.length - 1].text : undefined;
     logger.debug('No attachment resolved', { threadKey, lastText });
   }
   const intro = record ? undefined : await loadBlockKitGuide(logger);
-  const prompt = buildPrompt(event.channel, threadTs, messages, botUserId, intro, attachmentRequest);
+  const prompt = buildPrompt(
+    event.channel,
+    threadTs,
+    messages,
+    botUserId,
+    intro,
+    attachmentRequest,
+    attachmentIntent,
+    attachmentSuggestions,
+  );
 
   const { response, attachments } = await runCodexAndPost({
     thread,
@@ -169,6 +186,8 @@ export function buildPrompt(
   botUserId: string,
   intro?: string,
   attachment?: FileAttachment | null,
+  attachmentIntent = false,
+  attachmentSuggestions: string[] = [],
 ): string {
   const lines = messages.map((msg) => {
     const who = msg.user ? `@${msg.user}` : '@unknown';
@@ -190,6 +209,14 @@ export function buildPrompt(
   if (attachment) {
     hints.push(
       `Attachment request: the system will attach ${path.basename(attachment.path)} to this thread. Respond with a brief confirmation and do not refuse.`,
+    );
+  } else if (attachmentIntent) {
+    const suggestionLine =
+      attachmentSuggestions.length > 0
+        ? `Available files in workspace: ${attachmentSuggestions.join(', ')}.`
+        : 'No file was resolved.';
+    hints.push(
+      `Attachment request unresolved: do NOT claim a file was attached. Ask the user which file to attach. ${suggestionLine}`,
     );
   }
 
@@ -227,11 +254,32 @@ export function resolveAttachmentRequest(
   const candidate = match[1].replace(/[.,!?]+$/, '');
   const resolved = resolveSafePath(candidate, workDir);
   if (!resolved) return null;
+  if (!fsSync.existsSync(resolved)) return null;
   return { path: resolved };
 }
 
 function wantsRetry(text: string): boolean {
   return /\b(try again|retry|re-?attach|attach again|send again)\b/i.test(text);
+}
+
+function detectAttachmentIntent(messages: SlackMessage[]): boolean {
+  if (messages.length === 0) return false;
+  const latest = messages[messages.length - 1];
+  const text = latest.text ?? '';
+  return /\b(attach|upload|send)\b/i.test(text);
+}
+
+async function listAttachmentSuggestions(workDir: string): Promise<string[]> {
+  try {
+    const entries = await fs.readdir(workDir, { withFileTypes: true });
+    return entries
+      .filter((entry) => entry.isFile())
+      .map((entry) => entry.name)
+      .filter((name) => !name.startsWith('.'))
+      .slice(0, 8);
+  } catch {
+    return [];
+  }
 }
 
 function resolveReadmeAttachment(text: string, workDir: string): FileAttachment | null {

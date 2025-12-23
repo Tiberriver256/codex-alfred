@@ -367,6 +367,68 @@ test('handleAppMention retries pending attachments on request', async () => {
   assert.equal(uploads[0].filename, 'README.md');
 });
 
+test('handleAppMention asks for file when attachment intent is ambiguous', async () => {
+  const store = await makeStore();
+  const prompts: string[] = [];
+  const workDir = await fs.mkdtemp(path.join(os.tmpdir(), 'alfred-work-'));
+  await fs.writeFile(path.join(workDir, 'notes.txt'), 'hi');
+  await fs.writeFile(path.join(workDir, 'README.md'), 'hello');
+
+  const fakeThread: CodexThread = {
+    id: 'thread-4',
+    run: async (prompt) => {
+      prompts.push(prompt);
+      return { output: { text: 'Which file?', blocks: [{ type: 'section', text: { type: 'mrkdwn', text: 'Which file?' } }] } };
+    },
+  };
+
+  const codex: CodexClient = {
+    startThread: async () => fakeThread,
+    resumeThread: async () => fakeThread,
+  };
+
+  const uploads: any[] = [];
+  const client = {
+    conversations: {
+      replies: async () => ({
+        messages: [{ ts: '1.0', user: 'U1', text: 'attach another file' }],
+      }),
+    },
+    chat: {
+      postMessage: async () => ({ ts: '1.0' }),
+      update: async () => ({ ts: '1.1' }),
+    },
+    files: {
+      upload: async (args: any) => {
+        uploads.push(args);
+        return { file: { id: 'F3' } };
+      },
+    },
+  };
+
+  await handleAppMention(
+    {
+      event: { channel: 'C1', ts: '1.0', text: 'attach another file' },
+      ack: async () => undefined,
+    },
+    {
+      client,
+      store,
+      codex,
+      config: { ...baseConfig, workDir },
+      logger,
+      botUserId: 'B1',
+      blockKitOutputSchema: {},
+    },
+  );
+
+  assert.equal(prompts.length, 1);
+  assert.match(prompts[0], /Attachment request unresolved/i);
+  assert.match(prompts[0], /notes\.txt/);
+  assert.match(prompts[0], /README\.md/);
+  assert.equal(uploads.length, 0);
+});
+
 test('handleAppMention adds checklist hint when user requests a checklist', async () => {
   const store = await makeStore();
   const prompts: string[] = [];
