@@ -163,6 +163,7 @@ export async function runCodexAndPost(params: {
         blocks: output.blocks,
       });
       if (attachments && attachments.length > 0) {
+        logger.info('Uploading attachments', { threadKey, attachments: attachments.map((item) => item.path) });
         await uploadAttachments({ client, channel, threadTs, attachments, logger, threadKey });
       }
       return { response, output };
@@ -214,6 +215,8 @@ async function uploadAttachments(params: {
     return;
   }
 
+  const failures: Array<{ filename: string; reason: string }> = [];
+
   for (const attachment of attachments) {
     try {
       const data = await fs.readFile(attachment.path);
@@ -236,17 +239,44 @@ async function uploadAttachments(params: {
         }
       }
 
-      if (client.files?.upload) {
-        await client.files.upload({
-          channels: channel,
-          thread_ts: threadTs,
-          filename,
-          file: data,
-          initial_comment: initialComment,
-        });
-      }
-    } catch (error) {
+        if (client.files?.upload) {
+          await client.files.upload({
+            channels: channel,
+            thread_ts: threadTs,
+            filename,
+            file: data,
+            initial_comment: initialComment,
+          });
+        }
+      } catch (error) {
+      const reason = formatSlackError(error);
+      failures.push({ filename: attachment.filename ?? path.basename(attachment.path), reason });
       logger.warn('Failed to upload attachment', { threadKey, path: attachment.path, error });
+    }
+  }
+
+  if (failures.length > 0) {
+    const lines = failures.map((failure) => `• ${failure.filename}: ${failure.reason}`);
+    const text = [
+      'I couldn’t attach the file(s).',
+      ...lines,
+      'If this is a permissions issue, ensure the Slack app has `files:write` and is reinstalled.',
+    ].join('\n');
+
+    try {
+      await client.chat.postMessage({
+        channel,
+        thread_ts: threadTs,
+        text,
+        blocks: [
+          {
+            type: 'section',
+            text: { type: 'mrkdwn', text },
+          },
+        ],
+      });
+    } catch (error) {
+      logger.warn('Failed to post attachment error message', { threadKey, error });
     }
   }
 }

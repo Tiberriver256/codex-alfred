@@ -54,6 +54,12 @@ export async function handleAppMention(
 
   const messages = filterMessages(replies.messages ?? [], botUserId, record?.lastResponseTs);
   const attachmentRequest = resolveAttachmentRequest(messages, config.workDir);
+  if (attachmentRequest) {
+    logger.info('Attachment resolved', { threadKey, path: attachmentRequest.path });
+  } else if (logger.debug) {
+    const lastText = messages.length > 0 ? messages[messages.length - 1].text : undefined;
+    logger.debug('No attachment resolved', { threadKey, lastText });
+  }
   const intro = record ? undefined : await loadBlockKitGuide(logger);
   const prompt = buildPrompt(event.channel, threadTs, messages, botUserId, intro, attachmentRequest);
 
