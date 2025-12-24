@@ -80,12 +80,13 @@ if [[ "${ALFRED_SKIP_BUILD:-0}" != "1" ]]; then
 fi
 
 docker build -t "$IMAGE_NAME" .
+IMAGE_ID=$(docker image inspect "$IMAGE_NAME" --format '{{.Id}}')
 
 if ! docker inspect "$NAME" >/dev/null 2>&1; then
   SANDBOX_NAME="$NAME" SANDBOX_IMAGE="$IMAGE_NAME" ./docker.sh create "$DATA_DIR"
 else
-  CURRENT_IMAGE=$(docker inspect -f '{{.Config.Image}}' "$NAME")
-  if [[ "$CURRENT_IMAGE" != "$IMAGE_NAME" ]]; then
+  CONTAINER_IMAGE_ID=$(docker inspect -f '{{.Image}}' "$NAME")
+  if [[ "$CONTAINER_IMAGE_ID" != "$IMAGE_ID" ]]; then
     docker rm -f "$NAME" >/dev/null
     SANDBOX_NAME="$NAME" SANDBOX_IMAGE="$IMAGE_NAME" ./docker.sh create "$DATA_DIR"
   fi
