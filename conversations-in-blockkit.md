@@ -63,13 +63,13 @@ If (and only if) the user explicitly wants interactive input:
 - Ensure `action_id` is set, and do not include `url` in select options.
 - For `static_select`, do not include `max_selected_items`.
 
-If the user explicitly asks for a checklist:
+If a checklist would help the user track items (shopping list, todo list, etc.):
 - Use an `input` block with a `checkboxes` element and a short label.
 - Do not return a plain markdown list.
-- End the form with an `actions` block that contains a Submit button (no URL).
+- Only include an `actions` block with a Submit button when you need the user to submit selections or provide input. For tracking-only checklists, omit the actions block.
 
-If you output any `input` blocks:
-- Always include an `actions` block at the end with a Submit button.
+If you output any `input` blocks to collect user input:
+- Include an `actions` block at the end with a Submit button.
 - Keep `action_id` values short and kebab-case (e.g., `submit-form`).
 
 ## Mode 3: Sharing files

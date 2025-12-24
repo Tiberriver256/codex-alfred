@@ -131,10 +131,12 @@ let blockKitGuideCache: string | null = null;
 const BLOCK_KIT_GUIDE_FALLBACK = [
   'Block Kit Response Guidance (internal, do not repeat):',
   '- Respond with a JSON object that includes "text", "blocks", and "attachments" (array).',
-  '- Avoid interactive elements unless the user explicitly asks for them.',
+  '- Avoid interactive elements unless the user explicitly asks for them or a checklist helps the user track items.',
   '- Do not include image blocks or accessories unless the user explicitly asked for images.',
   '- For simple replies, use a single section block with just text; no fields, accessories, or buttons.',
   '- Never emit section blocks with empty or whitespace-only text; do not use spacer blocks.',
+  '- For tracking-only checklists, use an input block with checkboxes and no Submit button.',
+  '- Only include a Submit button when you need the user to submit selections or provide input.',
   '- If no files should be attached, set "attachments" to [].',
   '- Attachments must use workspace-relative paths; do not reference /tmp.',
 ].join('\n');
@@ -168,25 +170,12 @@ export function buildPrompt(
     lines.push('- (no new messages)');
   }
 
-  const hints: string[] = [];
-  if (wantsChecklist(messages)) {
-    hints.push(
-      'Checklist request: respond with an input block that uses a checkboxes element (action_id required) and a short label. End with an actions block containing a Submit button. Do not return a plain markdown list.',
-    );
-  }
-
   const introLines = intro ? [intro, ''] : [];
-  const hintLines = hints.length > 0 ? [...hints, ''] : [];
   return [
     ...introLines,
-    ...hintLines,
     'Messages since last response:',
     ...lines,
     '',
     'Respond with Block Kit JSON that matches the output schema.',
   ].join('\n');
-}
-
-function wantsChecklist(messages: SlackMessage[]): boolean {
-  return messages.some((msg) => /check\s*list|checklist|to[-\s]?do list|todo list/i.test(msg.text ?? ''));
 }

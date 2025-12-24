@@ -365,7 +365,7 @@ test('handleAppMention stages temp attachments outside the workspace', async () 
   assert.equal(stagedFiles.some((name) => name.startsWith('report')), false);
 });
 
-test('handleAppMention adds checklist hint when user requests a checklist', async () => {
+test('handleAppMention includes checklist guidance in the intro prompt', async () => {
   const store = await makeStore();
   const prompts: string[] = [];
 
@@ -385,7 +385,7 @@ test('handleAppMention adds checklist hint when user requests a checklist', asyn
   const client = {
     conversations: {
       replies: async () => ({
-        messages: [{ ts: '1.0', user: 'U1', text: '<@B1> Give me a checklist' }],
+        messages: [{ ts: '1.0', user: 'U1', text: '<@B1> hello' }],
       }),
     },
     chat: {
@@ -396,7 +396,7 @@ test('handleAppMention adds checklist hint when user requests a checklist', asyn
 
   await handleAppMention(
     {
-      event: { channel: 'C1', ts: '1.0', text: '<@B1> Give me a checklist' },
+      event: { channel: 'C1', ts: '1.0', text: '<@B1> hello' },
       ack: async () => undefined,
     },
     {
@@ -411,6 +411,6 @@ test('handleAppMention adds checklist hint when user requests a checklist', asyn
   );
 
   assert.equal(prompts.length, 1);
-  assert.match(prompts[0], /Checklist request:/);
-  assert.match(prompts[0], /checkboxes element/);
+  assert.match(prompts[0], /tracking-only checklists/i);
+  assert.doesNotMatch(prompts[0], /Checklist request:/);
 });
