@@ -1,6 +1,62 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+EXTRA_ENV_ARGS=()
+EXTRA_ENV_FILES=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -e|--env)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for $1 (expected KEY=VALUE)" >&2
+        exit 1
+      fi
+      if [[ "$2" != *"="* ]]; then
+        echo "Invalid $1 value '$2' (expected KEY=VALUE)" >&2
+        exit 1
+      fi
+      EXTRA_ENV_ARGS+=("-e" "$2")
+      shift 2
+      ;;
+    --env-file)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for $1 (expected PATH)" >&2
+        exit 1
+      fi
+      EXTRA_ENV_FILES+=("--env-file" "$2")
+      shift 2
+      ;;
+    --env-file=*)
+      ENV_FILE="${1#*=}"
+      EXTRA_ENV_FILES+=("--env-file" "$ENV_FILE")
+      shift
+      ;;
+    --env=*)
+      ENV_VALUE="${1#*=}"
+      if [[ "$ENV_VALUE" != *"="* ]]; then
+        echo "Invalid --env value '$ENV_VALUE' (expected KEY=VALUE)" >&2
+        exit 1
+      fi
+      EXTRA_ENV_ARGS+=("-e" "$ENV_VALUE")
+      shift
+      ;;
+    -h|--help)
+      cat <<'EOF'
+Usage: ./alfred-docker.sh [--env KEY=VALUE]...
+
+Options:
+  -e, --env KEY=VALUE   Add an extra environment variable for the container
+  --env-file PATH       Add environment variables from a file (docker --env-file format)
+  -h, --help            Show this help
+EOF
+      exit 0
+      ;;
+    *)
+      echo "Unknown argument: $1" >&2
+      exit 1
+      ;;
+  esac
+done
+
 DATA_DIR="${ALFRED_DATA_DIR:-$HOME/mom-data}"
 CODEX_HOME_HOST="${CODEX_HOME:-$HOME/.codex}"
 CODEX_HOME_DOCKER="/codex-home"
@@ -82,6 +138,12 @@ for var in SLACK_APP_TOKEN SLACK_BOT_TOKEN ALFRED_LOG_LEVEL OPENAI_API_KEY CODEX
   fi
 done
 
+if [[ -f ".env" ]]; then
+  EXTRA_ENV_FILES+=("--env-file" ".env")
+fi
+
+ENV_ARGS+=("${EXTRA_ENV_ARGS[@]}")
+ENV_ARGS+=("${EXTRA_ENV_FILES[@]}")
 ENV_ARGS+=("-e" "ALFRED_DATA_DIR=/workspace")
 ENV_ARGS+=("-e" "CODEX_HOME=$CODEX_HOME_DOCKER")
 ENV_ARGS+=("-e" "ALFRED_SANDBOX=host")
