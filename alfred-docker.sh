@@ -40,6 +40,19 @@ if [[ "${ALFRED_STOP_HOST:-1}" == "1" ]]; then
   fi
 fi
 
+if ! docker exec "$NAME" sh -lc "node -e 'const major=Number(process.versions.node.split(\".\")[0]); process.exit(Number.isFinite(major) && major >= 24 ? 0 : 1);'"; then
+  echo "Installing Node.js 24 in $NAME..."
+  docker exec "$NAME" sh -lc "apt-get update \
+    && apt-get install -y ca-certificates curl gnupg \
+    && mkdir -p /etc/apt/keyrings \
+    && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
+    && echo 'deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_24.x nodistro main' > /etc/apt/sources.list.d/nodesource.list \
+    && apt-get update \
+    && apt-get install -y nodejs \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*"
+fi
+
 docker exec "$NAME" sh -lc "mkdir -p \"$CODEX_HOME_DOCKER\""
 if [[ -d "$CODEX_HOME_HOST" ]]; then
   docker cp "$CODEX_HOME_HOST/." "$NAME:$CODEX_HOME_DOCKER"
