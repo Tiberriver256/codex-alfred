@@ -58,6 +58,7 @@ EOF
 done
 
 DATA_DIR="${ALFRED_DATA_DIR:-$HOME/mom-data}"
+IMAGE_NAME="${ALFRED_IMAGE:-codex-alfred:local}"
 CODEX_HOME_HOST="${CODEX_HOME:-$HOME/.codex}"
 CODEX_HOME_DOCKER="/codex-home"
 ENGINE_DIR="/alfred"
@@ -78,8 +79,16 @@ if [[ "${ALFRED_SKIP_BUILD:-0}" != "1" ]]; then
   npm run build
 fi
 
+docker build -t "$IMAGE_NAME" .
+
 if ! docker inspect "$NAME" >/dev/null 2>&1; then
-  SANDBOX_NAME="$NAME" ./docker.sh create "$DATA_DIR"
+  SANDBOX_NAME="$NAME" SANDBOX_IMAGE="$IMAGE_NAME" ./docker.sh create "$DATA_DIR"
+else
+  CURRENT_IMAGE=$(docker inspect -f '{{.Config.Image}}' "$NAME")
+  if [[ "$CURRENT_IMAGE" != "$IMAGE_NAME" ]]; then
+    docker rm -f "$NAME" >/dev/null
+    SANDBOX_NAME="$NAME" SANDBOX_IMAGE="$IMAGE_NAME" ./docker.sh create "$DATA_DIR"
+  fi
 fi
 
 STATUS=$(docker inspect -f '{{.State.Status}}' "$NAME")
@@ -97,19 +106,6 @@ if [[ "${ALFRED_STOP_HOST:-1}" == "1" ]]; then
   fi
 fi
 
-if ! docker exec "$NAME" sh -lc "node -e 'const major=Number(process.versions.node.split(\".\")[0]); process.exit(Number.isFinite(major) && major >= 24 ? 0 : 1);'"; then
-  echo "Installing Node.js 24 in $NAME..."
-  docker exec "$NAME" sh -lc "apt-get update \
-    && apt-get install -y ca-certificates curl gnupg \
-    && mkdir -p /etc/apt/keyrings \
-    && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
-    && echo 'deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_24.x nodistro main' > /etc/apt/sources.list.d/nodesource.list \
-    && apt-get update \
-    && apt-get install -y nodejs \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*"
-fi
-
 docker exec "$NAME" sh -lc "mkdir -p \"$CODEX_HOME_DOCKER\""
 if [[ -d "$CODEX_HOME_HOST" ]]; then
   docker cp "$CODEX_HOME_HOST/." "$NAME:$CODEX_HOME_DOCKER"
@@ -121,12 +117,6 @@ fi
 
 docker exec "$NAME" sh -lc "if [ -f \"$DOCKER_PID_FILE\" ]; then PID=\$(cat \"$DOCKER_PID_FILE\" || true); if [ -n \"\$PID\" ]; then kill -0 \"\$PID\" 2>/dev/null && kill \"\$PID\" || true; fi; fi"
 sleep 1
-
-docker exec "$NAME" sh -lc "mkdir -p \"$ENGINE_DIR\" && rm -rf \"$ENGINE_DIR/dist\" \"$ENGINE_DIR/schemas\""
-docker cp dist "$NAME:$ENGINE_DIR/dist"
-docker cp schemas "$NAME:$ENGINE_DIR/schemas"
-docker cp package.json package-lock.json "$NAME:$ENGINE_DIR/"
-docker cp conversations-in-blockkit.md "$NAME:$ENGINE_DIR/"
 
 ENV_ARGS=()
 for var in SLACK_APP_TOKEN SLACK_BOT_TOKEN ALFRED_LOG_LEVEL OPENAI_API_KEY CODEX_HOME; do
@@ -145,10 +135,6 @@ ENV_ARGS+=("-e" "ALFRED_DATA_DIR=/workspace")
 ENV_ARGS+=("-e" "CODEX_HOME=$CODEX_HOME_DOCKER")
 ENV_ARGS+=("-e" "ALFRED_SANDBOX=host")
 ENV_ARGS+=("-e" "ALFRED_WORKDIR=/workspace")
-
-if ! docker exec "$NAME" sh -lc "test -d \"$ENGINE_DIR/node_modules\""; then
-  docker exec "$NAME" sh -lc "cd \"$ENGINE_DIR\" && npm ci --omit=dev"
-fi
 
 docker exec "${ENV_ARGS[@]}" "$NAME" sh -lc "cd \"$ENGINE_DIR\" && nohup node \"$ENGINE_DIR/dist/index.js\" --log-level debug -- --yolo > /workspace/alfred.log 2>&1 & echo \$! | tee /workspace/alfred.pid > \"$DOCKER_PID_FILE\""
 

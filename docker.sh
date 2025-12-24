@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-IMAGE="ghcr.io/astral-sh/uv:python3.11-bookworm-slim"
+IMAGE="${SANDBOX_IMAGE:-ghcr.io/astral-sh/uv:python3.11-bookworm-slim}"
 DEFAULT_NAME="codex-alfred-sandbox"
 
 usage() {
@@ -18,6 +18,7 @@ Commands:
 
 Env:
   SANDBOX_NAME        Override the default container name (${DEFAULT_NAME})
+  SANDBOX_IMAGE       Override the container image (${IMAGE})
 USAGE
 }
 
