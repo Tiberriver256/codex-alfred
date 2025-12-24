@@ -505,12 +505,14 @@ async function createStatusSummarizer(params: { workDir: string; logger: Logger 
     return {
       summarize: async ({ userPrompt, eventType, recentEvents, currentEvent }) => {
         const subject = statusSubjectFromPrompt(userPrompt);
+        const eventHint = statusEventHint(currentEvent, userPrompt);
         const prompt = buildStatusSummaryPrompt({
           userPrompt,
           eventType,
           recentEvents,
           currentEvent,
           subject,
+          eventHint,
         });
         const startedAt = Date.now();
         try {
@@ -541,35 +543,30 @@ async function createStatusSummarizer(params: { workDir: string; logger: Logger 
   }
 }
 
-function buildStatusSummaryPrompt(params: {
+export function buildStatusSummaryPrompt(params: {
   userPrompt: string;
   eventType: string;
   recentEvents: CodexThreadEvent[];
   currentEvent: CodexThreadEvent;
   subject: string;
+  eventHint: string;
 }): string {
-  const { userPrompt, eventType, recentEvents, currentEvent, subject } = params;
-  const recipes = [
-    `thread.started -> "📝 Starting *Your ${subject}*."`,
-    `turn.started -> "⏳ Working on *Your ${subject}*."`,
-    `item.started -> "🔍 Checking *Your ${subject}*."`,
-    `item.updated -> "🔍 Checking *Your ${subject}*."`,
-    `item.completed -> "🔍 Noting progress on *Your ${subject}*."`,
-    `turn.completed -> "✅ *Your ${subject}* is ready."`,
-  ];
+  const { userPrompt, eventType, recentEvents, currentEvent, subject, eventHint } = params;
   return [
     'You write short Slack status lines for Alfred.',
     'Return JSON: {"summary":"..."} only.',
-    'One sentence, <= 8 words.',
-    `Always include *Your ${subject}* exactly (capital Y).`,
-    'No item names, no paths, no commands, no jargon.',
-    'Use ✅ only for turn.completed.',
-    'Use the exact recipe for the event type.',
-    'Start with emoji + space, sentence case, end with a period.',
+    'One sentence, <= 12 words.',
+    'Start with a single emoji, then a space.',
+    'Include one *bold* or _italic_ emphasis on the main object.',
+    'Explain what you are doing and why, tied to the user request.',
+    'Translate technical work into user-friendly language.',
+    'Avoid file paths, commands, IDs, and internal jargon.',
+    'Avoid vague phrasing like "your request".',
+    'Use lowercase "your" unless the sentence starts.',
+    'Use ✅ only when the turn is completed.',
     '',
-    'Recipes:',
-    ...recipes,
-    '',
+    `Subject hint: ${subject}`,
+    `Event hint: ${eventHint}`,
     `User prompt: ${userPrompt}`,
     `Event type: ${eventType}`,
     `Recent events: ${JSON.stringify(recentEvents.map(compactEventForSummary))}`,
@@ -577,7 +574,7 @@ function buildStatusSummaryPrompt(params: {
   ].join('\n');
 }
 
-function compactEventForSummary(event: CodexThreadEvent): Record<string, unknown> {
+export function compactEventForSummary(event: CodexThreadEvent): Record<string, unknown> {
   if (event.type === 'item.started' || event.type === 'item.updated' || event.type === 'item.completed') {
     return { type: event.type, item: { type: event.item.type } };
   }
@@ -599,7 +596,7 @@ function compactEventForSummary(event: CodexThreadEvent): Record<string, unknown
   return { type: event.type };
 }
 
-function extractLastUserPrompt(prompt: string): string {
+export function extractLastUserPrompt(prompt: string): string {
   const lines = prompt.split('\n');
   for (let i = lines.length - 1; i >= 0; i -= 1) {
     const line = lines[i];
@@ -609,18 +606,58 @@ function extractLastUserPrompt(prompt: string): string {
   return 'User request.';
 }
 
-function statusSubjectFromPrompt(prompt: string): string {
+export function statusSubjectFromPrompt(prompt: string): string {
   const text = prompt.toLowerCase();
-  if (/(shopping|grocery|groceries|list|todo|to-do|checklist|cart|picks)/i.test(text)) {
-    return 'list';
+  if (/(ynab|budget|category|transaction|reconcile)/i.test(text)) return 'budget';
+  if (/(shopping|grocery|groceries)/i.test(text)) return 'shopping list';
+  if (/(todo|to-do|checklist)/i.test(text)) return 'to-do list';
+  if (/(schedule|itinerary|plan|calendar)/i.test(text)) return 'plan';
+  if (/(report|analysis|insight|summary|recap|notes)/i.test(text)) return 'report';
+  if (/(invoice|receipt|bill)/i.test(text)) return 'invoice';
+  if (/(email|message|dm|reply|slack)/i.test(text)) return 'message';
+  return 'task';
+}
+
+export function statusEventHint(event: CodexThreadEvent, userPrompt: string): string {
+  const base = userPrompt.toLowerCase();
+  const fromText = (value: string | undefined): string => {
+    const text = `${value ?? ''} ${base}`;
+    if (/(ynab|budget|transaction|category)/i.test(text)) return 'checking budget data';
+    if (/(shopping|grocery|groceries|list)/i.test(text)) return 'building your list';
+    if (/(schedule|calendar|itinerary|plan)/i.test(text)) return 'organizing your schedule';
+    if (/(report|analysis|summary|recap)/i.test(text)) return 'preparing your report';
+    if (/(invoice|receipt|bill)/i.test(text)) return 'reviewing billing details';
+    if (/(email|message|dm|reply|slack)/i.test(text)) return 'preparing your message';
+    if (/(meijer|walmart|target|costco)/i.test(text)) return 'checking store items';
+    return 'working on your task';
+  };
+
+  if (event.type === 'item.started' || event.type === 'item.updated' || event.type === 'item.completed') {
+    const item = event.item;
+    if (item.type === 'command_execution') {
+      return fromText(typeof item.command === 'string' ? item.command : undefined);
+    }
+    if (item.type === 'web_search') {
+      return fromText(typeof item.query === 'string' ? item.query : undefined);
+    }
+    if (item.type === 'file_change') {
+      return 'updating files';
+    }
+    if (item.type === 'mcp_tool_call') {
+      return 'using a helper tool';
+    }
+    if (item.type === 'reasoning') {
+      return 'planning the next step';
+    }
+    if (item.type === 'agent_message') {
+      return 'preparing your response';
+    }
+    return fromText(undefined);
   }
-  if (/(schedule|itinerary|plan)/i.test(text)) {
-    return 'plan';
-  }
-  if (/(summary|recap|notes)/i.test(text)) {
-    return 'summary';
-  }
-  return 'request';
+  if (event.type === 'turn.started') return 'getting started';
+  if (event.type === 'turn.completed') return 'finishing up';
+  if (event.type === 'thread.started') return 'getting started';
+  return 'working on your task';
 }
 
 function statusFromEvent(event: CodexThreadEvent): string | null {
