@@ -70,8 +70,17 @@ export async function handleAppMention(
 
     messages = filterMessages(replies.messages ?? [], botUserId, record?.lastResponseTs);
     const intro = record ? undefined : await loadBlockKitGuide(logger);
-    attachments = await downloadSlackAttachments(messages, config.botToken, logger);
-    const prompt = buildPrompt(event.channel, threadTs, messages, botUserId, intro, attachments);
+    const downloadResult = await downloadSlackAttachments(messages, config.botToken, logger);
+    attachments = downloadResult.attachments;
+    const prompt = buildPrompt(
+      event.channel,
+      threadTs,
+      messages,
+      botUserId,
+      intro,
+      downloadResult.attachments,
+      downloadResult.failures,
+    );
     ({ response } = await runCodexAndPost({
       thread: activeThread,
       prompt,
@@ -247,6 +256,11 @@ export interface AttachmentInfo {
   path: string;
 }
 
+export interface AttachmentFailure {
+  name: string;
+  reason: string;
+}
+
 export function buildPrompt(
   channel: string,
   threadTs: string,
@@ -254,6 +268,7 @@ export function buildPrompt(
   botUserId: string,
   intro?: string,
   attachments: AttachmentInfo[] = [],
+  attachmentFailures: AttachmentFailure[] = [],
 ): string {
   const lines = messages.map((msg) => {
     const who = msg.user ? `@${msg.user}` : '@unknown';
@@ -275,12 +290,22 @@ export function buildPrompt(
         ]
       : [];
 
+  const failureLines =
+    attachmentFailures.length > 0
+      ? [
+          'Attachment download issues:',
+          ...attachmentFailures.map((failure) => `- ${failure.name}: ${failure.reason}`),
+          '',
+        ]
+      : [];
+
   return [
     ...introLines,
     'Messages since last response:',
     ...lines,
     '',
     ...attachmentLines,
+    ...failureLines,
     'Respond with Block Kit JSON that matches the output schema.',
   ].join('\n');
 }
@@ -295,13 +320,14 @@ async function downloadSlackAttachments(
   messages: SlackMessage[],
   botToken: string,
   logger: Logger,
-): Promise<AttachmentInfo[]> {
+): Promise<{ attachments: AttachmentInfo[]; failures: AttachmentFailure[] }> {
   const files = messages.flatMap((msg) => msg.files ?? []);
-  if (files.length === 0) return [];
+  if (files.length === 0) return { attachments: [], failures: [] };
 
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'alfred-attachments-'));
   const seen = new Set<string>();
   const results: AttachmentInfo[] = [];
+  const failures: AttachmentFailure[] = [];
   let downloaded = 0;
 
   for (let i = 0; i < files.length; i += 1) {
@@ -315,24 +341,63 @@ async function downloadSlackAttachments(
     const filename = sanitizeFilename(file.name ?? file.title ?? file.id ?? `attachment-${i + 1}`);
     const target = uniquePath(path.join(dir, filename), results.map((item) => item.path));
     try {
-      const res = await fetch(url, { headers: { Authorization: `Bearer ${botToken}` } });
+      const res = await fetchSlackFile(url, botToken);
       if (!res.ok) {
+        const reason = `download failed (HTTP ${res.status})`;
         logger.warn('Failed to download Slack attachment', { status: res.status, name: filename, url });
+        failures.push({ name: filename, reason });
         continue;
       }
+
       const arrayBuffer = await res.arrayBuffer();
-      await fs.writeFile(target, Buffer.from(arrayBuffer));
+      const buffer = Buffer.from(arrayBuffer);
+      const contentType = res.headers.get('content-type')?.toLowerCase() ?? '';
+      if (looksLikeHtml(buffer, contentType)) {
+        const reason = 'download returned HTML (check Slack permissions)';
+        logger.warn('Slack attachment download returned HTML', { name: filename, url, contentType });
+        failures.push({ name: filename, reason });
+        continue;
+      }
+
+      await fs.writeFile(target, buffer);
       results.push({ name: filename, path: target });
       downloaded += 1;
     } catch (error) {
       logger.warn('Failed to download Slack attachment', { error, name: filename });
+      failures.push({ name: filename, reason: 'download failed (network error)' });
     }
   }
 
   if (logger.debug) {
-    logger.debug('Slack attachments downloaded', { total: files.length, downloaded, dir });
+    logger.debug('Slack attachments downloaded', { total: files.length, downloaded, dir, failures: failures.length });
   }
-  return results;
+  return { attachments: results, failures };
+}
+
+async function fetchSlackFile(url: string, botToken: string): Promise<Response> {
+  let nextUrl: string | null = url;
+  for (let i = 0; i < 5; i += 1) {
+    if (!nextUrl) break;
+    const res = await fetch(nextUrl, {
+      headers: { Authorization: `Bearer ${botToken}` },
+      redirect: 'manual',
+    });
+    if (res.status >= 300 && res.status < 400) {
+      const location = res.headers.get('location');
+      if (location) {
+        nextUrl = new URL(location, nextUrl).toString();
+        continue;
+      }
+    }
+    return res;
+  }
+  return fetch(url, { headers: { Authorization: `Bearer ${botToken}` } });
+}
+
+function looksLikeHtml(buffer: Buffer, contentType: string): boolean {
+  if (contentType.includes('text/html') || contentType.includes('application/xhtml')) return true;
+  const snippet = buffer.slice(0, 64).toString('utf8').trim().toLowerCase();
+  return snippet.startsWith('<!doctype html') || snippet.startsWith('<html');
 }
 
 function sanitizeFilename(value: string): string {

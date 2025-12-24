@@ -536,12 +536,13 @@ test('handleAppMention includes downloaded image attachments in the prompt', asy
 
   const originalFetch = globalThis.fetch;
   const requested: string[] = [];
-  globalThis.fetch = (async (url: string, options: { headers?: Record<string, string> }) => {
+  globalThis.fetch = (async (url: string, options: { headers?: Record<string, string>; redirect?: string }) => {
     requested.push(url);
     assert.equal(options.headers?.Authorization, 'Bearer xoxb-test');
     return {
       ok: true,
       status: 200,
+      headers: new Map([['content-type', 'application/octet-stream']]),
       arrayBuffer: async () => new TextEncoder().encode('file').buffer,
     } as any;
   }) as typeof fetch;
@@ -579,4 +580,84 @@ test('handleAppMention includes downloaded image attachments in the prompt', asy
   if (match?.[1]) {
     await fs.rm(match[1], { recursive: true, force: true });
   }
+});
+
+test('handleAppMention notes attachment failures when Slack returns HTML', async () => {
+  const store = await makeStore();
+  const prompts: string[] = [];
+
+  const fakeThread: CodexThread = {
+    id: 'thread-7',
+    run: async (prompt, _options) => {
+      prompts.push(prompt);
+      return { output: { text: 'ok', blocks: [{ type: 'section', text: { type: 'mrkdwn', text: 'ok' } }] } };
+    },
+  };
+
+  const codex: CodexClient = {
+    startThread: async () => fakeThread,
+    resumeThread: async () => fakeThread,
+  };
+
+  const client = {
+    conversations: {
+      replies: async () => ({
+        messages: [
+          {
+            ts: '1.0',
+            user: 'U1',
+            text: '',
+            subtype: 'file_share',
+            files: [
+              {
+                id: 'F3',
+                name: 'photo.jpg',
+                url_private: 'https://example.com/photo.jpg',
+              },
+            ],
+          },
+        ],
+      }),
+    },
+    chat: {
+      postMessage: async () => ({ ts: '2.0' }),
+      update: async () => ({ ts: '3.0' }),
+    },
+  };
+
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async () => {
+    return {
+      ok: true,
+      status: 200,
+      headers: new Map([['content-type', 'text/html']]),
+      arrayBuffer: async () => new TextEncoder().encode('<!DOCTYPE html><html></html>').buffer,
+    } as any;
+  }) as typeof fetch;
+
+  try {
+    await handleAppMention(
+      {
+        event: { channel: 'C1', ts: '1.0', text: 'see file' },
+        ack: async () => undefined,
+      },
+      {
+        client,
+        store,
+        codex,
+        work: new ThreadWorkManager(),
+        config: baseConfig,
+        logger,
+        botUserId: 'B1',
+        blockKitOutputSchema: {},
+      },
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+
+  assert.equal(prompts.length, 1);
+  assert.match(prompts[0], /Attachment download issues/);
+  assert.match(prompts[0], /photo\.jpg/);
+  assert.doesNotMatch(prompts[0], /Attachments available/);
 });
