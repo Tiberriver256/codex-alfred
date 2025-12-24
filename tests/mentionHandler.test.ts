@@ -508,7 +508,8 @@ test('handleAppMention includes downloaded image attachments in the prompt', asy
           {
             ts: '1.0',
             user: 'U1',
-            text: 'see files',
+            text: '',
+            subtype: 'file_share',
             files: [
               {
                 id: 'F1',

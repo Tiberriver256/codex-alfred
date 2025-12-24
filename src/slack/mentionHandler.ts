@@ -131,11 +131,13 @@ export function filterMessages(messages: SlackMessage[], botUserId: string, last
       ...msg,
       text: stripBotMention(msg.text ?? '', botUserId),
     }))
-    .filter((msg) => Boolean(msg.text?.trim()));
+    .filter((msg) => Boolean(msg.text?.trim()) || Boolean(msg.files && msg.files.length > 0));
 }
 
 function isUserMessage(message: SlackMessage, botUserId: string): boolean {
-  if (message.subtype) return false;
+  if (message.subtype && message.subtype !== 'file_share' && !(message.files && message.files.length > 0)) {
+    return false;
+  }
   if (!message.user) return false;
   if (message.user === botUserId) return false;
   if (message.bot_id) return false;
@@ -300,6 +302,7 @@ async function downloadSlackAttachments(
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'alfred-attachments-'));
   const seen = new Set<string>();
   const results: AttachmentInfo[] = [];
+  let downloaded = 0;
 
   for (let i = 0; i < files.length; i += 1) {
     const file = files[i];
@@ -320,11 +323,15 @@ async function downloadSlackAttachments(
       const arrayBuffer = await res.arrayBuffer();
       await fs.writeFile(target, Buffer.from(arrayBuffer));
       results.push({ name: filename, path: target });
+      downloaded += 1;
     } catch (error) {
       logger.warn('Failed to download Slack attachment', { error, name: filename });
     }
   }
 
+  if (logger.debug) {
+    logger.debug('Slack attachments downloaded', { total: files.length, downloaded, dir });
+  }
   return results;
 }
 
