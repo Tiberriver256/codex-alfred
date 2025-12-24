@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-IMAGE="alpine:latest"
+IMAGE="ghcr.io/astral-sh/uv:python3.11-bookworm-slim"
 DEFAULT_NAME="codex-alfred-sandbox"
 
 usage() {

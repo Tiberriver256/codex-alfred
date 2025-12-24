@@ -166,7 +166,7 @@ Goal: secure tool execution by running Codex inside a Docker container with a pe
 
 Requirements (mirroring mom's sandbox UX/behavior):
 - Provide a `docker.sh` helper script with `create`, `start`, `stop`, `remove`, `status`, `shell`.
-- Default container name uses a `<project>-sandbox` pattern (mom uses `mom-sandbox`) with `IMAGE="alpine:latest"`.
+- Default container name uses a `<project>-sandbox` pattern (mom uses `mom-sandbox`) with `IMAGE="ghcr.io/astral-sh/uv:python3.11-bookworm-slim"`.
 - `create` accepts a data dir, resolves it to an absolute path, mounts it to `/workspace`, and keeps the container alive with `tail -f /dev/null`.
 - The host data directory is mounted to `/workspace` in the container and is also the Codex working directory.
 - The data directory is user-configurable (default to current working dir) to keep setups reusable.
