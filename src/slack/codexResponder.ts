@@ -557,6 +557,8 @@ export function buildStatusSummaryPrompt(params: {
     'Return JSON: {"summary":"..."} only.',
     'One sentence, <= 12 words.',
     'Start with a single emoji, then a space.',
+    'Speak as Alfred in first person (e.g., "I’m…").',
+    'Address the user as "you". Avoid "we" and third-person references.',
     'Include one *bold* or _italic_ emphasis on the main object.',
     'Explain what you are doing and why, tied to the user request.',
     'Translate technical work into user-friendly language.',
@@ -564,6 +566,7 @@ export function buildStatusSummaryPrompt(params: {
     'Avoid vague phrasing like "your request".',
     'Use lowercase "your" unless the sentence starts.',
     'Use ✅ only when the turn is completed.',
+    'If not turn.completed, use 📝 for thread.started, ⏳ for turn.started, 🔍 for item.*.',
     '',
     `Subject hint: ${subject}`,
     `Event hint: ${eventHint}`,
@@ -611,6 +614,7 @@ export function statusSubjectFromPrompt(prompt: string): string {
   if (/(ynab|budget|category|transaction|reconcile)/i.test(text)) return 'budget';
   if (/(shopping|grocery|groceries)/i.test(text)) return 'shopping list';
   if (/(todo|to-do|checklist)/i.test(text)) return 'to-do list';
+  if (/(cleanup|clean up|cleaning|tidy|prune|remove|delete|organize)/i.test(text)) return 'cleanup checklist';
   if (/(schedule|itinerary|plan|calendar)/i.test(text)) return 'plan';
   if (/(report|analysis|insight|summary|recap|notes)/i.test(text)) return 'report';
   if (/(invoice|receipt|bill)/i.test(text)) return 'invoice';
@@ -629,6 +633,9 @@ export function statusEventHint(event: CodexThreadEvent, userPrompt: string): st
     if (/(invoice|receipt|bill)/i.test(text)) return 'reviewing billing details';
     if (/(email|message|dm|reply|slack)/i.test(text)) return 'preparing your message';
     if (/(meijer|walmart|target|costco)/i.test(text)) return 'checking store items';
+    if (/(cleanup|clean up|cleaning|tidy|prune|remove|delete|organize)/i.test(text)) return 'organizing cleanup steps';
+    if (/\bdu\b|\bdf\b|\bsize\b|\bbytes\b|\bdisk\b/i.test(text)) return 'checking file sizes';
+    if (/\bls\b|\bfind\b|\bgrep\b|\bstat\b/i.test(text)) return 'scanning folders';
     return 'working on your task';
   };
 

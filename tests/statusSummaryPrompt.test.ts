@@ -40,4 +40,6 @@ test('buildStatusSummaryPrompt asks for why and avoids vague phrasing', () => {
   assert.match(prompt, /why/i);
   assert.match(prompt, /avoid vague phrasing/i);
   assert.doesNotMatch(prompt, /Your request/);
+  assert.match(prompt, /first person/i);
+  assert.match(prompt, /avoid \"we\"/i);
 });
