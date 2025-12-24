@@ -110,10 +110,6 @@ docker exec "$NAME" sh -lc "mkdir -p \"$CODEX_HOME_DOCKER\""
 if [[ -d "$CODEX_HOME_HOST" ]]; then
   docker cp "$CODEX_HOME_HOST/." "$NAME:$CODEX_HOME_DOCKER"
 fi
-if [[ -d ".codex/skills" ]]; then
-  docker exec "$NAME" sh -lc "mkdir -p \"$CODEX_HOME_DOCKER/skills\""
-  docker cp ".codex/skills/." "$NAME:$CODEX_HOME_DOCKER/skills"
-fi
 
 docker exec "$NAME" sh -lc "if [ -f \"$DOCKER_PID_FILE\" ]; then PID=\$(cat \"$DOCKER_PID_FILE\" || true); if [ -n \"\$PID\" ]; then kill -0 \"\$PID\" 2>/dev/null && kill \"\$PID\" || true; fi; fi"
 sleep 1
