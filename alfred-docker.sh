@@ -60,6 +60,7 @@ done
 DATA_DIR="${ALFRED_DATA_DIR:-$HOME/mom-data}"
 CODEX_HOME_HOST="${CODEX_HOME:-$HOME/.codex}"
 CODEX_HOME_DOCKER="/codex-home"
+ENGINE_DIR="/alfred"
 PID_FILE="${ALFRED_PID_FILE:-$DATA_DIR/alfred.pid}"
 DOCKER_PID_FILE="$CODEX_HOME_DOCKER/alfred.pid"
 
@@ -113,23 +114,19 @@ docker exec "$NAME" sh -lc "mkdir -p \"$CODEX_HOME_DOCKER\""
 if [[ -d "$CODEX_HOME_HOST" ]]; then
   docker cp "$CODEX_HOME_HOST/." "$NAME:$CODEX_HOME_DOCKER"
 fi
-docker exec "$NAME" sh -lc "if [ -d /workspace/skills/slack-docs-browser ]; then mkdir -p \"$CODEX_HOME_DOCKER/skills\"; rm -rf \"$CODEX_HOME_DOCKER/skills/slack-docs-browser\"; cp -R /workspace/skills/slack-docs-browser \"$CODEX_HOME_DOCKER/skills/\"; fi"
+if [[ -d ".codex/skills" ]]; then
+  docker exec "$NAME" sh -lc "mkdir -p \"$CODEX_HOME_DOCKER/skills\""
+  docker cp ".codex/skills/." "$NAME:$CODEX_HOME_DOCKER/skills"
+fi
 
 docker exec "$NAME" sh -lc "if [ -f \"$DOCKER_PID_FILE\" ]; then PID=\$(cat \"$DOCKER_PID_FILE\" || true); if [ -n \"\$PID\" ]; then kill -0 \"\$PID\" 2>/dev/null && kill \"\$PID\" || true; fi; fi"
 sleep 1
 
-if command -v rsync >/dev/null 2>&1; then
-  rsync -a --delete dist/ "$DATA_DIR/dist/"
-  rsync -a --delete schemas/ "$DATA_DIR/schemas/"
-  rsync -a package.json package-lock.json "$DATA_DIR/"
-else
-  rm -rf "$DATA_DIR/dist" "$DATA_DIR/schemas"
-  cp -R dist "$DATA_DIR/dist"
-  cp -R schemas "$DATA_DIR/schemas"
-  cp package.json package-lock.json "$DATA_DIR/"
-fi
-
-cp conversations-in-blockkit.md "$DATA_DIR/conversations-in-blockkit.md"
+docker exec "$NAME" sh -lc "mkdir -p \"$ENGINE_DIR\" && rm -rf \"$ENGINE_DIR/dist\" \"$ENGINE_DIR/schemas\""
+docker cp dist "$NAME:$ENGINE_DIR/dist"
+docker cp schemas "$NAME:$ENGINE_DIR/schemas"
+docker cp package.json package-lock.json "$NAME:$ENGINE_DIR/"
+docker cp conversations-in-blockkit.md "$NAME:$ENGINE_DIR/"
 
 ENV_ARGS=()
 for var in SLACK_APP_TOKEN SLACK_BOT_TOKEN ALFRED_LOG_LEVEL OPENAI_API_KEY CODEX_HOME; do
@@ -149,11 +146,11 @@ ENV_ARGS+=("-e" "CODEX_HOME=$CODEX_HOME_DOCKER")
 ENV_ARGS+=("-e" "ALFRED_SANDBOX=host")
 ENV_ARGS+=("-e" "ALFRED_WORKDIR=/workspace")
 
-if ! docker exec "$NAME" sh -lc "test -d /workspace/node_modules"; then
-  docker exec "$NAME" sh -lc "cd /workspace && npm ci --omit=dev"
+if ! docker exec "$NAME" sh -lc "test -d \"$ENGINE_DIR/node_modules\""; then
+  docker exec "$NAME" sh -lc "cd \"$ENGINE_DIR\" && npm ci --omit=dev"
 fi
 
-docker exec "${ENV_ARGS[@]}" "$NAME" sh -lc "cd /workspace && nohup node /workspace/dist/index.js --log-level debug -- --yolo > /workspace/alfred.log 2>&1 & echo \$! | tee /workspace/alfred.pid > \"$DOCKER_PID_FILE\""
+docker exec "${ENV_ARGS[@]}" "$NAME" sh -lc "cd \"$ENGINE_DIR\" && nohup node \"$ENGINE_DIR/dist/index.js\" --log-level debug -- --yolo > /workspace/alfred.log 2>&1 & echo \$! | tee /workspace/alfred.pid > \"$DOCKER_PID_FILE\""
 
 if [[ -f "$PID_FILE" ]]; then
   cat "$PID_FILE"
