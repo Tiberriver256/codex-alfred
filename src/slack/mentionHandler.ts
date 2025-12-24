@@ -1,12 +1,13 @@
 import { type Logger } from '../logger.js';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { type ThreadStore, type ThreadRecord } from '../store/threadStore.js';
 import { buildThreadOptions, type CodexClient } from '../codex/client.js';
 import { type AppConfig } from '../config.js';
 import { runCodexAndPost } from './codexResponder.js';
-import { type SlackClientLike, type SlackMessage, type MentionEvent } from './types.js';
+import { type SlackClientLike, type SlackMessage, type MentionEvent, type SlackFile } from './types.js';
 import { ThreadWorkManager } from './threadWork.js';
 
 export interface MentionDeps {
@@ -48,6 +49,7 @@ export async function handleAppMention(
   let messages: SlackMessage[] = [];
   let response: { ts?: string } | undefined;
   let replies: { messages?: SlackMessage[] } | undefined;
+  let attachments: AttachmentInfo[] = [];
   let queuedMentions: MentionEvent[] = [];
   try {
     const activeThread = record?.codexThreadId
@@ -68,7 +70,8 @@ export async function handleAppMention(
 
     messages = filterMessages(replies.messages ?? [], botUserId, record?.lastResponseTs);
     const intro = record ? undefined : await loadBlockKitGuide(logger);
-    const prompt = buildPrompt(event.channel, threadTs, messages, botUserId, intro);
+    attachments = await downloadSlackAttachments(messages, config.botToken, logger);
+    const prompt = buildPrompt(event.channel, threadTs, messages, botUserId, intro, attachments);
     ({ response } = await runCodexAndPost({
       thread: activeThread,
       prompt,
@@ -237,12 +240,18 @@ async function loadBlockKitGuide(logger: Logger): Promise<string> {
   return blockKitGuideCache;
 }
 
+export interface AttachmentInfo {
+  name: string;
+  path: string;
+}
+
 export function buildPrompt(
   channel: string,
   threadTs: string,
   messages: SlackMessage[],
   botUserId: string,
   intro?: string,
+  attachments: AttachmentInfo[] = [],
 ): string {
   const lines = messages.map((msg) => {
     const who = msg.user ? `@${msg.user}` : '@unknown';
@@ -255,11 +264,90 @@ export function buildPrompt(
   }
 
   const introLines = intro ? [intro, ''] : [];
+  const attachmentLines =
+    attachments.length > 0
+      ? [
+          'Attachments available (downloaded for you):',
+          ...attachments.map((item) => `- ${item.name}: ${item.path}`),
+          '',
+        ]
+      : [];
+
   return [
     ...introLines,
     'Messages since last response:',
     ...lines,
     '',
+    ...attachmentLines,
     'Respond with Block Kit JSON that matches the output schema.',
   ].join('\n');
+}
+
+function isImageFile(file: SlackFile): boolean {
+  if (file.mimetype && file.mimetype.startsWith('image/')) return true;
+  const filetype = file.filetype?.toLowerCase();
+  if (filetype && ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'tiff'].includes(filetype)) return true;
+  return false;
+}
+
+function getSlackFileUrl(file: SlackFile): string | null {
+  if (file.url_private_download) return file.url_private_download;
+  if (file.url_private) return file.url_private;
+  return null;
+}
+
+async function downloadSlackAttachments(
+  messages: SlackMessage[],
+  botToken: string,
+  logger: Logger,
+): Promise<AttachmentInfo[]> {
+  const files = messages.flatMap((msg) => msg.files ?? []).filter(isImageFile);
+  if (files.length === 0) return [];
+
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'alfred-attachments-'));
+  const seen = new Set<string>();
+  const results: AttachmentInfo[] = [];
+
+  for (let i = 0; i < files.length; i += 1) {
+    const file = files[i];
+    const url = getSlackFileUrl(file);
+    if (!url) continue;
+    const key = file.id ?? url;
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    const filename = sanitizeFilename(file.name ?? file.title ?? file.id ?? `attachment-${i + 1}`);
+    const target = uniquePath(path.join(dir, filename), results.map((item) => item.path));
+    try {
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${botToken}` } });
+      if (!res.ok) {
+        logger.warn('Failed to download Slack attachment', { status: res.status, name: filename, url });
+        continue;
+      }
+      const arrayBuffer = await res.arrayBuffer();
+      await fs.writeFile(target, Buffer.from(arrayBuffer));
+      results.push({ name: filename, path: target });
+    } catch (error) {
+      logger.warn('Failed to download Slack attachment', { error, name: filename });
+    }
+  }
+
+  return results;
+}
+
+function sanitizeFilename(value: string): string {
+  const base = path.basename(value);
+  const cleaned = base.replace(/[^\w.\-]+/g, '_');
+  return cleaned || 'attachment';
+}
+
+function uniquePath(candidate: string, existing: string[]): string {
+  if (!existing.includes(candidate)) return candidate;
+  const ext = path.extname(candidate);
+  const base = candidate.slice(0, candidate.length - ext.length);
+  for (let i = 2; i < 1000; i += 1) {
+    const next = `${base}-${i}${ext}`;
+    if (!existing.includes(next)) return next;
+  }
+  return `${base}-${Date.now()}${ext}`;
 }

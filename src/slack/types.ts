@@ -32,6 +32,17 @@ export interface SlackMessage {
   user?: string;
   subtype?: string;
   bot_id?: string;
+  files?: SlackFile[];
+}
+
+export interface SlackFile {
+  id?: string;
+  name?: string;
+  title?: string;
+  mimetype?: string;
+  filetype?: string;
+  url_private?: string;
+  url_private_download?: string;
 }
 
 export interface MentionEvent {

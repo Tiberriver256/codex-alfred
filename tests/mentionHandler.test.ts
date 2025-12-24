@@ -483,3 +483,89 @@ test('handleAppMention includes checklist guidance in the intro prompt', async (
   assert.match(prompts[0], /tracking-only checklists/i);
   assert.doesNotMatch(prompts[0], /Checklist request:/);
 });
+
+test('handleAppMention includes downloaded image attachments in the prompt', async () => {
+  const store = await makeStore();
+  const prompts: string[] = [];
+
+  const fakeThread: CodexThread = {
+    id: 'thread-6',
+    run: async (prompt, _options) => {
+      prompts.push(prompt);
+      return { output: { text: 'ok', blocks: [{ type: 'section', text: { type: 'mrkdwn', text: 'ok' } }] } };
+    },
+  };
+
+  const codex: CodexClient = {
+    startThread: async () => fakeThread,
+    resumeThread: async () => fakeThread,
+  };
+
+  const client = {
+    conversations: {
+      replies: async () => ({
+        messages: [
+          {
+            ts: '1.0',
+            user: 'U1',
+            text: 'see image',
+            files: [
+              {
+                id: 'F1',
+                name: 'photo.png',
+                mimetype: 'image/png',
+                url_private: 'https://example.com/file.png',
+              },
+            ],
+          },
+        ],
+      }),
+    },
+    chat: {
+      postMessage: async () => ({ ts: '2.0' }),
+      update: async () => ({ ts: '3.0' }),
+    },
+  };
+
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async (url: string, options: { headers?: Record<string, string> }) => {
+    assert.equal(url, 'https://example.com/file.png');
+    assert.equal(options.headers?.Authorization, 'Bearer xoxb-test');
+    return {
+      ok: true,
+      status: 200,
+      arrayBuffer: async () => new TextEncoder().encode('img').buffer,
+    } as any;
+  }) as typeof fetch;
+
+  try {
+    await handleAppMention(
+      {
+        event: { channel: 'C1', ts: '1.0', text: 'see image' },
+        ack: async () => undefined,
+      },
+      {
+        client,
+        store,
+        codex,
+        work: new ThreadWorkManager(),
+        config: baseConfig,
+        logger,
+        botUserId: 'B1',
+        blockKitOutputSchema: {},
+      },
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+
+  assert.equal(prompts.length, 1);
+  assert.match(prompts[0], /Attachments available/);
+  assert.match(prompts[0], /photo\.png/);
+  assert.match(prompts[0], /\/tmp\/alfred-attachments-[^/]+\/photo\.png/);
+
+  const match = prompts[0].match(/(\/tmp\/alfred-attachments-[^/]+)\/photo\.png/);
+  if (match?.[1]) {
+    await fs.rm(match[1], { recursive: true, force: true });
+  }
+});
