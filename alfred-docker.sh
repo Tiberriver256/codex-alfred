@@ -62,8 +62,9 @@ IMAGE_NAME="${ALFRED_IMAGE:-codex-alfred:local}"
 CODEX_HOME_HOST="${CODEX_HOME:-$HOME/.codex}"
 CODEX_HOME_DOCKER="/codex-home"
 ENGINE_DIR="/alfred"
-PID_FILE="${ALFRED_PID_FILE:-$DATA_DIR/alfred.pid}"
+PID_FILE="${ALFRED_PID_FILE:-$CODEX_HOME_HOST/alfred.pid}"
 DOCKER_PID_FILE="$CODEX_HOME_DOCKER/alfred.pid"
+DOCKER_LOG_FILE="$CODEX_HOME_DOCKER/alfred.log"
 
 if [[ -n "${SANDBOX_NAME:-}" ]]; then
   NAME="$SANDBOX_NAME"
@@ -133,7 +134,7 @@ ENV_ARGS+=("-e" "CODEX_HOME=$CODEX_HOME_DOCKER")
 ENV_ARGS+=("-e" "ALFRED_SANDBOX=host")
 ENV_ARGS+=("-e" "ALFRED_WORKDIR=/workspace")
 
-docker exec "${ENV_ARGS[@]}" "$NAME" sh -lc "cd \"$ENGINE_DIR\" && nohup node \"$ENGINE_DIR/dist/index.js\" --log-level debug -- --yolo > /workspace/alfred.log 2>&1 & echo \$! | tee /workspace/alfred.pid > \"$DOCKER_PID_FILE\""
+docker exec "${ENV_ARGS[@]}" "$NAME" sh -lc "cd \"$ENGINE_DIR\" && nohup node \"$ENGINE_DIR/dist/index.js\" --log-level debug -- --yolo > \"$DOCKER_LOG_FILE\" 2>&1 & echo \$! > \"$DOCKER_PID_FILE\""
 
 if [[ -f "$PID_FILE" ]]; then
   cat "$PID_FILE"
