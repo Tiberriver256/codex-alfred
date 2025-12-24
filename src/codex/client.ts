@@ -9,8 +9,8 @@ export interface CodexRunResult {
 
 export interface CodexThread {
   id: string | null;
-  run: (prompt: string, options: { outputSchema: object }) => Promise<CodexRunResult>;
-  runStreamed?: (prompt: string, options: { outputSchema: object }) => Promise<CodexStreamedTurn>;
+  run: (prompt: string, options: { outputSchema: object; signal?: AbortSignal }) => Promise<CodexRunResult>;
+  runStreamed?: (prompt: string, options: { outputSchema: object; signal?: AbortSignal }) => Promise<CodexStreamedTurn>;
 }
 
 export interface CodexClient {

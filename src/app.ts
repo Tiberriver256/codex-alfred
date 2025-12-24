@@ -8,6 +8,7 @@ import { createCodexClient } from './codex/client.js';
 import { handleAppMention } from './slack/mentionHandler.js';
 import { handleAction } from './slack/actionHandler.js';
 import { ensureDockerReady } from './sandbox/docker.js';
+import { ThreadWorkManager } from './slack/threadWork.js';
 
 export async function startApp(config: AppConfig, logger: Logger): Promise<void> {
   if (config.sandbox.mode === 'docker') {
@@ -20,6 +21,7 @@ export async function startApp(config: AppConfig, logger: Logger): Promise<void>
   const blockKitOutputSchema = await loadBlockKitOutputSchema();
 
   const codex = await createCodexClient();
+  const work = new ThreadWorkManager();
 
   const app = new App({
     token: config.botToken,
@@ -41,6 +43,7 @@ export async function startApp(config: AppConfig, logger: Logger): Promise<void>
         client: client as any,
         store,
         codex,
+        work,
         config,
         logger,
         botUserId,
@@ -57,6 +60,7 @@ export async function startApp(config: AppConfig, logger: Logger): Promise<void>
         client: client as any,
         store,
         codex,
+        work,
         config,
         logger,
         botUserId,

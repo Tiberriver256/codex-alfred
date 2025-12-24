@@ -7,11 +7,13 @@ import { buildThreadOptions, type CodexClient } from '../codex/client.js';
 import { type AppConfig } from '../config.js';
 import { runCodexAndPost } from './codexResponder.js';
 import { type SlackClientLike, type SlackMessage, type MentionEvent } from './types.js';
+import { ThreadWorkManager } from './threadWork.js';
 
 export interface MentionDeps {
   client: SlackClientLike;
   store: ThreadStore;
   codex: CodexClient;
+  work: ThreadWorkManager;
   config: AppConfig;
   logger: Logger;
   botUserId: string;
@@ -23,66 +25,90 @@ export async function handleAppMention(
   deps: MentionDeps,
 ): Promise<void> {
   const { event, ack } = params;
-  const { client, store, codex, config, logger, botUserId, blockKitOutputSchema } = deps;
+  const { client, store, codex, work, config, logger, botUserId, blockKitOutputSchema } = deps;
 
   await ack();
 
   const threadTs = event.thread_ts ?? event.ts;
   const threadKey = `${event.channel}:${threadTs}`;
 
+  if (work.isBusy(threadKey)) {
+    const busyMessage = await postBusyMessage({ client, channel: event.channel, threadTs });
+    work.queueMention(threadKey, event, busyMessage?.ts);
+    logger.info('Queued mention while busy', { threadKey, busyTs: busyMessage?.ts });
+    return;
+  }
+
   const record = store.get(threadKey);
-  let thread;
   const threadOptions = buildThreadOptions(config.workDir, config.sandbox, config.codexArgs);
+  const abortController = new AbortController();
+  work.begin(threadKey, abortController);
 
-  if (record?.codexThreadId) {
-    thread = await codex.resumeThread(record.codexThreadId, threadOptions);
-  } else {
-    thread = await codex.startThread(threadOptions);
+  let thread: Awaited<ReturnType<CodexClient['startThread']>> | undefined;
+  let messages: SlackMessage[] = [];
+  let response: { ts?: string } | undefined;
+  let replies: { messages?: SlackMessage[] } | undefined;
+  let queuedMentions: MentionEvent[] = [];
+  try {
+    const activeThread = record?.codexThreadId
+      ? await codex.resumeThread(record.codexThreadId, threadOptions)
+      : await codex.startThread(threadOptions);
+    thread = activeThread;
+
+    replies = await retryOnce(
+      () =>
+        client.conversations.replies({
+          channel: event.channel,
+          ts: threadTs,
+          oldest: record?.lastResponseTs,
+        }),
+      logger,
+      'conversations.replies',
+    );
+
+    messages = filterMessages(replies.messages ?? [], botUserId, record?.lastResponseTs);
+    const intro = record ? undefined : await loadBlockKitGuide(logger);
+    const prompt = buildPrompt(event.channel, threadTs, messages, botUserId, intro);
+    ({ response } = await runCodexAndPost({
+      thread: activeThread,
+      prompt,
+      outputSchema: blockKitOutputSchema,
+      logger,
+      threadKey,
+      client,
+      channel: event.channel,
+      threadTs,
+      workDir: config.workDir,
+      dataDir: config.dataDir,
+      sandbox: config.sandbox,
+      abortSignal: abortController.signal,
+    }));
+  } finally {
+    const { queued, busyMessages } = work.end(threadKey);
+    queuedMentions = queued;
+    await deleteBusyMessages(client, event.channel, busyMessages, logger, threadKey);
   }
 
-  const replies = await retryOnce(
-    () =>
-      client.conversations.replies({
-        channel: event.channel,
-        ts: threadTs,
-        oldest: record?.lastResponseTs,
-      }),
-    logger,
-    'conversations.replies',
-  );
+  if (response && replies) {
+    const lastResponseTs = response.ts ?? record?.lastResponseTs ?? threadTs;
+    const lastSeenUserTs = messages.length > 0 ? messages[messages.length - 1].ts : record?.lastSeenUserTs;
+    const threadId = thread.id ?? record?.codexThreadId;
 
-  const messages = filterMessages(replies.messages ?? [], botUserId, record?.lastResponseTs);
-  const intro = record ? undefined : await loadBlockKitGuide(logger);
-  const prompt = buildPrompt(event.channel, threadTs, messages, botUserId, intro);
+    const patch: Partial<ThreadRecord> = { lastResponseTs, lastSeenUserTs };
+    if (threadId) patch.codexThreadId = threadId;
 
-  const { response } = await runCodexAndPost({
-    thread,
-    prompt,
-    outputSchema: blockKitOutputSchema,
-    logger,
-    threadKey,
-    client,
-    channel: event.channel,
-    threadTs,
-    workDir: config.workDir,
-    dataDir: config.dataDir,
-    sandbox: config.sandbox,
-  });
+    if (record) {
+      await store.update(threadKey, patch);
+    } else {
+      await store.set({ threadKey, ...patch });
+    }
 
-  const lastResponseTs = response.ts ?? record?.lastResponseTs ?? threadTs;
-  const lastSeenUserTs = messages.length > 0 ? messages[messages.length - 1].ts : record?.lastSeenUserTs;
-  const threadId = thread.id ?? record?.codexThreadId;
-
-  const patch: Partial<ThreadRecord> = { lastResponseTs, lastSeenUserTs };
-  if (threadId) patch.codexThreadId = threadId;
-
-  if (record) {
-    await store.update(threadKey, patch);
-  } else {
-    await store.set({ threadKey, ...patch });
+    logger.info(`Responded to ${threadKey}`);
   }
 
-  logger.info(`Responded to ${threadKey}`);
+  if (queuedMentions.length > 0) {
+    await flushQueuedMentions(queuedMentions, deps);
+  }
 }
 
 async function retryOnce<T>(fn: () => Promise<T>, logger: Logger, label: string): Promise<T> {
@@ -117,6 +143,64 @@ function isNewerThan(ts?: string, last?: string): boolean {
   if (!ts) return false;
   if (!last) return true;
   return Number(ts) > Number(last);
+}
+
+async function postBusyMessage(params: {
+  client: SlackClientLike;
+  channel: string;
+  threadTs: string;
+}): Promise<{ ts?: string } | null> {
+  const { client, channel, threadTs } = params;
+  const text =
+    'Alfred is busy — I’ll pass along your message when he finishes. ' +
+    'Press *Interrupt now* to stop his work and deliver this immediately.';
+  try {
+    return await client.chat.postMessage({
+      channel,
+      thread_ts: threadTs,
+      text,
+      blocks: [
+        { type: 'section', text: { type: 'mrkdwn', text } },
+        {
+          type: 'actions',
+          elements: [
+            {
+              type: 'button',
+              text: { type: 'plain_text', text: 'Interrupt now' },
+              action_id: 'interrupt-now',
+            },
+          ],
+        },
+      ],
+    });
+  } catch {
+    return null;
+  }
+}
+
+export async function deleteBusyMessages(
+  client: SlackClientLike,
+  channel: string,
+  busyMessages: string[],
+  logger: Logger,
+  threadKey: string,
+): Promise<void> {
+  if (!client.chat.delete) return;
+  const unique = [...new Set(busyMessages)].filter(Boolean);
+  for (const ts of unique) {
+    try {
+      await client.chat.delete({ channel, ts });
+    } catch (error) {
+      logger.warn('Failed to delete busy message', { threadKey, ts, error });
+    }
+  }
+}
+
+export async function flushQueuedMentions(queued: MentionEvent[], deps: MentionDeps): Promise<void> {
+  if (queued.length === 0) return;
+  const nextEvent = queued[queued.length - 1];
+  if (!nextEvent) return;
+  await handleAppMention({ event: nextEvent, ack: async () => undefined }, deps);
 }
 
 export function stripBotMention(text: string, botUserId: string): string {

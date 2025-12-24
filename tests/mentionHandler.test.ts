@@ -7,6 +7,7 @@ import { ThreadStore } from '../src/store/threadStore.js';
 import { handleAppMention } from '../src/slack/mentionHandler.js';
 import { type AppConfig } from '../src/config.js';
 import { type CodexClient, type CodexThread } from '../src/codex/client.js';
+import { ThreadWorkManager } from '../src/slack/threadWork.js';
 
 const baseConfig: AppConfig = {
   appToken: 'xapp-test',
@@ -38,7 +39,7 @@ test('handleAppMention posts response and updates store', async () => {
 
   const fakeThread: CodexThread = {
     id: 'thread-1',
-    run: async (prompt) => {
+    run: async (prompt, _options) => {
       prompts.push(prompt);
       return { output: { text: 'Hello', blocks: [{ type: 'section', text: { type: 'mrkdwn', text: 'Hello' } }] } };
     },
@@ -51,6 +52,7 @@ test('handleAppMention posts response and updates store', async () => {
 
   const posted: { text?: string; blocks?: unknown[] } = {};
   let thinkingText = '';
+  let thinkingBlocks: unknown[] | undefined;
   const client = {
     conversations: {
       replies: async () => ({
@@ -63,6 +65,7 @@ test('handleAppMention posts response and updates store', async () => {
     chat: {
       postMessage: async ({ text, blocks }: { text: string; blocks: unknown[] }) => {
         thinkingText = text;
+        thinkingBlocks = blocks;
         return { ts: '2.0' };
       },
       update: async ({ text, blocks }: { text: string; blocks: unknown[] }) => {
@@ -82,6 +85,7 @@ test('handleAppMention posts response and updates store', async () => {
       client,
       store,
       codex,
+      work: new ThreadWorkManager(),
       config: baseConfig,
       logger,
       botUserId: 'B1',
@@ -97,6 +101,7 @@ test('handleAppMention posts response and updates store', async () => {
   assert.equal(thinkingText, 'Thinking...');
   assert.equal(posted.text, 'Hello');
   assert.equal(Array.isArray(posted.blocks), true);
+  assert.ok(JSON.stringify(thinkingBlocks ?? []).includes('interrupt-run'));
 
   const record = store.get('C1:1.0');
   assert.equal(record?.lastResponseTs, '3.0');
@@ -110,7 +115,7 @@ test('handleAppMention retries when Slack rejects the response', async () => {
 
   const fakeThread: CodexThread = {
     id: 'thread-1',
-    run: async (prompt) => {
+    run: async (prompt, _options) => {
       runCount += 1;
       prompts.push(prompt);
       if (runCount === 1) {
@@ -154,6 +159,7 @@ test('handleAppMention retries when Slack rejects the response', async () => {
       client,
       store,
       codex,
+      work: new ThreadWorkManager(),
       config: baseConfig,
       logger,
       botUserId: 'B1',
@@ -168,13 +174,71 @@ test('handleAppMention retries when Slack rejects the response', async () => {
   assert.match(prompts[1], /Slack error: invalid_blocks/);
 });
 
+test('handleAppMention queues mentions and posts busy message when already running', async () => {
+  const store = await makeStore();
+  const work = new ThreadWorkManager();
+  const abortController = new AbortController();
+  const threadKey = 'C1:1.0';
+  work.begin(threadKey, abortController);
+
+  let busyPosted = false;
+  let busyBlocks: unknown[] | undefined;
+  let codexStarted = false;
+
+  const codex: CodexClient = {
+    startThread: async () => {
+      codexStarted = true;
+      throw new Error('should not start');
+    },
+    resumeThread: async () => {
+      codexStarted = true;
+      throw new Error('should not resume');
+    },
+  };
+
+  const client = {
+    conversations: {
+      replies: async () => ({ messages: [] }),
+    },
+    chat: {
+      postMessage: async ({ blocks }: { blocks: unknown[] }) => {
+        busyPosted = true;
+        busyBlocks = blocks;
+        return { ts: '9.0' };
+      },
+      update: async () => ({ ts: '2.0' }),
+    },
+  };
+
+  await handleAppMention(
+    { event: { channel: 'C1', ts: '1.0', text: '<@B1> hi' }, ack: async () => undefined },
+    {
+      client,
+      store,
+      codex,
+      work,
+      config: baseConfig,
+      logger,
+      botUserId: 'B1',
+      blockKitOutputSchema: {},
+    },
+  );
+
+  const { queued, busyMessages } = work.end(threadKey);
+  assert.equal(codexStarted, false);
+  assert.equal(busyPosted, true);
+  assert.ok(JSON.stringify(busyBlocks ?? []).includes('interrupt-now'));
+  assert.equal(queued.length, 1);
+  assert.equal(busyMessages[0], '9.0');
+});
+
 test('handleAppMention only injects guidance on first turn', async () => {
   const store = await makeStore();
   const prompts: string[] = [];
 
   const fakeThread: CodexThread = {
     id: 'thread-1',
-    run: async (prompt) => {
+    run: async (prompt, _options) => {
       prompts.push(prompt);
       return { output: { text: 'Hello', blocks: [{ type: 'section', text: { type: 'mrkdwn', text: 'Hello' } }] } };
     },
@@ -209,6 +273,7 @@ test('handleAppMention only injects guidance on first turn', async () => {
       client,
       store,
       codex,
+      work: new ThreadWorkManager(),
       config: baseConfig,
       logger,
       botUserId: 'B1',
@@ -225,6 +290,7 @@ test('handleAppMention only injects guidance on first turn', async () => {
       client,
       store,
       codex,
+      work: new ThreadWorkManager(),
       config: baseConfig,
       logger,
       botUserId: 'B1',
@@ -245,7 +311,7 @@ test('handleAppMention uploads attachments returned by the model', async () => {
 
   const fakeThread: CodexThread = {
     id: 'thread-2',
-    run: async () => ({
+    run: async (_prompt, _options) => ({
       output: {
         text: 'Attached.',
         blocks: [{ type: 'section', text: { type: 'mrkdwn', text: 'Attached.' } }],
@@ -287,6 +353,7 @@ test('handleAppMention uploads attachments returned by the model', async () => {
       client,
       store,
       codex,
+      work: new ThreadWorkManager(),
       config: { ...baseConfig, workDir },
       logger,
       botUserId: 'B1',
@@ -310,7 +377,7 @@ test('handleAppMention stages temp attachments outside the workspace', async () 
 
   const fakeThread: CodexThread = {
     id: 'thread-5',
-    run: async () => ({
+    run: async (_prompt, _options) => ({
       output: {
         text: 'Attached.',
         blocks: [{ type: 'section', text: { type: 'mrkdwn', text: 'Attached.' } }],
@@ -352,6 +419,7 @@ test('handleAppMention stages temp attachments outside the workspace', async () 
       client,
       store,
       codex,
+      work: new ThreadWorkManager(),
       config: { ...baseConfig, workDir, dataDir },
       logger,
       botUserId: 'B1',
@@ -371,7 +439,7 @@ test('handleAppMention includes checklist guidance in the intro prompt', async (
 
   const fakeThread: CodexThread = {
     id: 'thread-1',
-    run: async (prompt) => {
+    run: async (prompt, _options) => {
       prompts.push(prompt);
       return { output: { text: 'Checklist', blocks: [{ type: 'section', text: { type: 'mrkdwn', text: 'Checklist' } }] } };
     },
@@ -403,6 +471,7 @@ test('handleAppMention includes checklist guidance in the intro prompt', async (
       client,
       store,
       codex,
+      work: new ThreadWorkManager(),
       config: baseConfig,
       logger,
       botUserId: 'B1',

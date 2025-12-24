@@ -5,6 +5,7 @@ export interface SlackClientLike {
   chat: {
     postMessage: (args: { channel: string; thread_ts: string; text: string; blocks: unknown[] }) => Promise<{ ts?: string }>;
     update: (args: { channel: string; ts: string; text: string; blocks: unknown[] }) => Promise<{ ts?: string }>;
+    delete?: (args: { channel: string; ts: string }) => Promise<void>;
   };
   files?: {
     upload?: (args: {

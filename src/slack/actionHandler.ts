@@ -3,12 +3,15 @@ import { type ThreadStore, type ThreadRecord } from '../store/threadStore.js';
 import { buildThreadOptions, type CodexClient } from '../codex/client.js';
 import { type AppConfig } from '../config.js';
 import { runCodexAndPost } from './codexResponder.js';
-import { type SlackClientLike, type ActionBody } from './types.js';
+import { type SlackClientLike, type ActionBody, type MentionEvent } from './types.js';
+import { ThreadWorkManager } from './threadWork.js';
+import { deleteBusyMessages, flushQueuedMentions } from './mentionHandler.js';
 
 export interface ActionDeps {
   client: SlackClientLike;
   store: ThreadStore;
   codex: CodexClient;
+  work: ThreadWorkManager;
   config: AppConfig;
   logger: Logger;
   botUserId: string;
@@ -20,20 +23,11 @@ export async function handleAction(
   deps: ActionDeps,
 ): Promise<void> {
   const { body, ack } = params;
-  const { client, store, codex, config, logger, botUserId, blockKitOutputSchema } = deps;
+  const { client, store, codex, work, config, logger, botUserId, blockKitOutputSchema } = deps;
 
   await ack();
 
   const actions = body.actions ?? [];
-  const hasSubmit = actions.some((action) => action.type === 'button' || action.action_id?.includes('submit'));
-  if (!hasSubmit) {
-    logger.info('Ignoring non-submit action', {
-      actionTypes: actions.map((action) => action.type ?? 'unknown'),
-      actionIds: actions.map((action) => action.action_id ?? 'unknown'),
-    });
-    return;
-  }
-
   const channel = body.channel?.id ?? body.container?.channel_id;
   const threadTs = body.message?.thread_ts ?? body.container?.thread_ts ?? body.message?.ts ?? body.container?.message_ts;
 
@@ -43,54 +37,98 @@ export async function handleAction(
   }
 
   const threadKey = `${channel}:${threadTs}`;
-  const record = store.get(threadKey);
-  const threadOptions = buildThreadOptions(config.workDir, config.sandbox, config.codexArgs);
-
-  const thread = record?.codexThreadId
-    ? await codex.resumeThread(record.codexThreadId, threadOptions)
-    : await codex.startThread(threadOptions);
-
-  const replies = await client.conversations.replies({
-    channel,
-    ts: threadTs,
-    oldest: record?.lastResponseTs,
-  });
-
-  const prompt = buildActionPrompt({
-    channel,
-    threadTs,
-    body,
-    botUserId,
-    messages: replies.messages ?? [],
-  });
-
-  const { response } = await runCodexAndPost({
-    thread,
-    prompt,
-    outputSchema: blockKitOutputSchema,
-    logger,
-    threadKey,
-    client,
-    channel,
-    threadTs,
-    workDir: config.workDir,
-    dataDir: config.dataDir,
-    sandbox: config.sandbox,
-  });
-
-  const lastResponseTs = response.ts ?? record?.lastResponseTs ?? threadTs;
-  const lastSeenUserTs = extractLastSeenUserTs(replies.messages ?? [], record?.lastSeenUserTs);
-  const threadId = thread.id ?? record?.codexThreadId;
-  const patch: Partial<ThreadRecord> = { lastResponseTs, lastSeenUserTs };
-  if (threadId) patch.codexThreadId = threadId;
-
-  if (record) {
-    await store.update(threadKey, patch);
-  } else {
-    await store.set({ threadKey, ...patch });
+  const isInterrupt = actions.some(
+    (action) => action.action_id === 'interrupt-run' || action.action_id === 'interrupt-now',
+  );
+  if (isInterrupt) {
+    const interrupted = work.requestInterrupt(threadKey);
+    logger.info('Interrupt requested', { threadKey, interrupted });
+    return;
   }
 
-  logger.info(`Handled action for ${threadKey}`);
+  const hasSubmit = actions.some((action) => action.type === 'button' || action.action_id?.includes('submit'));
+  if (!hasSubmit) {
+    logger.info('Ignoring non-submit action', {
+      actionTypes: actions.map((action) => action.type ?? 'unknown'),
+      actionIds: actions.map((action) => action.action_id ?? 'unknown'),
+    });
+    return;
+  }
+
+  if (work.isBusy(threadKey)) {
+    logger.info('Ignoring submit while busy', { threadKey });
+    return;
+  }
+
+  const abortController = new AbortController();
+  work.begin(threadKey, abortController);
+
+  let response: { ts?: string } | undefined;
+  let record: ThreadRecord | undefined;
+  let replies: { messages?: { ts?: string; text?: string; user?: string }[] } | undefined;
+  let thread: Awaited<ReturnType<CodexClient['startThread']>> | undefined;
+  let queuedMentions: MentionEvent[] = [];
+  try {
+    record = store.get(threadKey);
+    const threadOptions = buildThreadOptions(config.workDir, config.sandbox, config.codexArgs);
+
+    const activeThread = record?.codexThreadId
+      ? await codex.resumeThread(record.codexThreadId, threadOptions)
+      : await codex.startThread(threadOptions);
+    thread = activeThread;
+
+    replies = await client.conversations.replies({
+      channel,
+      ts: threadTs,
+      oldest: record?.lastResponseTs,
+    });
+
+    const prompt = buildActionPrompt({
+      channel,
+      threadTs,
+      body,
+      botUserId,
+      messages: replies.messages ?? [],
+    });
+    ({ response } = await runCodexAndPost({
+      thread: activeThread,
+      prompt,
+      outputSchema: blockKitOutputSchema,
+      logger,
+      threadKey,
+      client,
+      channel,
+      threadTs,
+      workDir: config.workDir,
+      dataDir: config.dataDir,
+      sandbox: config.sandbox,
+      abortSignal: abortController.signal,
+    }));
+  } finally {
+    const { queued, busyMessages } = work.end(threadKey);
+    queuedMentions = queued;
+    await deleteBusyMessages(client, channel, busyMessages, logger, threadKey);
+  }
+
+  if (response && replies && thread) {
+    const lastResponseTs = response.ts ?? record?.lastResponseTs ?? threadTs;
+    const lastSeenUserTs = extractLastSeenUserTs(replies.messages ?? [], record?.lastSeenUserTs);
+    const threadId = thread.id ?? record?.codexThreadId;
+    const patch: Partial<ThreadRecord> = { lastResponseTs, lastSeenUserTs };
+    if (threadId) patch.codexThreadId = threadId;
+
+    if (record) {
+      await store.update(threadKey, patch);
+    } else {
+      await store.set({ threadKey, ...patch });
+    }
+
+    logger.info(`Handled action for ${threadKey}`);
+  }
+
+  if (queuedMentions.length > 0) {
+    await flushQueuedMentions(queuedMentions, deps);
+  }
 }
 
 function buildActionPrompt(params: {

@@ -7,6 +7,7 @@ import { ThreadStore } from '../src/store/threadStore.js';
 import { handleAction } from '../src/slack/actionHandler.js';
 import { type AppConfig } from '../src/config.js';
 import { type CodexClient, type CodexThread } from '../src/codex/client.js';
+import { ThreadWorkManager } from '../src/slack/threadWork.js';
 
 const baseConfig: AppConfig = {
   appToken: 'xapp-test',
@@ -38,7 +39,7 @@ test('handleAction posts response and updates store', async () => {
 
   const fakeThread: CodexThread = {
     id: 'thread-2',
-    run: async (prompt) => {
+    run: async (prompt, _options) => {
       prompts.push(prompt);
       return {
         output: {
@@ -87,6 +88,7 @@ test('handleAction posts response and updates store', async () => {
       client,
       store,
       codex,
+      work: new ThreadWorkManager(),
       config: baseConfig,
       logger,
       botUserId: 'B1',
@@ -105,13 +107,69 @@ test('handleAction posts response and updates store', async () => {
   assert.equal(record?.codexThreadId, 'thread-2');
 });
 
+test('handleAction interrupts active work when cancel button is pressed', async () => {
+  const store = await makeStore();
+  const work = new ThreadWorkManager();
+  const abortController = new AbortController();
+  work.begin('C1:1.0', abortController);
+
+  let ran = false;
+  const fakeThread: CodexThread = {
+    id: 'thread-9',
+    run: async (_prompt, _options) => {
+      ran = true;
+      return { output: { text: 'ok', blocks: [] } };
+    },
+  };
+
+  const codex: CodexClient = {
+    startThread: async () => fakeThread,
+    resumeThread: async () => fakeThread,
+  };
+
+  const client = {
+    conversations: {
+      replies: async () => ({ messages: [] }),
+    },
+    chat: {
+      postMessage: async () => ({ ts: '2.0' }),
+      update: async () => ({ ts: '3.0' }),
+    },
+  };
+
+  await handleAction(
+    {
+      body: {
+        user: { id: 'U2' },
+        channel: { id: 'C1' },
+        message: { ts: '1.0', thread_ts: '1.0', text: 'thinking', blocks: [] },
+        actions: [{ type: 'button', action_id: 'interrupt-run' }],
+      },
+      ack: async () => undefined,
+    },
+    {
+      client,
+      store,
+      codex,
+      work,
+      config: baseConfig,
+      logger,
+      botUserId: 'B1',
+      blockKitOutputSchema: {},
+    },
+  );
+
+  assert.equal(abortController.signal.aborted, true);
+  assert.equal(ran, false);
+});
+
 test('handleAction ignores non-submit checkbox actions', async () => {
   const store = await makeStore();
   let ran = false;
 
   const fakeThread: CodexThread = {
     id: 'thread-3',
-    run: async () => {
+    run: async (_prompt, _options) => {
       ran = true;
       return { output: { text: 'noop', blocks: [] } };
     },
@@ -159,6 +217,7 @@ test('handleAction ignores non-submit checkbox actions', async () => {
       client,
       store,
       codex,
+      work: new ThreadWorkManager(),
       config: baseConfig,
       logger,
       botUserId: 'B1',
@@ -175,7 +234,7 @@ test('handleAction includes state values for submit actions', async () => {
 
   const fakeThread: CodexThread = {
     id: 'thread-4',
-    run: async (prompt) => {
+    run: async (prompt, _options) => {
       prompts.push(prompt);
       return { output: { text: 'ok', blocks: [{ type: 'section', text: { type: 'mrkdwn', text: 'ok' } }] } };
     },
@@ -220,6 +279,7 @@ test('handleAction includes state values for submit actions', async () => {
       client,
       store,
       codex,
+      work: new ThreadWorkManager(),
       config: baseConfig,
       logger,
       botUserId: 'B1',

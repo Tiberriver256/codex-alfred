@@ -33,8 +33,9 @@ export async function runCodexAndPost(params: {
   workDir: string;
   dataDir: string;
   sandbox: { mode: 'host' } | { mode: 'docker'; name: string };
+  abortSignal?: AbortSignal;
 }): Promise<{ response: { ts?: string }; output: BlockKitMessage; attachments?: AttachmentResult }> {
-  const { thread, prompt, outputSchema, logger, threadKey, client, channel, threadTs, workDir, dataDir, sandbox } = params;
+  const { thread, prompt, outputSchema, logger, threadKey, client, channel, threadTs, workDir, dataDir, sandbox, abortSignal } = params;
   let lastError: string | null = null;
   let lastOutput: unknown = null;
   const statusLimiter = createStatusLimiter();
@@ -45,12 +46,7 @@ export async function runCodexAndPost(params: {
     channel,
     thread_ts: threadTs,
     text: 'Thinking...',
-    blocks: [
-      {
-        type: 'section',
-        text: { type: 'mrkdwn', text: '_Thinking..._' },
-      },
-    ],
+    blocks: buildThinkingBlocks('Thinking...'),
   });
   const thinkingTs = thinking.ts;
   if (!thinkingTs) {
@@ -62,7 +58,7 @@ export async function runCodexAndPost(params: {
     statusLimiter.lastUpdatedAt = 0;
     const attemptPrompt = attempt === 1 ? prompt : buildRetryPrompt(prompt, lastError, lastOutput);
     if (attempt > 1) {
-      await maybeUpdateStatus(client, channel, thinkingTs, statusLimiter, '_Retrying..._');
+      await maybeUpdateStatus(client, channel, thinkingTs, statusLimiter, 'Retrying...');
     }
 
     const startedAt = Date.now();
@@ -83,7 +79,7 @@ export async function runCodexAndPost(params: {
 
     try {
       if (typeof thread.runStreamed === 'function') {
-        const stream = await thread.runStreamed(attemptPrompt, { outputSchema });
+        const stream = await thread.runStreamed(attemptPrompt, buildRunOptions(outputSchema, abortSignal));
         for await (const event of stream.events) {
           if (logger.debug) {
             logger.debug('Codex stream event', {
@@ -143,13 +139,18 @@ export async function runCodexAndPost(params: {
           structuredOutput = extractStructuredOutput({ text: finalText });
         }
       } else {
-        const result = await thread.run(attemptPrompt, { outputSchema });
+        const result = await thread.run(attemptPrompt, buildRunOptions(outputSchema, abortSignal));
         usage = (result as { usage?: { input_tokens: number; cached_input_tokens: number; output_tokens: number } }).usage ?? null;
         threadId = thread.id ?? null;
         structuredOutput = extractStructuredOutput(result);
       }
     } catch (error) {
       stopProgress();
+      if (isAbortError(error, abortSignal)) {
+        const cancelText = 'Okay — I stopped.';
+        await updateFinalMessage(client, channel, thinkingTs, cancelText);
+        return { response: { ts: thinkingTs }, output: { text: cancelText, blocks: [] } };
+      }
       lastError = error instanceof Error ? error.message : 'Codex stream failed.';
       logger.warn('Codex run failed', { threadKey, threadId, attempt, error: lastError });
       continue;
@@ -246,6 +247,30 @@ export async function runCodexAndPost(params: {
   } catch (error) {
     throw new Error(lastError ?? 'Slack update failed after 5 attempts.');
   }
+}
+
+function buildThinkingBlocks(text: string): unknown[] {
+  return [
+    {
+      type: 'section',
+      text: { type: 'mrkdwn', text: `_${text}_` },
+    },
+    {
+      type: 'actions',
+      elements: [
+        {
+          type: 'button',
+          text: { type: 'plain_text', text: 'Cancel' },
+          action_id: 'interrupt-run',
+        },
+      ],
+    },
+  ];
+}
+
+function buildRunOptions(outputSchema: object, abortSignal?: AbortSignal): { outputSchema: object; signal?: AbortSignal } {
+  if (!abortSignal) return { outputSchema };
+  return { outputSchema, signal: abortSignal };
 }
 
 function coerceBlockKitMessage(payload: unknown): BlockKitMessage | null {
@@ -463,6 +488,37 @@ async function maybeUpdateStatus(
   limiter.lastUpdatedAt = now;
 
   try {
+    await updateStatusMessage(client, channel, ts, text);
+  } catch {
+    // Ignore status update failures; final response will overwrite.
+  }
+}
+
+async function updateStatusMessage(
+  client: SlackClientLike,
+  channel: string,
+  ts: string,
+  text: string,
+): Promise<void> {
+  try {
+    await client.chat.update({
+      channel,
+      ts,
+      text,
+      blocks: buildThinkingBlocks(text),
+    });
+  } catch {
+    // Ignore interim status update failures.
+  }
+}
+
+async function updateFinalMessage(
+  client: SlackClientLike,
+  channel: string,
+  ts: string,
+  text: string,
+): Promise<void> {
+  try {
     await client.chat.update({
       channel,
       ts,
@@ -470,13 +526,26 @@ async function maybeUpdateStatus(
       blocks: [
         {
           type: 'section',
-          text: { type: 'mrkdwn', text: `_${text}_` },
+          text: { type: 'mrkdwn', text },
         },
       ],
     });
   } catch {
-    // Ignore status update failures; final response will overwrite.
+    // Ignore final update failures during cancellation.
   }
+}
+
+function isAbortError(error: unknown, signal?: AbortSignal): boolean {
+  if (signal?.aborted) return true;
+  if (error instanceof Error) {
+    const name = error.name.toLowerCase();
+    if (name.includes('abort')) return true;
+    const message = error.message.toLowerCase();
+    if (message.includes('aborted') || message.includes('cancelled') || message.includes('canceled')) {
+      return true;
+    }
+  }
+  return false;
 }
 
 async function createStatusSummarizer(params: { workDir: string; logger: Logger }): Promise<StatusSummarizer | null> {
