@@ -129,7 +129,7 @@ fi
 
 ENV_ARGS+=("${EXTRA_ENV_ARGS[@]}")
 ENV_ARGS+=("${EXTRA_ENV_FILES[@]}")
-ENV_ARGS+=("-e" "ALFRED_DATA_DIR=/workspace")
+ENV_ARGS+=("-e" "ALFRED_DATA_DIR=$ENGINE_DIR/data")
 ENV_ARGS+=("-e" "CODEX_HOME=$CODEX_HOME_DOCKER")
 ENV_ARGS+=("-e" "ALFRED_SANDBOX=host")
 ENV_ARGS+=("-e" "ALFRED_WORKDIR=/workspace")
