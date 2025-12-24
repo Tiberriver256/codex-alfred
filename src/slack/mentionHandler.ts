@@ -378,12 +378,12 @@ async function fetchSlackFile(url: string, botToken: string): Promise<Response> 
   let nextUrl: string | null = url;
   for (let i = 0; i < 5; i += 1) {
     if (!nextUrl) break;
-    const res = await fetch(nextUrl, {
+    const res: Response = await fetch(nextUrl, {
       headers: { Authorization: `Bearer ${botToken}` },
       redirect: 'manual',
     });
     if (res.status >= 300 && res.status < 400) {
-      const location = res.headers.get('location');
+      const location: string | null = res.headers.get('location');
       if (location) {
         nextUrl = new URL(location, nextUrl).toString();
         continue;
