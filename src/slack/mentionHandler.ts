@@ -283,13 +283,6 @@ export function buildPrompt(
   ].join('\n');
 }
 
-function isImageFile(file: SlackFile): boolean {
-  if (file.mimetype && file.mimetype.startsWith('image/')) return true;
-  const filetype = file.filetype?.toLowerCase();
-  if (filetype && ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'tiff'].includes(filetype)) return true;
-  return false;
-}
-
 function getSlackFileUrl(file: SlackFile): string | null {
   if (file.url_private_download) return file.url_private_download;
   if (file.url_private) return file.url_private;
@@ -301,7 +294,7 @@ async function downloadSlackAttachments(
   botToken: string,
   logger: Logger,
 ): Promise<AttachmentInfo[]> {
-  const files = messages.flatMap((msg) => msg.files ?? []).filter(isImageFile);
+  const files = messages.flatMap((msg) => msg.files ?? []);
   if (files.length === 0) return [];
 
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'alfred-attachments-'));

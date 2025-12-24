@@ -508,13 +508,19 @@ test('handleAppMention includes downloaded image attachments in the prompt', asy
           {
             ts: '1.0',
             user: 'U1',
-            text: 'see image',
+            text: 'see files',
             files: [
               {
                 id: 'F1',
                 name: 'photo.png',
                 mimetype: 'image/png',
                 url_private: 'https://example.com/file.png',
+              },
+              {
+                id: 'F2',
+                name: 'report.pdf',
+                mimetype: 'application/pdf',
+                url_private_download: 'https://example.com/report.pdf',
               },
             ],
           },
@@ -528,13 +534,14 @@ test('handleAppMention includes downloaded image attachments in the prompt', asy
   };
 
   const originalFetch = globalThis.fetch;
+  const requested: string[] = [];
   globalThis.fetch = (async (url: string, options: { headers?: Record<string, string> }) => {
-    assert.equal(url, 'https://example.com/file.png');
+    requested.push(url);
     assert.equal(options.headers?.Authorization, 'Bearer xoxb-test');
     return {
       ok: true,
       status: 200,
-      arrayBuffer: async () => new TextEncoder().encode('img').buffer,
+      arrayBuffer: async () => new TextEncoder().encode('file').buffer,
     } as any;
   }) as typeof fetch;
 
@@ -561,8 +568,11 @@ test('handleAppMention includes downloaded image attachments in the prompt', asy
 
   assert.equal(prompts.length, 1);
   assert.match(prompts[0], /Attachments available/);
+  assert.deepEqual(requested.sort(), ['https://example.com/file.png', 'https://example.com/report.pdf']);
   assert.match(prompts[0], /photo\.png/);
+  assert.match(prompts[0], /report\.pdf/);
   assert.match(prompts[0], /\/tmp\/alfred-attachments-[^/]+\/photo\.png/);
+  assert.match(prompts[0], /\/tmp\/alfred-attachments-[^/]+\/report\.pdf/);
 
   const match = prompts[0].match(/(\/tmp\/alfred-attachments-[^/]+)\/photo\.png/);
   if (match?.[1]) {
