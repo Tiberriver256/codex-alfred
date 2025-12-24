@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { extractStructuredOutput, type CodexThread, type CodexThreadEvent } from '../codex/client.js';
+import { createCodexClient, extractStructuredOutput, type CodexThread, type CodexThreadEvent } from '../codex/client.js';
 import { type BlockKitMessage } from '../blockkit/validator.js';
 import { type Logger } from '../logger.js';
 import { type SlackClientLike } from './types.js';
@@ -11,6 +11,15 @@ export interface AttachmentResult {
   succeeded: string[];
   failed: Array<{ filename: string; reason: string }>;
 }
+
+type StatusSummarizer = {
+  summarize: (params: {
+    userPrompt: string;
+    eventType: string;
+    recentEvents: CodexThreadEvent[];
+    currentEvent: CodexThreadEvent;
+  }) => Promise<string | null>;
+};
 
 export async function runCodexAndPost(params: {
   thread: CodexThread;
@@ -29,6 +38,9 @@ export async function runCodexAndPost(params: {
   let lastError: string | null = null;
   let lastOutput: unknown = null;
   const statusLimiter = createStatusLimiter();
+  const userPrompt = extractLastUserPrompt(prompt);
+  let summarizer: StatusSummarizer | null = null;
+  let summarizerAttempted = false;
   const thinking = await client.chat.postMessage({
     channel,
     thread_ts: threadTs,
@@ -67,6 +79,7 @@ export async function runCodexAndPost(params: {
     let structuredOutput: unknown | null = null;
     let sawTurnCompleted = false;
     let threadId = thread.id ?? null;
+    const recentEvents: CodexThreadEvent[] = [];
 
     try {
       if (typeof thread.runStreamed === 'function') {
@@ -99,10 +112,28 @@ export async function runCodexAndPost(params: {
           }
 
           const statusText = statusFromEvent(event);
-          if (statusText) {
+          if (statusText && shouldAttemptStatusUpdate(statusLimiter)) {
+            if (!summarizer && !summarizerAttempted) {
+              summarizerAttempted = true;
+              summarizer = await createStatusSummarizer({ workDir, logger });
+            }
+            const summary = summarizer
+              ? await summarizer.summarize({
+                  userPrompt,
+                  eventType: event.type,
+                  recentEvents: recentEvents.slice(-1),
+                  currentEvent: event,
+                })
+              : null;
+            const nextStatus = summary ?? statusText;
+            progress.lastStatus = nextStatus;
+            await maybeUpdateStatus(client, channel, thinkingTs, statusLimiter, nextStatus);
+          } else if (statusText) {
             progress.lastStatus = statusText;
-            await maybeUpdateStatus(client, channel, thinkingTs, statusLimiter, statusText);
           }
+
+          recentEvents.push(event);
+          if (recentEvents.length > 3) recentEvents.shift();
 
           if (finalText && sawTurnCompleted) {
             break;
@@ -370,6 +401,12 @@ function createStatusLimiter() {
   };
 }
 
+function shouldAttemptStatusUpdate(limiter: { lastText: string; lastUpdatedAt: number }): boolean {
+  const now = Date.now();
+  if (now - limiter.lastUpdatedAt < 2500) return false;
+  return true;
+}
+
 function createProgressState(startedAt: number) {
   return {
     startedAt,
@@ -440,6 +477,150 @@ async function maybeUpdateStatus(
   } catch {
     // Ignore status update failures; final response will overwrite.
   }
+}
+
+async function createStatusSummarizer(params: { workDir: string; logger: Logger }): Promise<StatusSummarizer | null> {
+  const { workDir, logger } = params;
+  try {
+    const client = await createCodexClient();
+    const thread = await client.startThread({
+      workingDirectory: workDir,
+      skipGitRepoCheck: true,
+      approvalPolicy: 'never',
+      model: 'gpt-5.1-codex-mini',
+      modelReasoningEffort: 'low',
+      networkAccessEnabled: false,
+      webSearchEnabled: false,
+    });
+
+    const outputSchema = {
+      type: 'object',
+      properties: {
+        summary: { type: 'string' },
+      },
+      required: ['summary'],
+      additionalProperties: false,
+    };
+
+    return {
+      summarize: async ({ userPrompt, eventType, recentEvents, currentEvent }) => {
+        const subject = statusSubjectFromPrompt(userPrompt);
+        const prompt = buildStatusSummaryPrompt({
+          userPrompt,
+          eventType,
+          recentEvents,
+          currentEvent,
+          subject,
+        });
+        const startedAt = Date.now();
+        try {
+          const result = await thread.run(prompt, { outputSchema });
+          const structured = extractStructuredOutput(result);
+          const summary =
+            structured && typeof structured === 'object' && 'summary' in structured
+              ? String((structured as { summary?: string }).summary ?? '')
+              : '';
+          const cleaned = summary.trim();
+          if (logger.debug) {
+            logger.debug('Status summary generated', {
+              eventType,
+              latencyMs: Date.now() - startedAt,
+              summary: cleaned,
+            });
+          }
+          return cleaned || null;
+        } catch (error) {
+          logger.warn('Status summary failed', { eventType, error });
+          return null;
+        }
+      },
+    };
+  } catch (error) {
+    logger.warn('Status summarizer unavailable', error);
+    return null;
+  }
+}
+
+function buildStatusSummaryPrompt(params: {
+  userPrompt: string;
+  eventType: string;
+  recentEvents: CodexThreadEvent[];
+  currentEvent: CodexThreadEvent;
+  subject: string;
+}): string {
+  const { userPrompt, eventType, recentEvents, currentEvent, subject } = params;
+  const recipes = [
+    `thread.started -> "📝 Starting *Your ${subject}*."`,
+    `turn.started -> "⏳ Working on *Your ${subject}*."`,
+    `item.started -> "🔍 Checking *Your ${subject}*."`,
+    `item.updated -> "🔍 Checking *Your ${subject}*."`,
+    `item.completed -> "🔍 Noting progress on *Your ${subject}*."`,
+    `turn.completed -> "✅ *Your ${subject}* is ready."`,
+  ];
+  return [
+    'You write short Slack status lines for Alfred.',
+    'Return JSON: {"summary":"..."} only.',
+    'One sentence, <= 8 words.',
+    `Always include *Your ${subject}* exactly (capital Y).`,
+    'No item names, no paths, no commands, no jargon.',
+    'Use ✅ only for turn.completed.',
+    'Use the exact recipe for the event type.',
+    'Start with emoji + space, sentence case, end with a period.',
+    '',
+    'Recipes:',
+    ...recipes,
+    '',
+    `User prompt: ${userPrompt}`,
+    `Event type: ${eventType}`,
+    `Recent events: ${JSON.stringify(recentEvents.map(compactEventForSummary))}`,
+    `Current event: ${JSON.stringify(compactEventForSummary(currentEvent))}`,
+  ].join('\n');
+}
+
+function compactEventForSummary(event: CodexThreadEvent): Record<string, unknown> {
+  if (event.type === 'item.started' || event.type === 'item.updated' || event.type === 'item.completed') {
+    return { type: event.type, item: { type: event.item.type } };
+  }
+  if (event.type === 'turn.completed') {
+    return { type: event.type };
+  }
+  if (event.type === 'turn.started') {
+    return { type: event.type };
+  }
+  if (event.type === 'thread.started') {
+    return { type: event.type };
+  }
+  if (event.type === 'turn.failed') {
+    return { type: event.type, error: event.error.message };
+  }
+  if (event.type === 'error') {
+    return { type: event.type, message: event.message };
+  }
+  return { type: event.type };
+}
+
+function extractLastUserPrompt(prompt: string): string {
+  const lines = prompt.split('\n');
+  for (let i = lines.length - 1; i >= 0; i -= 1) {
+    const line = lines[i];
+    const match = line.match(/^\-\s+\[[^\]]+\]\s+@[^:]+:\s*(.+)$/);
+    if (match?.[1]) return match[1].trim();
+  }
+  return 'User request.';
+}
+
+function statusSubjectFromPrompt(prompt: string): string {
+  const text = prompt.toLowerCase();
+  if (/(shopping|grocery|groceries|list|todo|to-do|checklist|cart|picks)/i.test(text)) {
+    return 'list';
+  }
+  if (/(schedule|itinerary|plan)/i.test(text)) {
+    return 'plan';
+  }
+  if (/(summary|recap|notes)/i.test(text)) {
+    return 'summary';
+  }
+  return 'request';
 }
 
 function statusFromEvent(event: CodexThreadEvent): string | null {
