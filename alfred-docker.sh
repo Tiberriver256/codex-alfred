@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
 EXTRA_ENV_ARGS=()
 EXTRA_ENV_FILES=()
 while [[ $# -gt 0 ]]; do
@@ -70,6 +73,8 @@ ENGINE_DIR="/alfred"
 PID_FILE="${ALFRED_PID_FILE:-$CODEX_HOME_HOST/alfred.pid}"
 DOCKER_PID_FILE="$CODEX_HOME_DOCKER/alfred.pid"
 DOCKER_LOG_FILE="$CODEX_HOME_DOCKER/alfred.log"
+BUILD_SHA="$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")"
+BUILD_TIME="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
 if [[ -n "${SANDBOX_NAME:-}" ]]; then
   NAME="$SANDBOX_NAME"
@@ -115,6 +120,8 @@ if [[ "${RELOAD_ONLY:-0}" == "1" ]]; then
   ENV_ARGS+=("-e" "CODEX_HOME=$CODEX_HOME_DOCKER")
   ENV_ARGS+=("-e" "ALFRED_SANDBOX=host")
   ENV_ARGS+=("-e" "ALFRED_WORKDIR=/workspace")
+  ENV_ARGS+=("-e" "ALFRED_BUILD_SHA=$BUILD_SHA")
+  ENV_ARGS+=("-e" "ALFRED_BUILD_TIME=$BUILD_TIME")
 
   docker exec "$NAME" sh -lc "mkdir -p \"$CODEX_HOME_DOCKER\" && touch \"$CODEX_HOME_DOCKER/config.toml\""
   docker exec "$NAME" sh -lc "CONFIG=\"$CODEX_HOME_DOCKER/config.toml\"; TMP=\$(mktemp); awk 'BEGIN{ins=0} /^model_reasoning_summary[[:space:]]*=/{next} /^\\[/{if(!ins){print \"model_reasoning_summary = \\\"detailed\\\"\"; ins=1}} {print} END{if(!ins) print \"model_reasoning_summary = \\\"detailed\\\"\"}' \"\$CONFIG\" > \"\$TMP\" && mv \"\$TMP\" \"\$CONFIG\""
@@ -178,6 +185,8 @@ ENV_ARGS+=("-e" "ALFRED_DATA_DIR=$ENGINE_DIR/data")
 ENV_ARGS+=("-e" "CODEX_HOME=$CODEX_HOME_DOCKER")
 ENV_ARGS+=("-e" "ALFRED_SANDBOX=host")
 ENV_ARGS+=("-e" "ALFRED_WORKDIR=/workspace")
+ENV_ARGS+=("-e" "ALFRED_BUILD_SHA=$BUILD_SHA")
+ENV_ARGS+=("-e" "ALFRED_BUILD_TIME=$BUILD_TIME")
 
 docker exec "${ENV_ARGS[@]}" "$NAME" sh -lc "cd \"$ENGINE_DIR\" && nohup node \"$ENGINE_DIR/dist/index.js\" --log-level debug -- --yolo > \"$DOCKER_LOG_FILE\" 2>&1 & echo \$! > \"$DOCKER_PID_FILE\""
 
