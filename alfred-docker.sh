@@ -96,8 +96,9 @@ if [[ "${RELOAD_ONLY:-0}" == "1" ]]; then
     exit 1
   fi
 
-  docker cp dist "$NAME:$ENGINE_DIR/dist"
-  docker cp schemas "$NAME:$ENGINE_DIR/schemas"
+  docker exec "$NAME" sh -lc "rm -rf \"$ENGINE_DIR/dist\" \"$ENGINE_DIR/schemas\" && mkdir -p \"$ENGINE_DIR/dist\" \"$ENGINE_DIR/schemas\""
+  docker cp dist/. "$NAME:$ENGINE_DIR/dist"
+  docker cp schemas/. "$NAME:$ENGINE_DIR/schemas"
   docker cp conversations-in-blockkit.md "$NAME:$ENGINE_DIR/"
 
   docker exec "$NAME" sh -lc "if [ -f \"$DOCKER_PID_FILE\" ]; then PID=\$(cat \"$DOCKER_PID_FILE\" || true); if [ -n \"\$PID\" ]; then kill -0 \"\$PID\" 2>/dev/null && kill \"\$PID\" || true; fi; fi"
