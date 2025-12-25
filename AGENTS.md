@@ -4,3 +4,4 @@
 - Avoid throwing errors where the system would already throw errors. You inadvertently hide the stack and make troubleshooting harder when you do that.
 - When a user mentions a problem during their exploratory testing you need to: 1. Document the desired behavior in the form of a failing test 2. Make the test go green
 - When changing output schemas, test them directly against `codex exec` so validation errors show up without involving Slack.
+- Logs now live in Codex home. Tail them with: `docker exec codex-alfred-sandbox sh -lc 'tail -n 200 /codex-home/alfred.log'`
