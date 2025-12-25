@@ -36,6 +36,7 @@ test('buildStatusSummaryPrompt asks for why and avoids vague phrasing', () => {
     currentEvent: { type: 'turn.started' },
     subject: 'budget',
     eventHint: 'checking budget data',
+    reasoningText: '**Checking pending transactions**',
   });
   assert.match(prompt, /why/i);
   assert.match(prompt, /avoid vague phrasing/i);
@@ -43,6 +44,8 @@ test('buildStatusSummaryPrompt asks for why and avoids vague phrasing', () => {
   assert.match(prompt, /first person/i);
   assert.match(prompt, /avoid \"we\"/i);
   assert.match(prompt, /NOT a coding agent/i);
+  assert.match(prompt, /reasoning_text/i);
+  assert.match(prompt, /current_event_full/i);
   assert.match(prompt, /<input>/);
   assert.match(prompt, /<user_prompt>/);
 });
