@@ -116,6 +116,9 @@ if [[ "${RELOAD_ONLY:-0}" == "1" ]]; then
   ENV_ARGS+=("-e" "ALFRED_SANDBOX=host")
   ENV_ARGS+=("-e" "ALFRED_WORKDIR=/workspace")
 
+  docker exec "$NAME" sh -lc "mkdir -p \"$CODEX_HOME_DOCKER\" && touch \"$CODEX_HOME_DOCKER/config.toml\""
+  docker exec "$NAME" sh -lc "if grep -q '^model_reasoning_summary' \"$CODEX_HOME_DOCKER/config.toml\"; then sed -i 's/^model_reasoning_summary.*/model_reasoning_summary = \"detailed\"/' \"$CODEX_HOME_DOCKER/config.toml\"; else printf '\\nmodel_reasoning_summary = \"detailed\"\\n' >> \"$CODEX_HOME_DOCKER/config.toml\"; fi"
+
   docker exec "${ENV_ARGS[@]}" "$NAME" sh -lc "cd \"$ENGINE_DIR\" && nohup node \"$ENGINE_DIR/dist/index.js\" --log-level debug -- --yolo > \"$DOCKER_LOG_FILE\" 2>&1 & echo \$! > \"$DOCKER_PID_FILE\""
   exit 0
 fi
@@ -152,6 +155,8 @@ docker exec "$NAME" sh -lc "mkdir -p \"$CODEX_HOME_DOCKER\""
 if [[ -d "$CODEX_HOME_HOST" ]]; then
   docker cp "$CODEX_HOME_HOST/." "$NAME:$CODEX_HOME_DOCKER"
 fi
+docker exec "$NAME" sh -lc "mkdir -p \"$CODEX_HOME_DOCKER\" && touch \"$CODEX_HOME_DOCKER/config.toml\""
+docker exec "$NAME" sh -lc "if grep -q '^model_reasoning_summary' \"$CODEX_HOME_DOCKER/config.toml\"; then sed -i 's/^model_reasoning_summary.*/model_reasoning_summary = \"detailed\"/' \"$CODEX_HOME_DOCKER/config.toml\"; else printf '\\nmodel_reasoning_summary = \"detailed\"\\n' >> \"$CODEX_HOME_DOCKER/config.toml\"; fi"
 
 docker exec "$NAME" sh -lc "if [ -f \"$DOCKER_PID_FILE\" ]; then PID=\$(cat \"$DOCKER_PID_FILE\" || true); if [ -n \"\$PID\" ]; then kill -0 \"\$PID\" 2>/dev/null && kill \"\$PID\" || true; fi; fi"
 sleep 1
