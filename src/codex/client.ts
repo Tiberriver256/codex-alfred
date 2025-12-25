@@ -33,6 +33,7 @@ export interface CodexStreamedTurn {
 export type ApprovalPolicy = 'never' | 'on-request' | 'on-failure' | 'untrusted';
 export type SandboxMode = 'read-only' | 'workspace-write' | 'danger-full-access';
 export type ModelReasoningEffort = 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
+export type ModelReasoningSummary = 'none' | 'brief' | 'detailed';
 
 export interface ThreadOptions {
   workingDirectory: string;
@@ -41,6 +42,7 @@ export interface ThreadOptions {
   model?: string;
   sandboxMode?: SandboxMode;
   modelReasoningEffort?: ModelReasoningEffort;
+  modelReasoningSummary?: ModelReasoningSummary;
   networkAccessEnabled?: boolean;
   webSearchEnabled?: boolean;
   additionalDirectories?: string[];
@@ -91,6 +93,7 @@ export function buildThreadOptions(
     workingDirectory: workDir,
     skipGitRepoCheck: true,
     approvalPolicy: 'never',
+    modelReasoningSummary: parsed.modelReasoningSummary ?? 'detailed',
     ...parsed,
   };
 }
@@ -197,6 +200,10 @@ function applyConfigValue(value: string, result: Partial<ThreadOptions>): void {
 
   if (key === 'model_reasoning_effort') {
     result.modelReasoningEffort = cleanedValue as ModelReasoningEffort;
+    return;
+  }
+  if (key === 'model_reasoning_summary') {
+    result.modelReasoningSummary = cleanedValue as ModelReasoningSummary;
     return;
   }
 

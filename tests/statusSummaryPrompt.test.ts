@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  buildStatusSummaryPrompt,
+  buildEmojiSelectorPrompt,
   statusSubjectFromPrompt,
   statusEventHint,
 } from '../src/slack/codexResponder.js';
@@ -28,24 +28,11 @@ test('statusEventHint maps command text to user-friendly intent', () => {
   assert.match(statusEventHint(event, 'List pending YNAB transactions'), /budget data/i);
 });
 
-test('buildStatusSummaryPrompt asks for why and avoids vague phrasing', () => {
-  const prompt = buildStatusSummaryPrompt({
-    userPrompt: 'List pending YNAB transactions',
-    eventType: 'item.completed',
-    recentEvents: [],
-    currentEvent: { type: 'turn.started' },
-    subject: 'budget',
-    eventHint: 'checking budget data',
-    reasoningText: '**Checking pending transactions**',
-  });
-  assert.match(prompt, /why/i);
-  assert.match(prompt, /avoid vague phrasing/i);
-  assert.doesNotMatch(prompt, /Your request/);
-  assert.match(prompt, /first person/i);
-  assert.match(prompt, /avoid \"we\"/i);
+test('buildEmojiSelectorPrompt is minimal and text-only', () => {
+  const prompt = buildEmojiSelectorPrompt('**Checking pending transactions**');
+  assert.match(prompt, /emoji selector/i);
   assert.match(prompt, /NOT a coding agent/i);
-  assert.match(prompt, /reasoning_text/i);
-  assert.match(prompt, /current_event_full/i);
-  assert.match(prompt, /<input>/);
-  assert.match(prompt, /<user_prompt>/);
+  assert.match(prompt, /Return JSON/);
+  assert.match(prompt, /<text>/);
+  assert.match(prompt, /Checking pending transactions/);
 });
