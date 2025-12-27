@@ -10,6 +10,7 @@ import { handleAppMention } from './slack/mentionHandler.js';
 import { handleAction } from './slack/actionHandler.js';
 import { ensureDockerReady } from './sandbox/docker.js';
 import { ThreadWorkManager } from './slack/threadWork.js';
+import { startMentionBackfillPoller } from './slack/mentionBackfill.js';
 
 export async function startApp(config: AppConfig, logger: Logger): Promise<void> {
   if (config.sandbox.mode === 'docker') {
@@ -83,6 +84,32 @@ export async function startApp(config: AppConfig, logger: Logger): Promise<void>
   });
 
   await app.start();
+  if (config.mentionBackfill.enabled) {
+    startMentionBackfillPoller(
+      {
+        client: app.client as any,
+        store,
+        codex,
+        work,
+        config,
+        logger,
+        botUserId,
+        blockKitOutputSchema,
+      },
+      {
+        intervalMs: config.mentionBackfill.intervalMs,
+        historyLookbackSeconds: config.mentionBackfill.historyLookbackSeconds,
+        maxHistoryPages: config.mentionBackfill.maxHistoryPages,
+        minAgeSeconds: config.mentionBackfill.minAgeSeconds,
+      },
+    );
+    logger.info('Mention backfill poller started', {
+      intervalMs: config.mentionBackfill.intervalMs,
+      historyLookbackSeconds: config.mentionBackfill.historyLookbackSeconds,
+      maxHistoryPages: config.mentionBackfill.maxHistoryPages,
+      minAgeSeconds: config.mentionBackfill.minAgeSeconds,
+    });
+  }
   logger.info('Alfred is running.');
 }
 

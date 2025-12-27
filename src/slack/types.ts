@@ -1,6 +1,18 @@
 export interface SlackClientLike {
   conversations: {
     replies: (args: { channel: string; ts: string; oldest?: string }) => Promise<{ messages?: SlackMessage[] }>;
+    history?: (args: {
+      channel: string;
+      oldest?: string;
+      limit?: number;
+      cursor?: string;
+    }) => Promise<{ messages?: SlackMessage[]; response_metadata?: { next_cursor?: string } }>;
+    list?: (args: {
+      types?: string;
+      limit?: number;
+      cursor?: string;
+      exclude_archived?: boolean;
+    }) => Promise<{ channels?: SlackConversation[]; response_metadata?: { next_cursor?: string } }>;
   };
   chat: {
     postMessage: (args: { channel: string; thread_ts: string; text: string; blocks: unknown[] }) => Promise<{ ts?: string }>;
@@ -33,6 +45,14 @@ export interface SlackMessage {
   subtype?: string;
   bot_id?: string;
   files?: SlackFile[];
+  thread_ts?: string;
+  reply_count?: number;
+  latest_reply?: string;
+}
+
+export interface SlackConversation {
+  id?: string;
+  is_member?: boolean;
 }
 
 export interface SlackFile {

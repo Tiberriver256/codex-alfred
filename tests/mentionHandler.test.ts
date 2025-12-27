@@ -17,6 +17,13 @@ const baseConfig: AppConfig = {
   sandbox: { mode: 'host' },
   codexArgs: [],
   logLevel: 'info',
+  mentionBackfill: {
+    enabled: true,
+    intervalMs: 60000,
+    historyLookbackSeconds: 86400,
+    maxHistoryPages: 3,
+    minAgeSeconds: 60,
+  },
 };
 
 const logger = {

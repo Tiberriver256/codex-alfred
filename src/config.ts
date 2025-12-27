@@ -12,6 +12,15 @@ export interface AppConfig {
   sandbox: SandboxConfig;
   codexArgs: string[];
   logLevel: 'debug' | 'info' | 'warn' | 'error';
+  mentionBackfill: MentionBackfillConfig;
+}
+
+export interface MentionBackfillConfig {
+  enabled: boolean;
+  intervalMs: number;
+  historyLookbackSeconds: number;
+  maxHistoryPages: number;
+  minAgeSeconds: number;
 }
 
 export interface CliParseResult {
@@ -79,6 +88,26 @@ export function parseCli(argv: string[], env = process.env, cwd = process.cwd())
       : dataDir;
 
   const logLevel = (flags['log-level'] as AppConfig['logLevel']) ?? (env.ALFRED_LOG_LEVEL as AppConfig['logLevel']) ?? 'info';
+  const mentionBackfillEnabled = parseBoolean(
+    (flags['mention-backfill'] as string) ?? env.ALFRED_MENTION_BACKFILL,
+    true,
+  );
+  const mentionBackfillIntervalSeconds = parsePositiveInt(
+    (flags['mention-backfill-interval'] as string) ?? env.ALFRED_MENTION_BACKFILL_INTERVAL,
+    60,
+  );
+  const mentionBackfillLookbackSeconds = parsePositiveInt(
+    (flags['mention-backfill-lookback'] as string) ?? env.ALFRED_MENTION_BACKFILL_LOOKBACK,
+    86400,
+  );
+  const mentionBackfillMaxPages = parsePositiveInt(
+    (flags['mention-backfill-max-pages'] as string) ?? env.ALFRED_MENTION_BACKFILL_MAX_PAGES,
+    3,
+  );
+  const mentionBackfillMinAgeSeconds = parsePositiveInt(
+    (flags['mention-backfill-min-age'] as string) ?? env.ALFRED_MENTION_BACKFILL_MIN_AGE,
+    60,
+  );
 
   const withDefaults = applyCodexDefaults(codexArgs);
   const finalCodexArgs = sandbox.mode === 'docker' && !withDefaults.includes('--yolo')
@@ -94,6 +123,13 @@ export function parseCli(argv: string[], env = process.env, cwd = process.cwd())
       sandbox,
       codexArgs: finalCodexArgs,
       logLevel,
+      mentionBackfill: {
+        enabled: mentionBackfillEnabled,
+        intervalMs: mentionBackfillIntervalSeconds * 1000,
+        historyLookbackSeconds: mentionBackfillLookbackSeconds,
+        maxHistoryPages: mentionBackfillMaxPages,
+        minAgeSeconds: mentionBackfillMinAgeSeconds,
+      },
     },
     showHelp: false,
     showVersion: false,
@@ -143,11 +179,18 @@ Options:
   --workdir <path>       Codex working directory (default: data dir or /workspace for docker)
   --sandbox <mode>       host | docker:<name>
   --log-level <level>    debug | info | warn | error
+  --mention-backfill <bool>        Enable mention backfill poller (default: true)
+  --mention-backfill-interval <s>  Backfill poll interval in seconds (default: 60)
+  --mention-backfill-lookback <s>  History lookback window in seconds (default: 86400)
+  --mention-backfill-max-pages <n> Max history/list pages per poll (default: 3)
+  --mention-backfill-min-age <s>   Only handle mentions older than N seconds (default: 60)
   --help                 Show this help
   --version              Show version
 
 Env:
   SLACK_APP_TOKEN, SLACK_BOT_TOKEN, ALFRED_DATA_DIR, ALFRED_WORKDIR, ALFRED_SANDBOX, ALFRED_LOG_LEVEL
+  ALFRED_MENTION_BACKFILL, ALFRED_MENTION_BACKFILL_INTERVAL, ALFRED_MENTION_BACKFILL_LOOKBACK,
+  ALFRED_MENTION_BACKFILL_MAX_PAGES, ALFRED_MENTION_BACKFILL_MIN_AGE
 `;
 }
 
@@ -159,4 +202,19 @@ function parseSandbox(value: string): SandboxConfig {
     return { mode: 'docker', name };
   }
   throw new Error(`Invalid sandbox value: ${value}`);
+}
+
+function parseBoolean(value: string | undefined, fallback: boolean): boolean {
+  if (!value) return fallback;
+  const normalized = value.trim().toLowerCase();
+  if (['1', 'true', 'yes', 'y', 'on'].includes(normalized)) return true;
+  if (['0', 'false', 'no', 'n', 'off'].includes(normalized)) return false;
+  return fallback;
+}
+
+function parsePositiveInt(value: string | undefined, fallback: number): number {
+  if (!value) return fallback;
+  const parsed = Number.parseInt(value, 10);
+  if (Number.isNaN(parsed) || parsed <= 0) return fallback;
+  return parsed;
 }
