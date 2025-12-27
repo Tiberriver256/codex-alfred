@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   buildEmojiSelectorPrompt,
+  extractReasoningStatusParts,
   statusSubjectFromPrompt,
   statusEventHint,
 } from '../src/slack/codexResponder.js';
@@ -35,4 +36,20 @@ test('buildEmojiSelectorPrompt is minimal and text-only', () => {
   assert.match(prompt, /Return JSON/);
   assert.match(prompt, /<text>/);
   assert.match(prompt, /Checking pending transactions/);
+});
+
+test('extractReasoningStatusParts splits heading and details', () => {
+  const reasoning =
+    '**Summarizing LazyLibrarian overview**\n\n' +
+    "I'm putting together a concise summary of LazyLibrarian from its docs.";
+  const parts = extractReasoningStatusParts(reasoning);
+  assert.equal(parts?.headline, 'Summarizing LazyLibrarian overview');
+  assert.equal(parts?.details, "I'm putting together a concise summary of LazyLibrarian from its docs.");
+});
+
+test('extractReasoningStatusParts falls back to first line', () => {
+  const reasoning = 'Investigating auth issues\nMore details follow.';
+  const parts = extractReasoningStatusParts(reasoning);
+  assert.equal(parts?.headline, 'Investigating auth issues');
+  assert.equal(parts?.details, 'More details follow.');
 });

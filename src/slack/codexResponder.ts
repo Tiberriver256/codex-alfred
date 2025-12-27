@@ -16,6 +16,11 @@ type EmojiSelector = {
   selectEmoji: (reasoningText: string) => Promise<string | null>;
 };
 
+type StatusParts = {
+  headline: string;
+  details?: string;
+};
+
 export async function runCodexAndPost(params: {
   thread: CodexThread;
   prompt: string;
@@ -40,7 +45,7 @@ export async function runCodexAndPost(params: {
     channel,
     thread_ts: threadTs,
     text: 'Thinking...',
-    blocks: buildThinkingBlocks('Thinking...'),
+    blocks: buildThinkingBlocks({ headline: 'Thinking...' }),
   });
   const thinkingTs = thinking.ts;
   if (!thinkingTs) {
@@ -97,13 +102,13 @@ export async function runCodexAndPost(params: {
               emojiSelector = await createEmojiSelector({ workDir, logger });
             }
             const reasoningText = typeof event.item.text === 'string' ? event.item.text : '';
-            const cleaned = sanitizeStatusText(reasoningText);
-            if (cleaned) {
+            const parts = extractReasoningStatusParts(reasoningText);
+            if (parts) {
               const emoji = emojiSelector ? await emojiSelector.selectEmoji(reasoningText) : null;
-              const status = formatReasoningStatus(cleaned, emoji);
+              const status = formatReasoningStatus(parts, emoji);
               if (status) {
                 if (logger.debug) {
-                  logger.debug('Status emoji selected', { emoji: status.slice(0, 2), text: cleaned });
+                  logger.debug('Status emoji selected', { emoji: status.headline.slice(0, 2), text: status.headline });
                 }
                 await maybeUpdateStatus(client, channel, thinkingTs, statusLimiter, status);
               }
@@ -231,23 +236,34 @@ export async function runCodexAndPost(params: {
   }
 }
 
-function buildThinkingBlocks(text: string): unknown[] {
-  return [
+function buildThinkingBlocks(status: StatusParts): unknown[] {
+  const headlineText = status.details ? `**${status.headline}**` : `_${status.headline}_`;
+  const blocks: Array<{ type: string; text?: { type: 'mrkdwn'; text: string }; elements?: unknown[] }> = [
     {
       type: 'section',
-      text: { type: 'mrkdwn', text: `_${text}_` },
-    },
-    {
-      type: 'actions',
-      elements: [
-        {
-          type: 'button',
-          text: { type: 'plain_text', text: 'Cancel' },
-          action_id: 'interrupt-run',
-        },
-      ],
+      text: { type: 'mrkdwn', text: headlineText },
     },
   ];
+
+  if (status.details) {
+    blocks.push({
+      type: 'section',
+      text: { type: 'mrkdwn', text: status.details },
+    });
+  }
+
+  blocks.push({
+    type: 'actions',
+    elements: [
+      {
+        type: 'button',
+        text: { type: 'plain_text', text: 'Cancel' },
+        action_id: 'interrupt-run',
+      },
+    ],
+  });
+
+  return blocks;
 }
 
 function buildRunOptions(outputSchema: object, abortSignal?: AbortSignal): { outputSchema: object; signal?: AbortSignal } {
@@ -460,13 +476,14 @@ async function maybeUpdateStatus(
   channel: string,
   ts: string,
   limiter: { lastText: string; lastUpdatedAt: number },
-  text: string,
+  text: string | StatusParts,
 ): Promise<void> {
   const now = Date.now();
-  if (text === limiter.lastText && now - limiter.lastUpdatedAt < 15000) return;
+  const statusKey = statusKeyFromText(text);
+  if (statusKey === limiter.lastText && now - limiter.lastUpdatedAt < 15000) return;
   if (now - limiter.lastUpdatedAt < 2500) return;
 
-  limiter.lastText = text;
+  limiter.lastText = statusKey;
   limiter.lastUpdatedAt = now;
 
   try {
@@ -480,14 +497,16 @@ async function updateStatusMessage(
   client: SlackClientLike,
   channel: string,
   ts: string,
-  text: string,
+  text: string | StatusParts,
 ): Promise<void> {
+  const status = normalizeStatus(text);
+  const plainText = stripMrkdwn(status.headline);
   try {
     await client.chat.update({
       channel,
       ts,
-      text,
-      blocks: buildThinkingBlocks(text),
+      text: plainText,
+      blocks: buildThinkingBlocks(status),
     });
   } catch {
     // Ignore interim status update failures.
@@ -593,6 +612,26 @@ export function buildEmojiSelectorPrompt(reasoningText: string): string {
     'Return JSON: {"emoji":"😀"} only.',
     'Choose exactly one emoji that matches the tone of the text.',
     'Do not include words or extra symbols.',
+    'When unsure, pick a neutral emoji (e.g., 🔍 or 🤔), not a celebratory one.',
+    '',
+    '<examples>',
+    '<text>Checking for errors</text>',
+    '{"emoji":"⚠️"}',
+    '<text>Cleaning up temporary files</text>',
+    '{"emoji":"🧹"}',
+    '<text>Re-running process</text>',
+    '{"emoji":"🔁"}',
+    '<text>Reviewing reference files and docs</text>',
+    '{"emoji":"📝"}',
+    '<text>Investigating unexpected behavior</text>',
+    '{"emoji":"🧐"}',
+    '<text>Fixing a specific line</text>',
+    '{"emoji":"✅"}',
+    '<text>Preparing response</text>',
+    '{"emoji":"✍️"}',
+    '<text>Waiting on a long-running task</text>',
+    '{"emoji":"⏳"}',
+    '</examples>',
     '',
     '<text>',
     clipped || '(no text)',
@@ -767,21 +806,67 @@ function sanitizeStatusText(value: string): string {
   return truncate(squashed, 120);
 }
 
+function sanitizeStatusDetails(value: string): string {
+  const trimmed = value.replace(/^\s*[:\-]\s*/, '').trim();
+  if (!trimmed) return '';
+  const normalized = trimmed.replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n');
+  return normalized;
+}
+
 function isReasoningCompleted(event: CodexThreadEvent): event is { type: 'item.completed'; item: { type: 'reasoning'; text?: string } } {
   return event.type === 'item.completed' && event.item.type === 'reasoning';
 }
 
-function formatReasoningStatus(cleanedText: string, emoji: string | null): string | null {
+export function extractReasoningStatusParts(reasoningText: string): StatusParts | null {
+  const trimmed = reasoningText.trim();
+  if (!trimmed) return null;
+
+  const headingMatch = trimmed.match(/^\*\*([\s\S]+?)\*\*/);
+  let headline = '';
+  let details = '';
+
+  if (headingMatch) {
+    headline = headingMatch[1]?.trim() ?? '';
+    details = trimmed.slice(headingMatch[0].length).trim();
+  } else {
+    const firstLine = trimmed.split('\n')[0]?.trim() ?? '';
+    headline = firstLine;
+    details = trimmed.slice(firstLine.length).trim();
+  }
+
+  const cleanedHeadline = sanitizeStatusText(headline || trimmed);
+  if (!cleanedHeadline) return null;
+  const cleanedDetails = details ? sanitizeStatusDetails(details) : '';
+
+  if (!cleanedDetails) return { headline: cleanedHeadline };
+  return { headline: cleanedHeadline, details: cleanedDetails };
+}
+
+function formatReasoningStatus(parts: StatusParts, emoji: string | null): StatusParts | null {
   const selected = coerceEmoji(emoji) ?? '🔍';
-  const text = cleanedText.replace(/^#+\s*/, '').trim();
+  const text = parts.headline.replace(/^#+\s*/, '').trim();
   if (!text) return null;
-  return `${selected} ${text}`;
+  return { headline: `${selected} ${text}`.trim(), details: parts.details };
 }
 
 function coerceEmoji(value: string | null): string | null {
   if (!value) return null;
   const match = value.match(/(\p{Extended_Pictographic}|\p{Emoji_Presentation})/u);
   return match ? match[0] : null;
+}
+
+function normalizeStatus(text: string | StatusParts): StatusParts {
+  if (typeof text === 'string') return { headline: text };
+  return text;
+}
+
+function statusKeyFromText(text: string | StatusParts): string {
+  const status = normalizeStatus(text);
+  return `${status.headline}\n${status.details ?? ''}`;
+}
+
+function stripMrkdwn(text: string): string {
+  return text.replace(/[*_~`]/g, '').trim();
 }
 
 function formatElapsed(startedAt: number, now: number): string {
