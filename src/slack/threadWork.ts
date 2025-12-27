@@ -5,6 +5,7 @@ export type ThreadWorkState = {
   abortController?: AbortController;
   queued: MentionEvent[];
   busyMessages: string[];
+  activeEventTs?: string;
 };
 
 export class ThreadWorkManager {
@@ -14,16 +15,18 @@ export class ThreadWorkManager {
     return this.getState(threadKey).inProgress;
   }
 
-  begin(threadKey: string, abortController: AbortController): void {
+  begin(threadKey: string, abortController: AbortController, eventTs?: string): void {
     const state = this.getState(threadKey);
     state.inProgress = true;
     state.abortController = abortController;
+    state.activeEventTs = eventTs;
   }
 
   end(threadKey: string): { queued: MentionEvent[]; busyMessages: string[] } {
     const state = this.getState(threadKey);
     state.inProgress = false;
     state.abortController = undefined;
+    state.activeEventTs = undefined;
     const queued = state.queued;
     const busyMessages = state.busyMessages;
     state.queued = [];
@@ -35,6 +38,13 @@ export class ThreadWorkManager {
     const state = this.getState(threadKey);
     state.queued.push(event);
     if (busyMessageTs) state.busyMessages.push(busyMessageTs);
+  }
+
+  hasSeenMention(threadKey: string, eventTs?: string): boolean {
+    if (!eventTs) return false;
+    const state = this.getState(threadKey);
+    if (state.activeEventTs === eventTs) return true;
+    return state.queued.some((queued) => queued.ts === eventTs);
   }
 
   requestInterrupt(threadKey: string): boolean {

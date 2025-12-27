@@ -239,6 +239,61 @@ test('handleAppMention queues mentions and posts busy message when already runni
   assert.equal(busyMessages[0], '9.0');
 });
 
+test('handleAppMention skips duplicate mention while busy', async () => {
+  const store = await makeStore();
+  const work = new ThreadWorkManager();
+  const abortController = new AbortController();
+  const threadKey = 'C1:1.0';
+  work.begin(threadKey, abortController, '1.0');
+
+  let busyPosted = false;
+  let codexStarted = false;
+
+  const codex: CodexClient = {
+    startThread: async () => {
+      codexStarted = true;
+      throw new Error('should not start');
+    },
+    resumeThread: async () => {
+      codexStarted = true;
+      throw new Error('should not resume');
+    },
+  };
+
+  const client = {
+    conversations: {
+      replies: async () => ({ messages: [] }),
+    },
+    chat: {
+      postMessage: async () => {
+        busyPosted = true;
+        return { ts: '9.0' };
+      },
+      update: async () => ({ ts: '2.0' }),
+    },
+  };
+
+  await handleAppMention(
+    { event: { channel: 'C1', ts: '1.0', text: '<@B1> hi' }, ack: async () => undefined },
+    {
+      client,
+      store,
+      codex,
+      work,
+      config: baseConfig,
+      logger,
+      botUserId: 'B1',
+      blockKitOutputSchema: {},
+    },
+  );
+
+  const { queued, busyMessages } = work.end(threadKey);
+  assert.equal(codexStarted, false);
+  assert.equal(busyPosted, false);
+  assert.equal(queued.length, 0);
+  assert.equal(busyMessages.length, 0);
+});
+
 test('handleAppMention only injects guidance on first turn', async () => {
   const store = await makeStore();
   const prompts: string[] = [];
