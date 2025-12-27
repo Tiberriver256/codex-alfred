@@ -92,6 +92,7 @@ export async function collectMissedMentions(
       if (messageTs > lastPollTs && messageTs <= eligibleNewest && isMentionCandidate(message, botUserId)) {
         const event = messageToMentionEvent(channelId, message);
         if (event && !isDuplicate(event, seen) && !isAlreadyHandled(store, event)) {
+          (event as MentionEvent & { source?: string }).source = 'backfill';
           mentions.push(event);
         }
       }
@@ -105,6 +106,7 @@ export async function collectMissedMentions(
         if (!isMentionCandidate(reply, botUserId)) continue;
         const event = messageToMentionEvent(channelId, reply);
         if (event && !isDuplicate(event, seen) && !isAlreadyHandled(store, event)) {
+          (event as MentionEvent & { source?: string }).source = 'backfill';
           mentions.push(event);
         }
       }

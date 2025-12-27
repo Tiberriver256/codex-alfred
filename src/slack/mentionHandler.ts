@@ -40,7 +40,11 @@ export async function handleAppMention(
     }
     const busyMessage = await postBusyMessage({ client, channel: event.channel, threadTs });
     work.queueMention(threadKey, event, busyMessage?.ts);
-    logger.info('Queued mention while busy', { threadKey, busyTs: busyMessage?.ts });
+    logger.info('Queued mention while busy', {
+      threadKey,
+      busyTs: busyMessage?.ts,
+      source: event.source ?? 'slack',
+    });
     return;
   }
 

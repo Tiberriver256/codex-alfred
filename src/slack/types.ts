@@ -71,6 +71,7 @@ export interface MentionEvent {
   thread_ts?: string;
   text?: string;
   user?: string;
+  source?: 'backfill';
 }
 
 export interface ActionBody {

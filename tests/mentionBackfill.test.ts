@@ -60,6 +60,7 @@ test('collectMissedMentions finds mentions in thread replies after downtime', as
     thread_ts: '50.0',
     text: '<@B1> help',
     user: 'U1',
+    source: 'backfill',
   });
   assert.equal(state.lastPollTs, '200');
 });
