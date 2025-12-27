@@ -33,7 +33,8 @@ export async function handleAppMention(
   const threadTs = event.thread_ts ?? event.ts;
   const threadKey = `${event.channel}:${threadTs}`;
 
-  if (work.isBusy(threadKey)) {
+  const abortController = new AbortController();
+  if (!work.tryBegin(threadKey, abortController, event.ts)) {
     if (work.hasSeenMention(threadKey, event.ts)) {
       logger.info('Skipping duplicate mention while busy', { threadKey, eventTs: event.ts });
       return;
@@ -50,8 +51,6 @@ export async function handleAppMention(
 
   const record = store.get(threadKey);
   const threadOptions = buildThreadOptions(config.workDir, config.sandbox, config.codexArgs);
-  const abortController = new AbortController();
-  work.begin(threadKey, abortController, event.ts);
 
   let thread: Awaited<ReturnType<CodexClient['startThread']>> | undefined;
   let messages: SlackMessage[] = [];

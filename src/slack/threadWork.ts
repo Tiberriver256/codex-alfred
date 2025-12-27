@@ -15,6 +15,15 @@ export class ThreadWorkManager {
     return this.getState(threadKey).inProgress;
   }
 
+  tryBegin(threadKey: string, abortController: AbortController, eventTs?: string): boolean {
+    const state = this.getState(threadKey);
+    if (state.inProgress) return false;
+    state.inProgress = true;
+    state.abortController = abortController;
+    state.activeEventTs = eventTs;
+    return true;
+  }
+
   begin(threadKey: string, abortController: AbortController, eventTs?: string): void {
     const state = this.getState(threadKey);
     state.inProgress = true;
