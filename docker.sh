@@ -50,6 +50,7 @@ case "$COMMAND" in
     ABS_DIR=$(abs_path "$DATA_DIR")
     docker create \
       --name "$NAME" \
+      --network host \
       -v "$ABS_DIR:/workspace" \
       "$IMAGE" \
       sh -c "tail -f /dev/null" >/dev/null

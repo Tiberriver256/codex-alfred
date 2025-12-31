@@ -76,6 +76,71 @@ DOCKER_LOG_FILE="$CODEX_HOME_DOCKER/alfred.log"
 BUILD_SHA="$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")"
 BUILD_TIME="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
+wait_for_alfred() {
+  if [[ "${ALFRED_WAIT_FOR_START:-1}" != "1" ]]; then
+    return
+  fi
+
+  local ready_pattern="${ALFRED_READY_PATTERN:-Alfred is running.}"
+  local interval="${ALFRED_WAIT_INTERVAL:-15}"
+  local log_lines="${ALFRED_WAIT_LOG_LINES:-10}"
+  local timeout="${ALFRED_WAIT_TIMEOUT:-0}"
+  local start_ts
+  start_ts=$(date +%s)
+  local last_check=0
+  local spinner_index=0
+  local spinner_chars=("|" "/" "-" "\\")
+
+  printf "Waiting for Alfred to start (polling logs every %ss)...\n" "$interval"
+
+  while true; do
+    local now
+    now=$(date +%s)
+    local elapsed=$((now - start_ts))
+
+    if [[ "$timeout" -gt 0 && "$elapsed" -ge "$timeout" ]]; then
+      echo "Timed out after ${timeout}s waiting for Alfred to start." >&2
+      docker exec "$NAME" sh -lc "tail -n \"$log_lines\" \"$DOCKER_LOG_FILE\" 2>/dev/null" || true
+      exit 1
+    fi
+
+    if (( now - last_check >= interval )); then
+      last_check=$now
+
+      if docker exec "$NAME" sh -lc "grep -Fq \"$ready_pattern\" \"$DOCKER_LOG_FILE\" 2>/dev/null"; then
+        printf "\rAlfred is running (ready in %ss).\n" "$elapsed"
+        break
+      fi
+
+      printf "\rWaiting for Alfred to start... %ss\n" "$elapsed"
+      docker exec "$NAME" sh -lc "tail -n \"$log_lines\" \"$DOCKER_LOG_FILE\" 2>/dev/null" || true
+    else
+      spinner_index=$(( (spinner_index + 1) % 4 ))
+      printf "\r[%s] Waiting for Alfred to start... %ss" "${spinner_chars[$spinner_index]}" "$elapsed"
+      sleep 1
+    fi
+  done
+}
+
+backup_codex_home() {
+  if ! docker inspect "$NAME" >/dev/null 2>&1; then
+    return
+  fi
+
+  mkdir -p "$CODEX_HOME_HOST"
+
+  if [[ "$(docker inspect -f '{{.State.Running}}' "$NAME")" == "true" ]]; then
+    if docker exec "$NAME" sh -lc "test -d \"$CODEX_HOME_DOCKER\""; then
+      docker cp "$NAME:$CODEX_HOME_DOCKER/." "$CODEX_HOME_HOST"
+    else
+      echo "Warning: $CODEX_HOME_DOCKER not found in $NAME; skipping backup." >&2
+    fi
+    return
+  fi
+
+  docker cp "$NAME:$CODEX_HOME_DOCKER/." "$CODEX_HOME_HOST"
+}
+
 if [[ -n "${SANDBOX_NAME:-}" ]]; then
   NAME="$SANDBOX_NAME"
 elif docker inspect mom-sandbox >/dev/null 2>&1; then
@@ -93,6 +158,12 @@ fi
 if [[ "${RELOAD_ONLY:-0}" == "1" ]]; then
   if ! docker inspect "$NAME" >/dev/null 2>&1; then
     echo "Container $NAME does not exist; run without --reload to create it." >&2
+    exit 1
+  fi
+
+  NETWORK_MODE=$(docker inspect -f '{{.HostConfig.NetworkMode}}' "$NAME")
+  if [[ "$NETWORK_MODE" != "host" ]]; then
+    echo "Container $NAME is using network mode '$NETWORK_MODE'; rerun without --reload to recreate it with host networking." >&2
     exit 1
   fi
 
@@ -128,6 +199,7 @@ if [[ "${RELOAD_ONLY:-0}" == "1" ]]; then
   docker exec "$NAME" sh -lc "CONFIG=\"$CODEX_HOME_DOCKER/config.toml\"; TMP=\$(mktemp); awk 'BEGIN{ins=0} /^model_reasoning_summary[[:space:]]*=/{next} /^\\[/{if(!ins){print \"model_reasoning_summary = \\\"detailed\\\"\"; ins=1}} {print} END{if(!ins) print \"model_reasoning_summary = \\\"detailed\\\"\"}' \"\$CONFIG\" > \"\$TMP\" && mv \"\$TMP\" \"\$CONFIG\""
 
   docker exec "${ENV_ARGS[@]}" "$NAME" sh -lc "cd \"$ENGINE_DIR\" && nohup node \"$ENGINE_DIR/dist/index.js\" --log-level debug -- --yolo > \"$DOCKER_LOG_FILE\" 2>&1 & echo \$! > \"$DOCKER_PID_FILE\""
+  wait_for_alfred
   exit 0
 fi
 
@@ -137,8 +209,10 @@ IMAGE_ID=$(docker image inspect "$IMAGE_NAME" --format '{{.Id}}')
 if ! docker inspect "$NAME" >/dev/null 2>&1; then
   SANDBOX_NAME="$NAME" SANDBOX_IMAGE="$IMAGE_NAME" ./docker.sh create "$DATA_DIR"
 else
+  NETWORK_MODE=$(docker inspect -f '{{.HostConfig.NetworkMode}}' "$NAME")
   CONTAINER_IMAGE_ID=$(docker inspect -f '{{.Image}}' "$NAME")
-  if [[ "$CONTAINER_IMAGE_ID" != "$IMAGE_ID" ]]; then
+  if [[ "$NETWORK_MODE" != "host" || "$CONTAINER_IMAGE_ID" != "$IMAGE_ID" ]]; then
+    backup_codex_home
     docker rm -f "$NAME" >/dev/null
     SANDBOX_NAME="$NAME" SANDBOX_IMAGE="$IMAGE_NAME" ./docker.sh create "$DATA_DIR"
   fi
@@ -190,6 +264,7 @@ ENV_ARGS+=("-e" "ALFRED_BUILD_SHA=$BUILD_SHA")
 ENV_ARGS+=("-e" "ALFRED_BUILD_TIME=$BUILD_TIME")
 
 docker exec "${ENV_ARGS[@]}" "$NAME" sh -lc "cd \"$ENGINE_DIR\" && nohup node \"$ENGINE_DIR/dist/index.js\" --log-level debug -- --yolo > \"$DOCKER_LOG_FILE\" 2>&1 & echo \$! > \"$DOCKER_PID_FILE\""
+wait_for_alfred
 
 if [[ -f "$PID_FILE" ]]; then
   cat "$PID_FILE"
