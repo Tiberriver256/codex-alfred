@@ -116,19 +116,24 @@ async function loadEmbeddings(dataDir: string, logger: Logger): Promise<EmojiEmb
 }
 
 function resolveEmbedQueryScript(): string {
-  if (process.env.EMOJI_EMBED_QUERIES_SCRIPT) {
-    return process.env.EMOJI_EMBED_QUERIES_SCRIPT;
-  }
-  return path.join(resolveProjectRoot(), 'scripts', 'emoji-llm-desc-embed-queries.py');
+  const root = resolveProjectRoot();
+  return path.join(root, 'dist', 'scripts', 'emoji-llm-desc-embed-queries.py');
 }
 
 async function embedQuery(query: string, logger: Logger): Promise<Float32Array | null> {
-  const scriptPath = resolveEmbedQueryScript();
+  const candidate = resolveEmbedQueryScript();
+  let scriptPath = candidate;
   try {
-    await fs.access(scriptPath);
+    await fs.access(candidate);
   } catch {
-    logger.warn('Emoji embedder script missing', { scriptPath });
-    return null;
+    const fallback = path.join(resolveProjectRoot(), 'scripts', 'emoji-llm-desc-embed-queries.py');
+    try {
+      await fs.access(fallback);
+      scriptPath = fallback;
+    } catch {
+      logger.warn('Emoji embedder script missing', { scriptPath: candidate });
+      return null;
+    }
   }
 
   try {
