@@ -50,12 +50,12 @@ export async function maybeGenerateAndPostVoiceResponse(
       return;
     }
 
-    const audioData = await fs.readFile(voiceResult.audioPath);
-
     if (!client.files?.uploadV2) {
       logger.warn('Slack files API not available', { threadKey });
       return;
     }
+
+    const audioData = await fs.readFile(voiceResult.audioPath);
 
     const uploadResult = await client.files.uploadV2({
       channel_id: channel,

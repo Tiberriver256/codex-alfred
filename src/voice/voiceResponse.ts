@@ -12,6 +12,9 @@ export interface VoiceResponseOptions {
   logger: Logger;
 }
 
+const ELEVENLABS_MAX_CHARS = 5000;
+const ELEVENLABS_TRUNCATE_AT = 4900;
+
 export async function generateVoiceResponse(
   responseText: string,
   options: VoiceResponseOptions,
@@ -28,9 +31,9 @@ export async function generateVoiceResponse(
       return null;
     }
 
-    if (textForSpeech.length > 5000) {
+    if (textForSpeech.length > ELEVENLABS_MAX_CHARS) {
       logger.warn('Text too long for TTS, truncating', { length: textForSpeech.length });
-      const truncated = textForSpeech.slice(0, 4900) + '... (message truncated)';
+      const truncated = textForSpeech.slice(0, ELEVENLABS_TRUNCATE_AT) + '... (message truncated)';
       const audioBuffer = await client.synthesize(truncated, elevenlabs.voiceId);
       const audioPath = await saveAudioToWorkspace(audioBuffer, workDir, logger);
       return { audioPath, text: truncated };
@@ -128,7 +131,8 @@ export function extractVoiceRequestFromText(text: string): {
 
   let cleanedText = text;
   for (const keyword of voiceKeywords) {
-    const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
+    const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`\\b${escapedKeyword}\\b`, 'gi');
     cleanedText = cleanedText.replace(regex, '').trim();
   }
 

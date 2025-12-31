@@ -15,7 +15,7 @@ export interface VoiceSettings {
 
 export interface SynthesizeOptions {
   voiceSettings?: VoiceSettings;
-  optimizeStreamingLatency?: number;
+  optimizeStreamingLatency?: boolean;
   outputFormat?: 'mp3_44100_128' | 'pcm_16000' | 'pcm_22050' | 'pcm_24000' | 'pcm_44100';
 }
 
