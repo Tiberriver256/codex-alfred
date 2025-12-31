@@ -12,7 +12,7 @@ const SAMPLE_LIMIT = Number(process.env.SAMPLE_LIMIT ?? DEFAULT_LIMIT);
 const DOCKER_CONTAINER = 'codex-alfred-sandbox';
 const LOG_PATH = '/codex-home/alfred.log';
 
-const LOCAL_EMBEDDING_MODEL = process.env.LOCAL_EMBEDDING_MODEL ?? 'BAAI/bge-small-en-v1.5';
+const LOCAL_EMBEDDING_MODEL = process.env.LOCAL_EMBEDDING_MODEL ?? 'BAAI/bge-base-en-v1.5';
 const EMBEDDING_BATCH_SIZE = Number(process.env.EMBEDDING_BATCH_SIZE ?? '32');
 const EXCLUDE_FILE = process.env.EXCLUDE_FILE ?? '';
 const SAMPLE_OUT = process.env.SAMPLE_OUT ?? '';

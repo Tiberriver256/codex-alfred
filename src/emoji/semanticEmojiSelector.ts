@@ -1,7 +1,7 @@
-import { spawn } from 'node:child_process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { pipeline, type FeatureExtractionPipeline } from '@xenova/transformers';
 import { type Logger } from '../logger.js';
 
 export type EmojiSearchResult = {
@@ -22,7 +22,8 @@ type EmojiEmbedding = {
 let embeddingsCache: EmojiEmbedding[] | null = null;
 let embeddingsPromise: Promise<EmojiEmbedding[] | null> | null = null;
 let embeddingsCachePath: string | null = null;
-const DEFAULT_EMBEDDING_MODEL = 'BAAI/bge-small-en-v1.5';
+const DEFAULT_QUERY_MODEL = 'Xenova/bge-base-en-v1.5';
+let embedderPromise: Promise<FeatureExtractionPipeline> | null = null;
 
 function resolveProjectRoot(): string {
   const here = path.dirname(fileURLToPath(import.meta.url));
@@ -36,8 +37,8 @@ function resolveProjectRoot(): string {
 
 function resolveEmbeddingsPath(): { primary: string; fallback: string } {
   const root = resolveProjectRoot();
-  const distPath = path.join(root, 'dist', 'emoji-llm-desc', 'local-embeddings-BAAI_bge-small-en-v1_5.jsonl');
-  const dataPath = path.join(root, 'data', 'emoji-llm-desc', 'local-embeddings-BAAI_bge-small-en-v1_5.jsonl');
+  const distPath = path.join(root, 'dist', 'emoji-llm-desc', 'local-embeddings-BAAI_bge-base-en-v1_5.jsonl');
+  const dataPath = path.join(root, 'data', 'emoji-llm-desc', 'local-embeddings-BAAI_bge-base-en-v1_5.jsonl');
   return { primary: distPath, fallback: dataPath };
 }
 
@@ -115,69 +116,27 @@ async function loadEmbeddings(dataDir: string, logger: Logger): Promise<EmojiEmb
   return embeddingsPromise;
 }
 
-function resolveEmbedQueryScript(): string {
-  const root = resolveProjectRoot();
-  return path.join(root, 'dist', 'scripts', 'emoji-llm-desc-embed-queries.py');
+async function getEmbedder(logger?: Logger): Promise<FeatureExtractionPipeline | null> {
+  if (!embedderPromise) {
+    embedderPromise = pipeline('feature-extraction', DEFAULT_QUERY_MODEL, { quantized: true }) as Promise<FeatureExtractionPipeline>;
+  }
+  try {
+    return await embedderPromise;
+  } catch (error) {
+    if (logger) {
+      logger.warn('Failed to initialize emoji embedder', { error });
+    }
+    return null;
+  }
 }
 
 async function embedQuery(query: string, logger: Logger): Promise<Float32Array | null> {
-  const candidate = resolveEmbedQueryScript();
-  let scriptPath = candidate;
-  try {
-    await fs.access(candidate);
-  } catch {
-    const fallback = path.join(resolveProjectRoot(), 'scripts', 'emoji-llm-desc-embed-queries.py');
-    try {
-      await fs.access(fallback);
-      scriptPath = fallback;
-    } catch {
-      logger.warn('Emoji embedder script missing', { scriptPath: candidate });
-      return null;
-    }
-  }
+  const embedder = await getEmbedder(logger);
+  if (!embedder) return null;
 
-  try {
-    const parsed = await new Promise<number[][]>((resolve, reject) => {
-      const child = spawn('uv', ['run', scriptPath], {
-        env: {
-          ...process.env,
-          LOCAL_EMBEDDING_MODEL: process.env.EMOJI_EMBEDDINGS_MODEL ?? DEFAULT_EMBEDDING_MODEL,
-        },
-        stdio: ['pipe', 'pipe', 'pipe'],
-      });
-
-      let stdout = '';
-      let stderr = '';
-      child.stdout.on('data', (chunk) => {
-        stdout += chunk.toString();
-      });
-      child.stderr.on('data', (chunk) => {
-        stderr += chunk.toString();
-      });
-      child.on('error', (error) => reject(error));
-      child.on('close', (code) => {
-        if (code !== 0) {
-          reject(new Error(stderr || `emoji embedder exited with code ${code ?? 'unknown'}`));
-          return;
-        }
-        try {
-          resolve(JSON.parse(stdout) as number[][]);
-        } catch (parseError) {
-          reject(parseError);
-        }
-      });
-
-      child.stdin.write(JSON.stringify([query]));
-      child.stdin.end();
-    });
-
-    const first = parsed[0];
-    if (!first || first.length === 0) return null;
-    return Float32Array.from(first);
-  } catch (error) {
-    logger.warn('Failed to embed emoji query', { error });
-    return null;
-  }
+  const result = await embedder(query, { pooling: 'mean', normalize: true } as Record<string, unknown>);
+  const data = (result as { data?: Float32Array }).data;
+  return data ?? null;
 }
 
 function cosineSimilarity(query: Float32Array, queryNorm: number, target: EmojiEmbedding): number {

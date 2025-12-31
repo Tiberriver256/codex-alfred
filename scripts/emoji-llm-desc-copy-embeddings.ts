@@ -6,13 +6,13 @@ const EMBEDDINGS_SOURCE = path.join(
   ROOT,
   'data',
   'emoji-llm-desc',
-  'local-embeddings-BAAI_bge-small-en-v1_5.jsonl',
+  'local-embeddings-BAAI_bge-base-en-v1_5.jsonl',
 );
 const EMBEDDINGS_DEST = path.join(
   ROOT,
   'dist',
   'emoji-llm-desc',
-  'local-embeddings-BAAI_bge-small-en-v1_5.jsonl',
+  'local-embeddings-BAAI_bge-base-en-v1_5.jsonl',
 );
 const QUERIES_SOURCE = path.join(ROOT, 'scripts', 'emoji-llm-desc-embed-queries.py');
 const QUERIES_DEST = path.join(ROOT, 'dist', 'scripts', 'emoji-llm-desc-embed-queries.py');

@@ -9,7 +9,7 @@ import sys
 
 from fastembed import TextEmbedding
 
-MODEL_NAME = os.getenv("LOCAL_EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5")
+MODEL_NAME = os.getenv("LOCAL_EMBEDDING_MODEL", "BAAI/bge-base-en-v1.5")
 BATCH_SIZE = int(os.getenv("EMBEDDING_BATCH_SIZE", "32"))
 
 payload = sys.stdin.read().strip()

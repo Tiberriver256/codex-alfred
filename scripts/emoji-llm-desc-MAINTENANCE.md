@@ -1,6 +1,6 @@
 # Emoji embeddings maintenance
 
-This repo ships the emoji embeddings file in `data/emoji-llm-desc/local-embeddings-BAAI_bge-small-en-v1_5.jsonl`.
+This repo ships the emoji embeddings file in `data/emoji-llm-desc/local-embeddings-BAAI_bge-base-en-v1_5.jsonl`.
 When you want to refresh quality with new status messages, use this loop:
 
 1) Pull a fresh sample from logs
