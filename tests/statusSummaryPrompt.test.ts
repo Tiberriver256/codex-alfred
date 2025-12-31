@@ -1,11 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  buildEmojiSelectorPrompt,
-  extractReasoningStatusParts,
-  statusSubjectFromPrompt,
-  statusEventHint,
-} from '../src/slack/codexResponder.js';
+import { extractReasoningStatusParts, statusSubjectFromPrompt, statusEventHint } from '../src/slack/codexResponder.js';
 import { type CodexThreadEvent } from '../src/codex/client.js';
 
 test('statusSubjectFromPrompt prefers specific subjects over vague request', () => {
@@ -27,15 +22,6 @@ test('statusEventHint maps command text to user-friendly intent', () => {
     },
   };
   assert.match(statusEventHint(event, 'List pending YNAB transactions'), /budget data/i);
-});
-
-test('buildEmojiSelectorPrompt is minimal and text-only', () => {
-  const prompt = buildEmojiSelectorPrompt('**Checking pending transactions**');
-  assert.match(prompt, /emoji selector/i);
-  assert.match(prompt, /NOT a coding agent/i);
-  assert.match(prompt, /Return JSON/);
-  assert.match(prompt, /<text>/);
-  assert.match(prompt, /Checking pending transactions/);
 });
 
 test('extractReasoningStatusParts splits heading and details', () => {

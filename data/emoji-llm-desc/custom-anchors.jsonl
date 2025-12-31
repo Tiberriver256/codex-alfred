@@ -1,0 +1,278 @@
+{"emoji":"📝","shortDescription":"memo","description":"Creating headlines.py script"}
+{"emoji":"🧭","shortDescription":"compass","description":"Designing orchestration for daily summary"}
+{"emoji":"⚙️","shortDescription":"gear","description":"Running daily_summary task"}
+{"emoji":"🔁","shortDescription":"repeat","description":"Re-running daily summary"}
+{"emoji":"🖼️","shortDescription":"framed picture","description":"Using image viewing tool"}
+{"emoji":"🔤","shortDescription":"input latin letters","description":"Checking for non-ASCII characters"}
+{"emoji":"🛠️","shortDescription":"hammer and wrench","description":"Adjusting patch for correct arrow character"}
+{"emoji":"🧾","shortDescription":"receipt","description":"Reviewing outflow sign conventions"}
+{"emoji":"📰","shortDescription":"newspaper","description":"Designing orchestration for daily summary"}
+{"emoji":"📂","shortDescription":"open file folder","description":"Exploring gogcli command directory"}
+{"emoji":"🌦️","shortDescription":"sun behind rain cloud","description":"Modifying weather formatting to handle None"}
+{"emoji":"📝","shortDescription":"memo","description":"Summarizing daily-summary skill details"}
+{"emoji":"🌡️","shortDescription":"thermometer","description":"Preparing to verify weather data with tool"}
+{"emoji":"🌡️","shortDescription":"thermometer","description":"Verifying weather with live tool"}
+{"emoji":"⚠️","shortDescription":"warning","description":"Preparing weather discrepancy response"}
+{"emoji":"📧","shortDescription":"e-mail","description":"Designing email filtering heuristics"}
+{"emoji":"🔗","shortDescription":"link","description":"Updating link formats and event parsing"}
+{"emoji":"🌦️","shortDescription":"sun behind rain cloud","description":"Ensuring proper weather formatting"}
+{"emoji":"✅","shortDescription":"check mark","description":"Confirming changes and asking next steps"}
+{"emoji":"📰","shortDescription":"newspaper","description":"Designing orchestration for daily summary"}
+{"emoji":"⏲️","shortDescription":"timer clock","description":"Adjusting command timeout"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Considering search capabilities for quotes"}
+{"emoji":"📂","shortDescription":"open file folder","description":"Checking location of init_skill.py"}
+{"emoji":"📦","shortDescription":"package","description":"Checking built binary location"}
+{"emoji":"📄","shortDescription":"page facing up","description":"Deciding on output formats"}
+{"emoji":"🧮","shortDescription":"abacus","description":"Ensuring safe float formatting"}
+{"emoji":"📂","shortDescription":"open file folder","description":"Checking codex-home/skills directory"}
+{"emoji":"📥","shortDescription":"inbox tray","description":"Planning inbox header update"}
+{"emoji":"📝","shortDescription":"memo","description":"Planning report update script"}
+{"emoji":"📝","shortDescription":"memo","description":"Updating snapshot in todo.md"}
+{"emoji":"🧹","shortDescription":"broom","description":"Updating project snapshot and cleanup tasks"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Checking related files for updates"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Checking move-log update"}
+{"emoji":"📝","shortDescription":"memo","description":"Appending entry to move-log"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Checking git status for changes"}
+{"emoji":"🐛","shortDescription":"bug","description":"Investigating unexpected git status results"}
+{"emoji":"🐛","shortDescription":"bug","description":"Investigating file tracking status"}
+{"emoji":"🐛","shortDescription":"bug","description":"Investigating missing git status changes"}
+{"emoji":"🐛","shortDescription":"bug","description":"Investigating git diff behavior"}
+{"emoji":"🔤","shortDescription":"input latin letters","description":"Implementing Unicode subscript formatting"}
+{"emoji":"📝","shortDescription":"memo","description":"Adding descriptions to options"}
+{"emoji":"🧩","shortDescription":"puzzle piece","description":"Reconciling schema with description request"}
+{"emoji":"📝","shortDescription":"memo","description":"Updating text generation formatting"}
+{"emoji":"🧪","shortDescription":"test tube","description":"Preparing response and testing conversion"}
+{"emoji":"🧩","shortDescription":"puzzle piece","description":"Preparing response schema"}
+{"emoji":"📝","shortDescription":"memo","description":"Reviewing skill creation and resources"}
+{"emoji":"📚","shortDescription":"books","description":"Examining existing skills"}
+{"emoji":"📝","shortDescription":"memo","description":"Reevaluating drive summary update"}
+{"emoji":"📝","shortDescription":"memo","description":"Considering inventory update approach"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Investigating Drive listing capabilities"}
+{"emoji":"📝","shortDescription":"memo","description":"Evaluating inventory update needs"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Considering recursive listing with queries"}
+{"emoji":"🛠️","shortDescription":"hammer and wrench","description":"Designing Drive listing script"}
+{"emoji":"🛠️","shortDescription":"hammer and wrench","description":"Designing a BFS script for drive inventory"}
+{"emoji":"🧪","shortDescription":"test tube","description":"Running with uv"}
+{"emoji":"📝","shortDescription":"memo","description":"Replacing formatted_aisle with compact"}
+{"emoji":"🛠️","shortDescription":"hammer and wrench","description":"Preparing to patch build options section"}
+{"emoji":"🔁","shortDescription":"repeat","description":"Re-running command to refresh output"}
+{"emoji":"📝","shortDescription":"memo","description":"Preparing final Block Kit JSON response"}
+{"emoji":"📝","shortDescription":"memo","description":"Preparing updated Block Kit JSON response"}
+{"emoji":"🧩","shortDescription":"puzzle piece","description":"Analyzing Block Kit checkbox limitations"}
+{"emoji":"🗂️","shortDescription":"card index dividers","description":"Organizing root folders into PARA structure"}
+{"emoji":"📄","shortDescription":"page facing up","description":"Considering categorization for PDF resource"}
+{"emoji":"🗂️","shortDescription":"card index dividers","description":"Evaluating resource organization options"}
+{"emoji":"🧐","shortDescription":"face with monocle","description":"Evaluating OCR output issues"}
+{"emoji":"🐛","shortDescription":"bug","description":"Debugging OCR script with Tesseract options"}
+{"emoji":"📊","shortDescription":"bar chart","description":"Checking snapshot total items"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Checking unused variables"}
+{"emoji":"🧹","shortDescription":"broom","description":"Cleaning up unused variable"}
+{"emoji":"🛒","shortDescription":"shopping cart","description":"Redesigning shopping list output"}
+{"emoji":"📝","shortDescription":"memo","description":"Updating command usage"}
+{"emoji":"🗂️","shortDescription":"card index dividers","description":"Organizing papers and refining OCR process"}
+{"emoji":"🛠️","shortDescription":"hammer and wrench","description":"Preparing OCR script for sample pages"}
+{"emoji":"📝","shortDescription":"memo","description":"Summarizing scan and OCR updates"}
+{"emoji":"📄","shortDescription":"page facing up","description":"Preparing to manually inspect scanned PDFs"}
+{"emoji":"📝","shortDescription":"memo","description":"Reviewing and updating TODO status"}
+{"emoji":"🛠️","shortDescription":"hammer and wrench","description":"Preparing rename and move script"}
+{"emoji":"🗂️","shortDescription":"card index dividers","description":"Updating file-type placement rules"}
+{"emoji":"🛒","shortDescription":"shopping cart","description":"Preparing Woot deals message"}
+{"emoji":"📝","shortDescription":"memo","description":"Planning concise deal response"}
+{"emoji":"🛒","shortDescription":"shopping cart","description":"Planning automated deal scraping"}
+{"emoji":"🛠️","shortDescription":"hammer and wrench","description":"Fixing nonlocal usage"}
+{"emoji":"🗂️","shortDescription":"card index dividers","description":"Organizing and classifying files for script"}
+{"emoji":"🛠️","shortDescription":"hammer and wrench","description":"Preparing OCR process for scanned PDFs"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Checking for Tesseract installation"}
+{"emoji":"🔁","shortDescription":"repeat","description":"Rerunning OCR process"}
+{"emoji":"📝","shortDescription":"memo","description":"Planning OCR extraction approach"}
+{"emoji":"📂","shortDescription":"open file folder","description":"Exploring Meijer skill code"}
+{"emoji":"🗂️","shortDescription":"card index dividers","description":"Organizing scanned PDFs into Archive folder"}
+{"emoji":"📥","shortDescription":"inbox tray","description":"Updating inbox status and todos"}
+{"emoji":"💡","shortDescription":"light bulb","description":"Identifying need for receipt-catalog skill"}
+{"emoji":"✅","shortDescription":"check mark","description":"Validating JSON with receipt_tool.py"}
+{"emoji":"✅","shortDescription":"check mark","description":"Confirming global argument placement"}
+{"emoji":"🗂️","shortDescription":"card index dividers","description":"Classifying and mapping document categories"}
+{"emoji":"🗂️","shortDescription":"card index dividers","description":"Planning bulk download and classification"}
+{"emoji":"🗂️","shortDescription":"card index dividers","description":"Preparing to categorize previews"}
+{"emoji":"📊","shortDescription":"bar chart","description":"Verifying root file count"}
+{"emoji":"⏲️","shortDescription":"timer clock","description":"Handling file move timeouts"}
+{"emoji":"🗂️","shortDescription":"card index dividers","description":"Planning iterative moves"}
+{"emoji":"📊","shortDescription":"bar chart","description":"Updating counts after category moves"}
+{"emoji":"🏷️","shortDescription":"label","description":"Evaluating owner tagging feasibility"}
+{"emoji":"📝","shortDescription":"memo","description":"Updating .gitignore for skill runtime data"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Verifying and correcting root_id detection"}
+{"emoji":"📝","shortDescription":"memo","description":"Outlining detailed snapshot and tasks"}
+{"emoji":"📥","shortDescription":"inbox tray","description":"Organizing root files into Inbox"}
+{"emoji":"👥","shortDescription":"people","description":"Considering contact management need"}
+{"emoji":"👤","shortDescription":"bust in silhouette","description":"Preparing new person entry for addition"}
+{"emoji":"📅","shortDescription":"calendar","description":"Preparing calendar event questions"}
+{"emoji":"🤖","shortDescription":"robot","description":"Devising browser automation with Playwright"}
+{"emoji":"📝","shortDescription":"memo","description":"Updating librarian SKILL.md"}
+{"emoji":"🌐","shortDescription":"globe with meridians","description":"Planning web.run usage for data fetching"}
+{"emoji":"⚠️","shortDescription":"warning","description":"Handling blocked web fetcher for citations"}
+{"emoji":"✂️","shortDescription":"scissors","description":"Preparing trimmed copy for splitting"}
+{"emoji":"📅","shortDescription":"calendar","description":"Updating rules-of-road with scheduled tasks"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Preparing to inspect repository structure"}
+{"emoji":"🧹","shortDescription":"broom","description":"Cleaning up tracked files"}
+{"emoji":"📄","shortDescription":"page facing up","description":"Investigating chapter text location"}
+{"emoji":"🛒","shortDescription":"shopping cart","description":"Exploring alternative deal sources"}
+{"emoji":"🔑","shortDescription":"key","description":"Investigating GraphQL API key retrieval"}
+{"emoji":"🔑","shortDescription":"key","description":"Investigating API key injection via AppSync"}
+{"emoji":"✂️","shortDescription":"scissors","description":"Examining chapter splitting inconsistency"}
+{"emoji":"🔤","shortDescription":"input latin letters","description":"Investigating line case inconsistency"}
+{"emoji":"🌐","shortDescription":"globe with meridians","description":"Exploring API and scraping options"}
+{"emoji":"⚠️","shortDescription":"warning","description":"Analyzing chapter file overwriting"}
+{"emoji":"✂️","shortDescription":"scissors","description":"Planning endnotes removal script"}
+{"emoji":"🔁","shortDescription":"repeat","description":"Repeating copy and cleanup process"}
+{"emoji":"🧹","shortDescription":"broom","description":"Preparing to remove book.md"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Searching for Woot GraphQL API"}
+{"emoji":"🧪","shortDescription":"test tube","description":"Testing GraphQL query method"}
+{"emoji":"🌐","shortDescription":"globe with meridians","description":"Investigating alternate GraphQL API"}
+{"emoji":"📊","shortDescription":"bar chart","description":"Verifying chapter count"}
+{"emoji":"🧩","shortDescription":"puzzle piece","description":"Reconciling script runners and guidelines"}
+{"emoji":"⚖️","shortDescription":"balance scale","description":"Weighing skill usage versus global rules"}
+{"emoji":"🧩","shortDescription":"puzzle piece","description":"Resolving script language conflicts"}
+{"emoji":"🔑","shortDescription":"key","description":"Preparing to extract API key from JS files"}
+{"emoji":"📝","shortDescription":"memo","description":"Summarizing book processing results"}
+{"emoji":"📚","shortDescription":"books","description":"Planning document evaluation with gogcli"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Preparing to check search command"}
+{"emoji":"📄","shortDescription":"page facing up","description":"Preparing to list drive files"}
+{"emoji":"📝","shortDescription":"memo","description":"Adding note on browsing constraints"}
+{"emoji":"📂","shortDescription":"open file folder","description":"Preparing Google Drive project folder"}
+{"emoji":"🗂️","shortDescription":"card index dividers","description":"Preparing project folder and checklist file"}
+{"emoji":"🔤","shortDescription":"input latin letters","description":"Improving chapter title normalization"}
+{"emoji":"🔁","shortDescription":"repeat","description":"Re-running to add titles"}
+{"emoji":"🔤","shortDescription":"input latin letters","description":"Improving chapter title detection logic"}
+{"emoji":"🔁","shortDescription":"repeat","description":"Re-running normalization"}
+{"emoji":"⏳","shortDescription":"hourglass","description":"Running embedding process"}
+{"emoji":"📚","shortDescription":"books","description":"Preparing to fetch next book"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Trying full book title in search"}
+{"emoji":"🛠️","shortDescription":"hammer and wrench","description":"Setting up Dewey 650.1 processing"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Considering search terms for chapters"}
+{"emoji":"🛠️","shortDescription":"hammer and wrench","description":"Executing script on book.md"}
+{"emoji":"🧹","shortDescription":"broom","description":"Performing cleanup"}
+{"emoji":"⏳","shortDescription":"hourglass","description":"Considering embedding"}
+{"emoji":"🗂️","shortDescription":"card index dividers","description":"Organizing library with Dewey categories"}
+{"emoji":"📂","shortDescription":"open file folder","description":"Organizing book.md into library directory"}
+{"emoji":"🛠️","shortDescription":"hammer and wrench","description":"Preparing to restructure setup skills"}
+{"emoji":"🗂️","shortDescription":"card index dividers","description":"Investigating book download issues"}
+{"emoji":"📂","shortDescription":"open file folder","description":"Planning new gogcli skill structure"}
+{"emoji":"👀","shortDescription":"eyes","description":"Noticing third skill"}
+{"emoji":"📝","shortDescription":"memo","description":"Adding optional gogcli setup section"}
+{"emoji":"🐛","shortDescription":"bug","description":"Checking patch failure原因"}
+{"emoji":"📚","shortDescription":"books","description":"Considering need for librarian skill"}
+{"emoji":"🔔","shortDescription":"bell","description":"Preparing to start background listener"}
+{"emoji":"🔑","shortDescription":"key","description":"Handling keyring password prompt"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Searching for setup skill"}
+{"emoji":"⚙️","shortDescription":"gear","description":"Preparing to start server"}
+{"emoji":"🔧","shortDescription":"wrench","description":"Checking environment and tool availability"}
+{"emoji":"🔒","shortDescription":"lock","description":"Checking TLS issues with go.dev"}
+{"emoji":"🔐","shortDescription":"locked with key","description":"Setting up Go environment and authentication"}
+{"emoji":"📧","shortDescription":"email","description":"Preparing email authorization instructions"}
+{"emoji":"🔐","shortDescription":"locked with key","description":"Preparing to run authentication command"}
+{"emoji":"📂","shortDescription":"open folder","description":"Navigating to script directory"}
+{"emoji":"⚙️","shortDescription":"gear","description":"Preparing to install Golang"}
+{"emoji":"⚙️","shortDescription":"gear","description":"Choosing Go version for installation"}
+{"emoji":"ℹ️","shortDescription":"information","description":"Running help command"}
+{"emoji":"🛠️","shortDescription":"hammer and wrench","description":"Running build command"}
+{"emoji":"🛠️","shortDescription":"hammer and wrench","description":"Handling patch failure by overwriting"}
+{"emoji":"🛡️","shortDescription":"shield","description":"Considering cybersecurity guidelines"}
+{"emoji":"📡","shortDescription":"satellite antenna","description":"Preparing network scanning steps"}
+{"emoji":"🌐","shortDescription":"globe","description":"Checking network information"}
+{"emoji":"🛰️","shortDescription":"satellite","description":"Planning home network scanning"}
+{"emoji":"🕵️","shortDescription":"detective","description":"Running initial nmap enumeration"}
+{"emoji":"📡","shortDescription":"satellite antenna","description":"Planning targeted UDP port scan"}
+{"emoji":"📖","shortDescription":"open book","description":"Reading README file"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Analyzing chapter heading inconsistencies"}
+{"emoji":"▶️","shortDescription":"play","description":"Planning to run digest with wrapper script"}
+{"emoji":"📝","shortDescription":"memo","description":"Summarizing setup fixes and test results"}
+{"emoji":"📚","shortDescription":"books","description":"Searching for Nmap book files"}
+{"emoji":"🗄️","shortDescription":"file cabinet","description":"Preparing authors table query"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Investigating missing EPUB/PDF files"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Investigating missing book download"}
+{"emoji":"🛠️","shortDescription":"hammer and wrench","description":"Preparing to rebuild library embeddings"}
+{"emoji":"📝","shortDescription":"memo","description":"Planning rebuild and embedding steps"}
+{"emoji":"⚙️","shortDescription":"gear","description":"Updating configuration file settings"}
+{"emoji":"🔤","shortDescription":"input latin letters","description":"Examining config file case sensitivity"}
+{"emoji":"🔤","shortDescription":"input latin letters","description":"Investigating config option casing issues"}
+{"emoji":"🔄","shortDescription":"counterclockwise arrows","description":"Investigating service restart effectiveness"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Analyzing config loading behavior"}
+{"emoji":"⏳","shortDescription":"hourglass","description":"Waiting for service readiness"}
+{"emoji":"💾","shortDescription":"floppy disk","description":"Planning LazyLibrarian backup and restore"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Searching for skill-related references"}
+{"emoji":"🐛","shortDescription":"bug","description":"Investigating LazyLibrarian error source"}
+{"emoji":"⚙️","shortDescription":"gear","description":"Updating environment variable handling"}
+{"emoji":"🔁","shortDescription":"repeat","description":"Planning script retries with varied queries"}
+{"emoji":"📝","shortDescription":"memo","description":"Preparing response with next steps"}
+{"emoji":"📖","shortDescription":"open book","description":"Extracting title and author from page"}
+{"emoji":"🧹","shortDescription":"broom","description":"Preparing to clean author names"}
+{"emoji":"⚙️","shortDescription":"gear","description":"Verifying language model provider setup"}
+{"emoji":"🔄","shortDescription":"counterclockwise arrows","description":"Preparing to switch book API configuration"}
+{"emoji":"🔁","shortDescription":"repeat","description":"Retrying findBook with curl"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Planning fallback search logic"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Checking LazyLibrarian logs for delays"}
+{"emoji":"🐛","shortDescription":"bug","description":"Investigating addBook failure detection"}
+{"emoji":"🔑","shortDescription":"key","description":"Reporting missing Google Books API key"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Investigating Z-library presence in UI"}
+{"emoji":"⚙️","shortDescription":"gear","description":"Investigating Z-Library configuration"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Searching for Z-library integration"}
+{"emoji":"✅","shortDescription":"check mark","description":"Confirming no Z-Library provider found"}
+{"emoji":"🚫","shortDescription":"prohibited","description":"Declining piracy-related help"}
+{"emoji":"🛠️","shortDescription":"hammer and wrench","description":"Updating lazy librarian setup workflow"}
+{"emoji":"🗄️","shortDescription":"file cabinet","description":"Investigating database schema mismatch"}
+{"emoji":"🗄️","shortDescription":"file cabinet","description":"Investigating database upgrade process"}
+{"emoji":"🗄️","shortDescription":"file cabinet","description":"Investigating database upgrade issues"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Analyzing database upgrade issues"}
+{"emoji":"📝","shortDescription":"memo","description":"Evaluating database upgrade options"}
+{"emoji":"🐛","shortDescription":"bug","description":"Investigating database upgrade errors"}
+{"emoji":"🐛","shortDescription":"bug","description":"Analyzing upgrade interruption and errors"}
+{"emoji":"🐛","shortDescription":"bug","description":"Analyzing upgrade failure causes"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Checking for errors in lazylibrarian.out"}
+{"emoji":"🔄","shortDescription":"counterclockwise arrows","description":"Restarting language model after updates"}
+{"emoji":"🗄️","shortDescription":"file cabinet","description":"Checking database schema for missing table"}
+{"emoji":"🗄️","shortDescription":"file cabinet","description":"Investigating database upgrade execution"}
+{"emoji":"🗄️","shortDescription":"file cabinet","description":"Investigating skipped database upgrades"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Continuing schema update review"}
+{"emoji":"🐛","shortDescription":"bug","description":"Investigating schema migration failure"}
+{"emoji":"🛑","shortDescription":"stop sign","description":"Stopping LazyLibrarian process"}
+{"emoji":"🗄️","shortDescription":"file cabinet","description":"Investigating schema update process"}
+{"emoji":"🐛","shortDescription":"bug","description":"Investigating schema update issues"}
+{"emoji":"🐛","shortDescription":"bug","description":"Investigating missing temp table error"}
+{"emoji":"🗄️","shortDescription":"file cabinet","description":"Preparing comprehensive database migration"}
+{"emoji":"🧹","shortDescription":"broom","description":"Preparing for repository cleanup"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Searching hidden files for lazylibrarian"}
+{"emoji":"🛑","shortDescription":"stop sign","description":"Terminating flaresolverr process"}
+{"emoji":"✅","shortDescription":"check mark","description":"Verifying removal of specific references"}
+{"emoji":"🌐","shortDescription":"globe","description":"Opting for curl due to missing requests"}
+{"emoji":"📚","shortDescription":"books","description":"Evaluating book provider options"}
+{"emoji":"🗄️","shortDescription":"file cabinet","description":"Checking database version"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Inspecting db_version checks"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Verifying database upgrade logs"}
+{"emoji":"🧹","shortDescription":"broom","description":"Evaluating backup and service cleanup"}
+{"emoji":"✅","shortDescription":"check mark","description":"Confirming restore and config change"}
+{"emoji":"🛑","shortDescription":"stop sign","description":"Preparing to stop services and processes"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Searching for leftover backup references"}
+{"emoji":"🖼️","shortDescription":"framed picture","description":"Considering minimal image options"}
+{"emoji":"🧮","shortDescription":"abacus","description":"Testing hex conversion with shell builtins"}
+{"emoji":"📦","shortDescription":"package","description":"Installing packages"}
+{"emoji":"🔐","shortDescription":"locked with key","description":"Reauthenticating GitHub CLI in tmux"}
+{"emoji":"📤","shortDescription":"outbox tray","description":"Preparing to send data"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Gathering release info for FlareSolverr"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Checking for flaresolverr binary"}
+{"emoji":"🔑","shortDescription":"key","description":"Changing ownership of directories"}
+{"emoji":"📦","shortDescription":"package","description":"Installing FlareSolverr dependencies"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Investigating missing libgobject package"}
+{"emoji":"🔄","shortDescription":"counterclockwise arrows","description":"Restarting FlareSolverr process"}
+{"emoji":"🧩","shortDescription":"puzzle piece","description":"Assessing dependency compatibility issues"}
+{"emoji":"🧩","shortDescription":"puzzle piece","description":"Analyzing vendored requests compatibility"}
+{"emoji":"🛠️","shortDescription":"hammer and wrench","description":"Fixing indentation error around line 90"}
+{"emoji":"🔄","shortDescription":"counterclockwise arrows","description":"Restarting LazyLibrarian service"}
+{"emoji":"📡","shortDescription":"satellite antenna","description":"Investigating service port listening"}
+{"emoji":"🐛","shortDescription":"bug","description":"Resolving self-matching in process killing"}
+{"emoji":"🔍","shortDescription":"magnifying glass","description":"Checking service startup logs"}
+{"emoji":"📝","shortDescription":"memo","description":"Composing concise reindex response"}
+{"emoji":"▶️","shortDescription":"play","description":"Deciding output location and running script"}
+{"emoji":"⏳","shortDescription":"hourglass","description":"Waiting for download completion"}
+{"emoji":"⏳","shortDescription":"hourglass","description":"Waiting for headless shell download"}
+{"emoji":"⬇️","shortDescription":"down arrow","description":"Downloading ffmpeg"}
+{"emoji":"🔑","shortDescription":"key","description":"Preparing LazyLibrarian API details"}

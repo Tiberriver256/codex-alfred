@@ -3,5 +3,9 @@ dist/
 .env
 .env.*
 .DS_Store
-data/
+data/*
+!data/emoji-llm-desc/
+data/emoji-llm-desc/*
+!data/emoji-llm-desc/local-embeddings-*.jsonl
+!data/emoji-llm-desc/custom-anchors.jsonl
 tests/*.js
