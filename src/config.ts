@@ -4,6 +4,15 @@ export type SandboxConfig =
   | { mode: 'host' }
   | { mode: 'docker'; name: string };
 
+export interface VoiceConfig {
+  enabled: boolean;
+  elevenlabs?: {
+    apiKey: string;
+    voiceId: string;
+    model?: string;
+  };
+}
+
 export interface AppConfig {
   appToken: string;
   botToken: string;
@@ -13,6 +22,7 @@ export interface AppConfig {
   codexArgs: string[];
   logLevel: 'debug' | 'info' | 'warn' | 'error';
   mentionBackfill: MentionBackfillConfig;
+  voice: VoiceConfig;
 }
 
 export interface MentionBackfillConfig {
@@ -109,6 +119,14 @@ export function parseCli(argv: string[], env = process.env, cwd = process.cwd())
     60,
   );
 
+  const voiceEnabled = parseBoolean(
+    (flags['voice-enabled'] as string) ?? env.ALFRED_VOICE_ENABLED,
+    false,
+  );
+  const elevenLabsApiKey = (flags['elevenlabs-api-key'] as string) ?? env.ELEVENLABS_API_KEY;
+  const elevenLabsVoiceId = (flags['elevenlabs-voice-id'] as string) ?? env.ELEVENLABS_VOICE_ID;
+  const elevenLabsModel = (flags['elevenlabs-model'] as string) ?? env.ELEVENLABS_MODEL;
+
   const withDefaults = applyCodexDefaults(codexArgs);
   const finalCodexArgs = sandbox.mode === 'docker' && !withDefaults.includes('--yolo')
     ? ['--yolo', ...withDefaults]
@@ -129,6 +147,16 @@ export function parseCli(argv: string[], env = process.env, cwd = process.cwd())
         historyLookbackSeconds: mentionBackfillLookbackSeconds,
         maxHistoryPages: mentionBackfillMaxPages,
         minAgeSeconds: mentionBackfillMinAgeSeconds,
+      },
+      voice: {
+        enabled: voiceEnabled,
+        elevenlabs: elevenLabsApiKey && elevenLabsVoiceId
+          ? {
+              apiKey: elevenLabsApiKey,
+              voiceId: elevenLabsVoiceId,
+              model: elevenLabsModel,
+            }
+          : undefined,
       },
     },
     showHelp: false,
@@ -184,6 +212,10 @@ Options:
   --mention-backfill-lookback <s>  History lookback window in seconds (default: 86400)
   --mention-backfill-max-pages <n> Max history/list pages per poll (default: 3)
   --mention-backfill-min-age <s>   Only handle mentions older than N seconds (default: 60)
+  --voice-enabled <bool>           Enable voice features (default: false)
+  --elevenlabs-api-key <key>       ElevenLabs API key
+  --elevenlabs-voice-id <id>       ElevenLabs voice ID
+  --elevenlabs-model <model>       ElevenLabs model (optional)
   --help                 Show this help
   --version              Show version
 
@@ -191,6 +223,7 @@ Env:
   SLACK_APP_TOKEN, SLACK_BOT_TOKEN, ALFRED_DATA_DIR, ALFRED_WORKDIR, ALFRED_SANDBOX, ALFRED_LOG_LEVEL
   ALFRED_MENTION_BACKFILL, ALFRED_MENTION_BACKFILL_INTERVAL, ALFRED_MENTION_BACKFILL_LOOKBACK,
   ALFRED_MENTION_BACKFILL_MAX_PAGES, ALFRED_MENTION_BACKFILL_MIN_AGE
+  ALFRED_VOICE_ENABLED, ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID, ELEVENLABS_MODEL
 `;
 }
 
