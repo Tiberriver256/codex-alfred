@@ -27,6 +27,13 @@ npx @tiberriver256/codex-alfred --appKey <app-key> --botKey <bot-key> --data-dir
 
 See `spec.md` for the product/technical spec.
 
+## Voice Communication (Optional)
+Alfred supports voice-based communication via ElevenLabs. See [`VOICE_SETUP.md`](./VOICE_SETUP.md) for:
+- Setting up ElevenLabs integration
+- Voice message handling in Slack
+- Text-to-speech response generation
+- Cost management and configuration
+
 ## Local restart (dev)
 Use the npm script to restart Alfred with the same command we’ve been using. It prints the new PID.
 ```
