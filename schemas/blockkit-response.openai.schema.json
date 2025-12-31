@@ -78,20 +78,44 @@
       ]
     },
     "optionObject": {
-      "type": "object",
-      "properties": {
-        "text": {
-          "$ref": "#/$defs/plainTextObject"
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "text": {
+              "$ref": "#/$defs/textObject"
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "text",
+            "value"
+          ],
+          "additionalProperties": false
         },
-        "value": {
-          "type": "string"
+        {
+          "type": "object",
+          "properties": {
+            "text": {
+              "$ref": "#/$defs/textObject"
+            },
+            "value": {
+              "type": "string"
+            },
+            "description": {
+              "$ref": "#/$defs/textObject"
+            }
+          },
+          "required": [
+            "text",
+            "value",
+            "description"
+          ],
+          "additionalProperties": false
         }
-      },
-      "required": [
-        "text",
-        "value"
-      ],
-      "additionalProperties": false
+      ]
     },
     "headerBlock": {
       "type": "object",

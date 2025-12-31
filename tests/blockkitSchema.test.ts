@@ -52,3 +52,23 @@ test('openai slack ui schema does not allow button URLs', () => {
   assert.equal('url' in props, false);
   assert.equal('value' in props, false);
 });
+
+test('openai slack ui schema supports checkbox option descriptions', () => {
+  const schemaPath = path.resolve(process.cwd(), 'schemas', 'blockkit-response.openai.schema.json');
+  const raw = fs.readFileSync(schemaPath, 'utf8');
+  const schema = JSON.parse(raw) as {
+    $defs?: Record<string, { properties?: Record<string, unknown>; anyOf?: Array<{ properties?: Record<string, unknown> }> }>;
+  };
+
+  const optionObject = schema.$defs?.optionObject;
+  assert.ok(optionObject, 'optionObject definition missing');
+
+  const variants = optionObject?.anyOf ?? [];
+  assert.ok(variants.length >= 2, 'optionObject variants missing');
+
+  const withDescription = variants.find((variant) => 'description' in (variant.properties ?? {}));
+  assert.ok(withDescription, 'optionObject missing description variant');
+
+  const text = withDescription?.properties?.text as { $ref?: string } | undefined;
+  assert.equal(text?.$ref, '#/$defs/textObject');
+});
