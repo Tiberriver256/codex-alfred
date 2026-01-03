@@ -51,6 +51,7 @@ case "$COMMAND" in
     docker create \
       --name "$NAME" \
       --network host \
+      --device /dev/bus/usb:/dev/bus/usb \
       -v "$ABS_DIR:/workspace" \
       "$IMAGE" \
       sh -c "tail -f /dev/null" >/dev/null
